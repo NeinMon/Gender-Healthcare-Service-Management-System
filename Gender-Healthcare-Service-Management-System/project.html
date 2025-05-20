@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Phần mềm Quản lý Sức khỏe Giới tính</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f6f9fb; }
+    header { background: #185adb; color: #fff; padding: 18px 0; }
+    nav { text-align: center; }
+    nav a { color: #fff; margin: 0 15px; text-decoration: none; font-weight: bold; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 30px 10px; }
+    .hero { text-align: center; padding: 40px 0 20px 0; }
+    .hero h1 { margin-bottom: 8px; color: #333; }
+    .hero p { color: #555; }
+    .cta-btn { background: #185adb; color: #fff; border: none; padding: 10px 28px; margin: 10px; font-size: 16px;
+      border-radius: 5px; cursor: pointer; transition: background 0.2s;}
+    .cta-btn:hover { background: #003366;}
+    .flex-section { display: flex; gap: 38px; justify-content: center; flex-wrap: wrap; }
+    .block { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px #0001; padding: 26px 22px; flex: 1 1 320px; min-width: 300px; margin: 12px 0;}
+    .block h2 { margin-top: 0; }
+    .service-list { margin: 0; padding-left: 18px; }
+    .service-list li { margin: 7px 0; }
+    .feedback { background: #f8fafc; padding: 20px; margin-top: 40px; border-radius: 8px; }
+    footer { background: #222; color: #fff; text-align: center; padding: 16px 0; margin-top: 40px;}
+    @media (max-width: 900px) {
+      .flex-section { flex-direction: column; align-items: center; }
+      .block { width: 95%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="#">Trang chủ</a>
+      <a href="#">Blog</a>
+      <a href="#">Dịch vụ xét nghiệm</a>
+      <a href="#">Theo dõi chu kỳ</a>
+      <a href="#">Đặt lịch tư vấn</a>
+      <a href="#">Hỏi đáp</a>
+      <a href="#">Tư vấn viên</a>
+      <a href="#">Dashboard</a>
+      <a href="#">Hồ sơ</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Trang chủ, giới thiệu -->
+    <section class="hero">
+      <h1>Phần mềm Quản lý Dịch vụ Sức khỏe Giới tính</h1>
+      <p>
+        Nền tảng hỗ trợ quản lý và cung cấp các dịch vụ chăm sóc sức khỏe sinh sản, giáo dục giới tính, tư vấn trực tuyến, xét nghiệm STIs và nhiều tiện ích hiện đại cho cơ sở y tế.<br>
+        <b>An toàn – Bảo mật – Tiện lợi!</b>
+      </p>
+      <button class="cta-btn">Đăng ký khám & tư vấn</button>
+      <button class="cta-btn">Dịch vụ xét nghiệm</button>
+    </section>
+
+    <!-- Các tính năng chính -->
+    <section class="flex-section">
+      <div class="block">
+        <h2>Theo dõi chu kỳ sinh sản</h2>
+        <ul class="service-list">
+          <li>Khai báo chu kỳ kinh nguyệt</li>
+          <li>Nhận dự đoán rụng trứng, khả năng mang thai</li>
+          <li>Nhắc nhở uống thuốc tránh thai</li>
+          <li>Xem biểu đồ, thống kê</li>
+        </ul>
+        <a href="#" style="color: #185adb;">Sử dụng ngay</a>
+      </div>
+      <div class="block">
+        <h2>Đặt lịch tư vấn trực tuyến</h2>
+        <ul class="service-list">
+          <li>Xem danh sách tư vấn viên</li>
+          <li>Chọn thời gian tư vấn</li>
+          <li>Nhận nhắc lịch qua email/app</li>
+          <li>Tham gia tư vấn video call/chat</li>
+        </ul>
+        <a href="#" style="color: #185adb;">Đặt lịch</a>
+      </div>
+      <div class="block">
+        <h2>Dịch vụ xét nghiệm STIs</h2>
+        <ul class="service-list">
+          <li>Xem bảng giá, danh sách xét nghiệm</li>
+          <li>Đặt lịch tại cơ sở hoặc lấy mẫu tại nhà</li>
+          <li>Nhận kết quả qua hệ thống</li>
+        </ul>
+        <a href="#" style="color: #185adb;">Đăng ký xét nghiệm</a>
+      </div>
+    </section>
+
+    <!-- Blog -->
+    <section class="block" style="margin-top:40px;">
+      <h2>Blog chia sẻ kinh nghiệm</h2>
+      <ul class="service-list">
+        <li><a href="#">Giáo dục giới tính cho tuổi teen</a></li>
+        <li><a href="#">Làm thế nào để phòng tránh bệnh STIs?</a></li>
+        <li><a href="#">Theo dõi chu kỳ kinh nguyệt hiệu quả</a></li>
+      </ul>
+      <a href="#" style="color: #185adb;">Xem thêm bài viết</a>
+    </section>
+
+    <!-- Đánh giá, phản hồi -->
+    <section class="feedback">
+      <h2>Đánh giá & Phản hồi</h2>
+      <p>Hãy chia sẻ cảm nhận để chúng tôi phục vụ tốt hơn!</p>
+      <form>
+        <label for="rating">Đánh giá:</label>
+        <select id="rating" name="rating">
+          <option>5 - Rất hài lòng</option>
+          <option>4 - Hài lòng</option>
+          <option>3 - Bình thường</option>
+          <option>2 - Chưa tốt</option>
+          <option>1 - Rất tệ</option>
+        </select>
+        <br><br>
+        <label for="comment">Phản hồi:</label><br>
+        <textarea id="comment" name="comment" rows="3" style="width: 100%;"></textarea>
+        <br><br>
+        <button type="submit" class="cta-btn">Gửi đánh giá</button>
+      </form>
+    </section>
+  </div>
+
+  <footer>
+    © 2025 Phần mềm Sức khỏe Giới tính. Bảo mật & đồng hành cùng bạn!
+  </footer>
+</body>
+</html>

@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 
+// Color scheme for reproductive health status indicators - using medical color palette
 const STATUS_COLOR = {
-  "Bắt đầu kinh nguyệt": "#43a047",
-  "Kết thúc kinh nguyệt": "#1de9b6",
-  "Rụng trứng": "#fbc02d",
-  "Dự kiến kinh nguyệt tiếp theo": "#1976d2"
+  "Bắt đầu kinh nguyệt": "#d32f2f", // Medical red
+  "Kết thúc kinh nguyệt": "#1e88e5", // Medical blue
+  "Rụng trứng": "#fb8c00", // Medical orange
+  "Dự kiến kinh nguyệt tiếp theo": "#7b1fa2" // Medical purple
 };
 
+// Health status icons with medical focus
 const STATUS_ICON = {
   "Bắt đầu kinh nguyệt": "🩸",
-  "Kết thúc kinh nguyệt": "✅",
-  "Rụng trứng": "🌼",
-  "Dự kiến kinh nguyệt tiếp theo": "🔔"
+  "Kết thúc kinh nguyệt": "✓",
+  "Rụng trứng": "⭐",
+  "Dự kiến kinh nguyệt tiếp theo": "📅"
 };
 
 const App = () => {
@@ -124,16 +126,16 @@ const App = () => {
   };
 
   return (
-    <div>
-      <header style={{
-        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+    <div>      <header style={{
+        background: "linear-gradient(90deg, #005b9f 0%, #0277bd 100%)", // Medical blue gradient
         paddingBottom: 0,
-        position: "relative"
+        position: "relative",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
       }}>
         <div style={{
           position: "absolute",
-          top: 170, // tăng top để xuống dưới
-          right: 25, // sang phải
+          top: 170,
+          right: 25,
           display: "flex",
           gap: 10,
           zIndex: 2
@@ -141,12 +143,13 @@ const App = () => {
           <button
             style={{
               background: "#fff",
-              color: "#11998e",
+              color: "#0277bd",
               border: "none",
-              borderRadius: 6,
+              borderRadius: 4,
               padding: "8px 20px",
               fontWeight: 600,
-              cursor: "pointer"
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
             }}
             onClick={() => setShowRegister(true)}
           >
@@ -154,13 +157,14 @@ const App = () => {
           </button>
           <button
             style={{
-              background: "#11998e",
+              background: "#e91e63", // Clinical accent
               color: "#fff",
-              border: "2px solid #fff",
-              borderRadius: 6,
+              border: "none",
+              borderRadius: 4,
               padding: "8px 20px",
               fontWeight: 600,
-              cursor: "pointer"
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.1)"
             }}
             onClick={() => setShowLogin(true)}
           >
@@ -171,7 +175,12 @@ const App = () => {
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
+            style={{ 
+              height: 100, 
+              width: 100, 
+              objectFit: "contain",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+            }}
           />
         </div>
         <h1
@@ -181,7 +190,8 @@ const App = () => {
             padding: "24px 0 16px 0",
             textAlign: "center",
             fontWeight: 700,
-            letterSpacing: 1
+            letterSpacing: 1,
+            textShadow: "0 2px 4px rgba(0,0,0,0.2)"
           }}
         >
           Chăm sóc sức khỏe giới tính
@@ -192,7 +202,10 @@ const App = () => {
             justifyContent: "center",
             alignItems: "center",
             gap: 18,
-            margin: "0 0 8px 0"
+            margin: "0 0 12px 0",
+            background: "rgba(255,255,255,0.1)",
+            padding: "8px 16px",
+            borderRadius: "0 0 8px 8px"
           }}
         >
           <a href="#gioi-thieu" style={{ color: "#fff", fontWeight: 500 }}>Giới thiệu</a>
@@ -201,13 +214,11 @@ const App = () => {
           <span style={{ color: "#fff" }}>|</span>
           <a href="#blog" style={{ color: "#fff", fontWeight: 500 }}>Blog</a>
         </nav>
-      </header>
-
-      {showRegister && (
+      </header>      {showRegister && (
         <div style={{
           position: "fixed",
           top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.3)",
+          background: "rgba(0,45,85,0.7)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -217,16 +228,16 @@ const App = () => {
             onSubmit={handleRegisterSubmit}
             style={{
               background: "#fff",
-              borderRadius: 12,
+              borderRadius: 8,
               padding: 32,
-              minWidth: 320,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+              minWidth: 350,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
               display: "flex",
               flexDirection: "column",
               gap: 16
             }}
           >
-            <h2 style={{ color: "#11998e", margin: 0, textAlign: "center" }}>Đăng ký tài khoản</h2>
+            <h2 style={{ color: "#0277bd", margin: 0, textAlign: "center", borderBottom: "2px solid #e0e0e0", paddingBottom: 12 }}>Đăng ký tài khoản</h2>
             <label>
               Họ và tên:
               <input
@@ -235,7 +246,7 @@ const App = () => {
                 value={registerData.name}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -246,7 +257,7 @@ const App = () => {
                 value={registerData.username}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -256,7 +267,7 @@ const App = () => {
                 value={registerData.gender}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               >
                 <option value="">-- Chọn giới tính --</option>
                 <option value="Nam">Nam</option>
@@ -272,7 +283,7 @@ const App = () => {
                 value={registerData.dob}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -283,7 +294,7 @@ const App = () => {
                 value={registerData.email}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -294,7 +305,7 @@ const App = () => {
                 value={registerData.phone}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -305,7 +316,7 @@ const App = () => {
                 value={registerData.address}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -316,7 +327,7 @@ const App = () => {
                 value={registerData.password}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -327,18 +338,18 @@ const App = () => {
                 value={registerData.confirmPassword}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
               <button
                 type="button"
                 onClick={() => setShowRegister(false)}
                 style={{
-                  background: "#b2dfdb",
-                  color: "#11998e",
+                  background: "#eceff1",
+                  color: "#546e7a",
                   border: "none",
-                  borderRadius: 6,
+                  borderRadius: 4,
                   padding: "8px 20px",
                   fontWeight: 600,
                   cursor: "pointer"
@@ -349,10 +360,10 @@ const App = () => {
               <button
                 type="submit"
                 style={{
-                  background: "#11998e",
+                  background: "#0277bd",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 6,
+                  borderRadius: 4,
                   padding: "8px 20px",
                   fontWeight: 600,
                   cursor: "pointer"
@@ -363,13 +374,11 @@ const App = () => {
             </div>
           </form>
         </div>
-      )}
-
-      {showLogin && (
+      )}      {showLogin && (
         <div style={{
           position: "fixed",
           top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.3)",
+          background: "rgba(0,45,85,0.7)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -379,16 +388,16 @@ const App = () => {
             onSubmit={handleLoginSubmit}
             style={{
               background: "#fff",
-              borderRadius: 12,
+              borderRadius: 8,
               padding: 32,
               minWidth: 320,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
               display: "flex",
               flexDirection: "column",
               gap: 16
             }}
           >
-            <h2 style={{ color: "#11998e", margin: 0, textAlign: "center" }}>Đăng nhập</h2>
+            <h2 style={{ color: "#0277bd", margin: 0, textAlign: "center", borderBottom: "2px solid #e0e0e0", paddingBottom: 12 }}>Đăng nhập</h2>
             <label>
               Tài khoản (Email):
               <input
@@ -397,7 +406,7 @@ const App = () => {
                 value={loginData.email}
                 onChange={handleLoginChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 10, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
             <label>
@@ -408,19 +417,22 @@ const App = () => {
                 value={loginData.password}
                 onChange={handleLoginChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 10, borderRadius: 4, border: "1px solid #90caf9", marginTop: 4 }}
               />
             </label>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+              <a href="#" style={{ color: "#0277bd", textDecoration: "none", fontSize: 14 }}>Quên mật khẩu?</a>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
               <button
                 type="button"
                 onClick={() => setShowLogin(false)}
                 style={{
-                  background: "#b2dfdb",
-                  color: "#11998e",
+                  background: "#eceff1",
+                  color: "#546e7a",
                   border: "none",
-                  borderRadius: 6,
-                  padding: "8px 20px",
+                  borderRadius: 4,
+                  padding: "10px 20px",
                   fontWeight: 600,
                   cursor: "pointer"
                 }}
@@ -430,11 +442,11 @@ const App = () => {
               <button
                 type="submit"
                 style={{
-                  background: "#11998e",
+                  background: "#0277bd",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 6,
-                  padding: "8px 20px",
+                  borderRadius: 4,
+                  padding: "10px 20px",
                   fontWeight: 600,
                   cursor: "pointer"
                 }}
@@ -446,38 +458,63 @@ const App = () => {
         </div>
       )}
 
-      <main>
-        <section id="demo-chu-ky">
+      <main>        <section id="demo-chu-ky">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginBottom: 8 }}>
             <button
               onClick={() => setShowCalculator(v => !v)}
               style={{
-                background: "#11998e",
+                background: "#0277bd",
                 color: "#fff",
                 border: "none",
-                borderRadius: 6,
-                padding: "6px 18px",
+                borderRadius: 4,
+                padding: "8px 18px",
                 fontWeight: 600,
-                cursor: "pointer"
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
               }}
             >
-              {showCalculator ? "Ẩn bảng tính chu kỳ" : "Hiện bảng tính chu kỳ"}
+              {showCalculator ? (
+                <>
+                  <span style={{ fontSize: 18 }}>−</span> Ẩn bảng tính chu kỳ
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: 18 }}>+</span> Hiện bảng tính chu kỳ
+                </>
+              )}
             </button>
           </div>
           {showCalculator && (
             <div style={{
-              background: "#f4fff8",
-              borderRadius: 12,
-              boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
+              background: "#f5f5f5",
+              borderRadius: 8,
+              boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
               padding: 24,
-              marginTop: 18
+              marginTop: 18,
+              border: "1px solid #e0e0e0"
             }}>
+              <h3 style={{ color: "#0277bd", marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 2V6" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M8 2V6" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 10H21" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Công cụ tính chu kỳ kinh nguyệt
+              </h3>
               <form onSubmit={handleCalculate} style={{
                 marginBottom: 24,
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 18,
-                alignItems: "center"
+                alignItems: "center",
+                background: "#fff",
+                padding: "16px",
+                borderRadius: "8px",
+                boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)"
               }}>
                 <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   Ngày bắt đầu:
@@ -488,9 +525,9 @@ const App = () => {
                     required
                     style={{
                       marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "4px 8px"
+                      border: "1px solid #bbdefb",
+                      borderRadius: 4,
+                      padding: "6px 10px"
                     }}
                   />
                 </label>
@@ -504,11 +541,11 @@ const App = () => {
                     onChange={e => setCycleLength(Number(e.target.value))}
                     required
                     style={{
-                      width: 50,
+                      width: 60,
                       marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "4px 8px"
+                      border: "1px solid #bbdefb",
+                      borderRadius: 4,
+                      padding: "6px 10px"
                     }}
                   />
                 </label>
@@ -522,77 +559,87 @@ const App = () => {
                     onChange={e => setPeriodLength(Number(e.target.value))}
                     required
                     style={{
-                      width: 40,
+                      width: 50,
                       marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "4px 8px"
+                      border: "1px solid #bbdefb",
+                      borderRadius: 4,
+                      padding: "6px 10px"
                     }}
                   />
                 </label>
                 <button type="submit" style={{
-                  background: "#11998e",
+                  background: "#1976d2",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 6,
+                  borderRadius: 4,
                   padding: "8px 20px",
                   fontWeight: 600,
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8
                 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 8L15 12H18C18 15.3137 15.3137 18 12 18C10.3431 18 8.84311 17.3284 7.75732 16.2426" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 16L9 12H6C6 8.68629 8.68629 6 12 6C13.6569 6 15.1569 6.67157 16.2427 7.75736" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   Tính toán
                 </button>
-              </form>
-              {tableData.length > 0 && (
+              </form>              {tableData.length > 0 && (
                 <div style={{ overflowX: "auto" }}>
                   <table style={{
                     width: "100%",
                     borderCollapse: "separate",
                     borderSpacing: 0,
-                    background: "#e0f2f1",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 8px rgba(17,153,142,0.06)",
+                    background: "#fff",
+                    borderRadius: 8,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                     marginBottom: 0,
-                    fontSize: 16
+                    fontSize: 16,
+                    border: "1px solid #e0e0e0"
                   }}>
                     <thead>
                       <tr>
                         <th style={{
                           padding: 12,
-                          background: "#b2dfdb",
-                          color: "#11998e",
+                          background: "#0277bd",
+                          color: "#fff",
                           border: "none",
-                          borderTopLeftRadius: 12
+                          borderTopLeftRadius: 8,
+                          fontWeight: 500
                         }}>Ngày</th>
                         <th style={{
                           padding: 12,
-                          background: "#b2dfdb",
-                          color: "#11998e",
-                          border: "none"
+                          background: "#0277bd",
+                          color: "#fff",
+                          border: "none",
+                          fontWeight: 500
                         }}>Trạng thái</th>
                         <th style={{
                           padding: 12,
-                          background: "#b2dfdb",
-                          color: "#11998e",
+                          background: "#0277bd",
+                          color: "#fff",
                           border: "none",
-                          borderTopRightRadius: 12
+                          borderTopRightRadius: 8,
+                          fontWeight: 500
                         }}>Ghi chú</th>
                       </tr>
                     </thead>
                     <tbody>
                       {tableData.map((row, idx) => (
                         <tr key={idx} style={{
-                          background: idx % 2 === 0 ? "#e0f2f1" : "#f4fff8"
+                          background: idx % 2 === 0 ? "#f5f5f5" : "#fff"
                         }}>
                           <td style={{
                             padding: 12,
                             textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb"
+                            borderBottom: "1px solid #e0e0e0"
                           }}>{row.date}</td>
                           <td style={{
                             padding: 12,
                             textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb",
-                            color: STATUS_COLOR[row.status] || "#11998e",
+                            borderBottom: "1px solid #e0e0e0",
+                            color: STATUS_COLOR[row.status] || "#0277bd",
                             fontWeight: 600
                           }}>
                             <span style={{ fontSize: 20, marginRight: 6 }}>{STATUS_ICON[row.status]}</span>
@@ -601,7 +648,7 @@ const App = () => {
                           <td style={{
                             padding: 12,
                             textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb"
+                            borderBottom: "1px solid #e0e0e0"
                           }}>{row.note}</td>
                         </tr>
                       ))}
@@ -611,56 +658,83 @@ const App = () => {
               )}
             </div>
           )}
-        </section>
-        <section id="gioi-thieu" style={{
-          background: "#e6fff4",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
+        </section>        <section id="gioi-thieu" style={{
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           padding: 24,
-          margin: "32px 0"
+          margin: "32px 0",
+          border: "1px solid #e0e0e0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0 }}>Giới thiệu về chúng tôi</h2>
-          <p style={{ fontSize: 17, marginBottom: 16 }}>
+          <h2 style={{ 
+            color: "#0277bd", 
+            marginTop: 0, 
+            borderBottom: "2px solid #bbdefb",
+            paddingBottom: 10,
+            display: "flex",
+            alignItems: "center",
+            gap: 8
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 16V12" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 8H12.01" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Giới thiệu về chúng tôi
+          </h2>
+          <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 16, color: "#424242" }}>
             Trung Tâm Sức Khỏe Sinh Sản &amp; Giới Tính An Toàn là cơ sở y tế uy tín chuyên cung cấp các dịch vụ chăm sóc sức khỏe sinh sản, tư vấn giáo dục giới tính, và xét nghiệm các bệnh lây truyền qua đường tình dục (STIs). Với đội ngũ chuyên gia giàu kinh nghiệm, chúng tôi luôn đồng hành cùng bạn trong hành trình bảo vệ sức khỏe cá nhân và xây dựng lối sống tình dục an toàn, lành mạnh.
           </p>
-          <ul style={{ fontSize: 16, color: "#11998e", margin: 0, paddingLeft: 24 }}>
-            <li>🔸 Đội ngũ tư vấn viên &amp; bác sĩ chuyên môn cao</li>
-            <li>🔸 Dịch vụ bảo mật – thông tin cá nhân được giữ kín tuyệt đối</li>
-            <li>🔸 Quy trình đặt lịch – xét nghiệm – trả kết quả nhanh chóng, minh bạch</li>
-            <li>🔸 Cam kết y tế – thiết bị hiện đại, kết quả chính xác, hỗ trợ chuyên sâu</li>
+          <ul style={{ fontSize: 16, color: "#424242", margin: 0, paddingLeft: 24, lineHeight: 1.8 }}>
+            <li><span style={{ color: "#0277bd", fontWeight: 600 }}>✓</span> Đội ngũ tư vấn viên &amp; bác sĩ chuyên môn cao</li>
+            <li><span style={{ color: "#0277bd", fontWeight: 600 }}>✓</span> Dịch vụ bảo mật – thông tin cá nhân được giữ kín tuyệt đối</li>
+            <li><span style={{ color: "#0277bd", fontWeight: 600 }}>✓</span> Quy trình đặt lịch – xét nghiệm – trả kết quả nhanh chóng, minh bạch</li>
+            <li><span style={{ color: "#0277bd", fontWeight: 600 }}>✓</span> Cam kết y tế – thiết bị hiện đại, kết quả chính xác, hỗ trợ chuyên sâu</li>
           </ul>
         </section>
         <section id="dich-vu" style={{
-          background: "#e6fff4",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           padding: 24,
-          margin: "32px 0"
+          margin: "32px 0",
+          border: "1px solid #e0e0e0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
-            <span role="img" aria-label="stethoscope">🩺</span> Dịch Vụ Cung Cấp
+          <h2 style={{ 
+            color: "#0277bd", 
+            marginTop: 0, 
+            borderBottom: "2px solid #bbdefb",
+            paddingBottom: 10,
+            display: "flex", 
+            alignItems: "center", 
+            gap: 8 
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 12H18L15 21L9 3L6 12H2" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Dịch Vụ Y Tế
           </h2>
-          <ol style={{ fontSize: 16, color: "#11998e", margin: 0, paddingLeft: 24 }}>
-            <li style={{ marginBottom: 14 }}>
-              <b>Theo dõi chu kỳ sinh sản</b>
-              <ul style={{ marginTop: 6, marginBottom: 0 }}>
+          <ol style={{ fontSize: 16, color: "#424242", margin: 0, paddingLeft: 24, lineHeight: 1.6 }}>
+            <li style={{ marginBottom: 16 }}>
+              <h3 style={{ color: "#0277bd", margin: "10px 0", fontSize: 18 }}>Theo dõi chu kỳ sinh sản</h3>
+              <ul style={{ marginTop: 6, marginBottom: 0, paddingLeft: 20 }}>
                 <li>Khai báo chu kỳ kinh nguyệt dễ dàng</li>
                 <li>Nhắc nhở thời điểm rụng trứng, khả năng mang thai cao/thấp</li>
                 <li>Nhắc uống thuốc tránh thai đúng giờ</li>
                 <li>Phân tích biểu đồ sức khỏe sinh sản</li>
               </ul>
             </li>
-            <li style={{ marginBottom: 14 }}>
-              <b>Tư vấn giới tính &amp; sức khỏe sinh sản</b>
-              <ul style={{ marginTop: 6, marginBottom: 0 }}>
+            <li style={{ marginBottom: 16 }}>
+              <h3 style={{ color: "#0277bd", margin: "10px 0", fontSize: 18 }}>Tư vấn giới tính &amp; sức khỏe sinh sản</h3>
+              <ul style={{ marginTop: 6, marginBottom: 0, paddingLeft: 20 }}>
                 <li>Đặt lịch tư vấn trực tuyến với chuyên gia</li>
                 <li>Được tư vấn riêng tư, bảo mật</li>
                 <li>Gửi câu hỏi, thắc mắc về giới tính, tâm sinh lý, mối quan hệ,...</li>
               </ul>
             </li>
-            <li style={{ marginBottom: 14 }}>
-              <b>Xét nghiệm các bệnh STIs</b>
-              <ul style={{ marginTop: 6, marginBottom: 0 }}>
+            <li style={{ marginBottom: 16 }}>
+              <h3 style={{ color: "#0277bd", margin: "10px 0", fontSize: 18 }}>Xét nghiệm các bệnh STIs</h3>
+              <ul style={{ marginTop: 6, marginBottom: 0, paddingLeft: 20 }}>
                 <li>Danh sách dịch vụ xét nghiệm đa dạng: HIV, HPV, Lậu, Giang mai, Chlamydia,...</li>
                 <li>Đặt lịch và theo dõi quá trình xét nghiệm</li>
                 <li>Trả kết quả online an toàn và nhanh chóng</li>
@@ -668,8 +742,8 @@ const App = () => {
               </ul>
             </li>
             <li>
-              <b>Thông tin dịch vụ rõ ràng</b>
-              <ul style={{ marginTop: 6, marginBottom: 0 }}>
+              <h3 style={{ color: "#0277bd", margin: "10px 0", fontSize: 18 }}>Thông tin dịch vụ minh bạch</h3>
+              <ul style={{ marginTop: 6, marginBottom: 0, paddingLeft: 20 }}>
                 <li>Bảng giá xét nghiệm minh bạch, cập nhật liên tục</li>
                 <li>Gói dịch vụ phù hợp cho từng đối tượng (nam, nữ, cặp đôi,...)</li>
               </ul>
@@ -677,29 +751,99 @@ const App = () => {
           </ol>
         </section>
         <section id="blog" style={{
-          background: "#e6fff4",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           padding: 24,
-          margin: "32px 0"
+          margin: "32px 0",
+          border: "1px solid #e0e0e0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
-            <span role="img" aria-label="book">📚</span> Chuyên mục Blog: Kiến Thức Sức Khỏe Giới Tính
+          <h2 style={{ 
+            color: "#0277bd", 
+            marginTop: 0, 
+            borderBottom: "2px solid #bbdefb",
+            paddingBottom: 10,
+            display: "flex", 
+            alignItems: "center", 
+            gap: 8 
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="#0277bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Chuyên mục Y tế: Kiến Thức Sức Khỏe Giới Tính
           </h2>
-          <p style={{ fontSize: 17, marginBottom: 16 }}>
+          <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 16, color: "#424242" }}>
             Chúng tôi chia sẻ những bài viết thiết thực, cập nhật, khoa học về:
           </p>
-          <ul style={{ fontSize: 16, color: "#11998e", margin: 0, paddingLeft: 24 }}>
-            <li>Giáo dục giới tính an toàn cho mọi lứa tuổi</li>
-            <li>Sức khỏe sinh sản: điều cần biết cho nữ giới &amp; nam giới</li>
-            <li>Cách phòng tránh và nhận biết bệnh lây truyền qua đường tình dục (STIs)</li>
-            <li>Hiểu rõ chu kỳ kinh nguyệt và dấu hiệu rụng trứng</li>
-            <li>Tư vấn tâm lý, tình dục học, quan hệ lành mạnh</li>
-          </ul>
-        </section>
-      </main>
-      <footer style={{ background: "#e6fff4", color: "#11998e" }}>
-        &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            <div style={{ 
+              flex: "1 1 300px", 
+              background: "#f5f5f5", 
+              padding: 16, 
+              borderRadius: 8,
+              borderLeft: "4px solid #0277bd"
+            }}>
+              <h4 style={{ color: "#0277bd", marginTop: 0 }}>Giáo dục giới tính</h4>
+              <p style={{ margin: 0, fontSize: 14, color: "#616161" }}>
+                Thông tin an toàn cho mọi lứa tuổi và hướng dẫn trò chuyện về sức khỏe tình dục
+              </p>
+            </div>
+            <div style={{ 
+              flex: "1 1 300px", 
+              background: "#f5f5f5", 
+              padding: 16, 
+              borderRadius: 8,
+              borderLeft: "4px solid #0277bd"
+            }}>
+              <h4 style={{ color: "#0277bd", marginTop: 0 }}>Sức khỏe sinh sản</h4>
+              <p style={{ margin: 0, fontSize: 14, color: "#616161" }}>
+                Kiến thức cần thiết dành cho cả nam giới và nữ giới ở các giai đoạn khác nhau
+              </p>
+            </div>
+            <div style={{ 
+              flex: "1 1 300px", 
+              background: "#f5f5f5", 
+              padding: 16, 
+              borderRadius: 8,
+              borderLeft: "4px solid #0277bd"
+            }}>
+              <h4 style={{ color: "#0277bd", marginTop: 0 }}>Phòng ngừa STIs</h4>
+              <p style={{ margin: 0, fontSize: 14, color: "#616161" }}>
+                Các phương pháp nhận biết, phòng tránh và điều trị các bệnh lây truyền qua đường tình dục
+              </p>
+            </div>
+          </div>
+        </section>      </main>
+      <footer style={{ 
+        background: "#0277bd", 
+        color: "#fff", 
+        padding: "20px 0",
+        marginTop: 40,
+        textAlign: "center" 
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20, gap: 20 }}>
+            <div style={{ flex: "1 1 300px", textAlign: "left" }}>
+              <h3 style={{ marginTop: 0, borderBottom: "1px solid #64b5f6", paddingBottom: 8 }}>Liên hệ</h3>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Điện thoại: 1800-xxxx-xxx</p>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Email: info@healthcare.vn</p>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Địa chỉ: 123 Đường Y tế, Quận 1, TP. HCM</p>
+            </div>
+            <div style={{ flex: "1 1 300px", textAlign: "left" }}>
+              <h3 style={{ marginTop: 0, borderBottom: "1px solid #64b5f6", paddingBottom: 8 }}>Giờ làm việc</h3>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Thứ Hai - Thứ Sáu: 8:00 - 17:00</p>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Thứ Bảy: 8:00 - 12:00</p>
+              <p style={{ margin: "8px 0", fontSize: 14 }}>Chủ Nhật: Nghỉ</p>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid #64b5f6", paddingTop: 15, fontSize: 14 }}>
+            &copy; {new Date().getFullYear()} Trung tâm Y tế Sức khỏe Giới tính - Bộ Y tế Việt Nam
+            <div style={{ marginTop: 8, fontSize: 12, color: "#e1f5fe" }}>
+              Tất cả thông tin trên trang web này chỉ dành cho mục đích giáo dục và không thay thế cho tư vấn y tế chuyên nghiệp
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );

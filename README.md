@@ -1,43 +1,12 @@
-# Hệ Thống Quản Lý Dịch Vụ Chăm Sóc Sức Khỏe Giới Tính
+# React + Vite
 
-Dự án này là một hệ thống quản lý dịch vụ chăm sóc sức khỏe giới tính, được phát triển bằng React và Vite. Hệ thống cung cấp các tính năng như theo dõi chu kỳ kinh nguyệt, đăng ký và đăng nhập tài khoản, và thông tin về các dịch vụ liên quan đến sức khỏe giới tính.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Tính Năng
+Currently, two official plugins are available:
 
-- Theo dõi chu kỳ kinh nguyệt và dự đoán thời gian rụng trứng
-- Đăng ký và đăng nhập tài khoản người dùng
-- Cung cấp thông tin về dịch vụ chăm sóc sức khỏe giới tính
-- Giao diện thân thiện với người dùng và dễ sử dụng
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Công Nghệ Sử Dụng
+## Expanding the ESLint configuration
 
-- React
-- Vite
-- JavaScript/JSX
-- CSS-in-JS
-
-## Cài Đặt và Chạy
-
-1. Clone repository:
-   ```
-   git clone https://github.com/NeinMon/Gender-Healthcare-Service-Management-System.git
-   ```
-
-2. Di chuyển vào thư mục dự án:
-   ```
-   cd Gender-Healthcare-Service-Management-System
-   ```
-
-3. Cài đặt dependencies:
-   ```
-   npm install
-   ```
-
-4. Chạy dự án:
-   ```
-   npm run dev
-   ```
-
-## Đóng Góp
-
-Mọi đóng góp đều được hoan nghênh. Vui lòng fork repository và tạo pull request để đóng góp.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

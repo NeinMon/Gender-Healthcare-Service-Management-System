@@ -148,7 +148,7 @@ const App = () => {
               fontWeight: 600,
               cursor: "pointer"
             }}
-            onClick={() => setShowRegister(true)}
+            onClick={() => window.location.href = "/register"}
           >
             Đăng ký
           </button>
@@ -162,7 +162,7 @@ const App = () => {
               fontWeight: 600,
               cursor: "pointer"
             }}
-            onClick={() => setShowLogin(true)}
+            onClick={() => window.location.href = "/login"}
           >
             Đăng nhập
           </button>

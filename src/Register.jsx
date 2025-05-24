@@ -81,18 +81,18 @@ const Register = () => {
         >
           Đăng Ký Tài Khoản
         </h1>
-      </header>
-
-      <main style={{ 
-        maxWidth: "800px", 
+      </header>      <main style={{ 
+        width: "100%", 
         margin: "40px auto", 
-        padding: "0 20px" 
+        padding: "0 40px" 
       }}>
         <div style={{
           background: "#fff",
           borderRadius: 12,
           boxShadow: "0 4px 24px rgba(17,153,142,0.15)",
           padding: 32,
+          maxWidth: "1200px",
+          margin: "0 auto",
         }}>
           {success ? (
             <div style={{

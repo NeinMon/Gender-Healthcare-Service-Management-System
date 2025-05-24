@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import accounts from './data/accounts';
 
 const Register = () => {
   const [registerData, setRegisterData] = useState({
@@ -44,13 +45,41 @@ const Register = () => {
       return;
     }
 
-    // Here you would typically call an API to register the user
+    // Kiểm tra xem email đã tồn tại chưa
+    const existingUser = accounts.find(account => account.email === registerData.email);
+    if (existingUser) {
+      setError("Email này đã được sử dụng. Vui lòng chọn một email khác!");
+      return;
+    }
+
+    // Tạo một người dùng mới
+    const newUser = {
+      id: accounts.length + 1,
+      username: registerData.username,
+      name: registerData.name,
+      email: registerData.email,
+      password: registerData.password,
+      gender: registerData.gender,
+      dob: registerData.dob,
+      phone: registerData.phone,
+      address: registerData.address,
+      role: "user"
+    };
+
+    // Lưu người dùng vào localStorage
+    localStorage.setItem("currentUser", JSON.stringify({
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role
+    }));
+
     setSuccess(true);
     setError("");
     
-    // Clear form after successful registration
+    // Chuyển hướng đến trang dịch vụ sau khi đăng ký thành công
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/services";
     }, 2000);
   };
 
@@ -102,9 +131,8 @@ const Register = () => {
               backgroundColor: "#e8f5e9",
               borderRadius: "8px",
               marginBottom: "20px"
-            }}>
-              <h3>Đăng ký thành công!</h3>
-              <p>Đang chuyển hướng về trang chủ...</p>
+            }}>              <h3>Đăng ký thành công!</h3>
+              <p>Đang chuyển hướng đến trang dịch vụ...</p>
             </div>
           ) : (
             <>
@@ -332,14 +360,26 @@ const Register = () => {
                     >
                       Đăng ký
                     </button>
-                  </div>
-                  <div style={{ textAlign: "center", marginTop: "20px" }}>
+                  </div>                  <div style={{ textAlign: "center", marginTop: "20px" }}>
                     <p>
                       Đã có tài khoản?{" "}
-                      <Link to="/login" style={{ color: "#11998e", textDecoration: "none", fontWeight: "600" }}>
-                        Đăng nhập ngay
-                      </Link>
                     </p>
+                    <button 
+                      onClick={() => window.location.href = "/login"}
+                      style={{
+                        background: "#38ef7d",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "10px 24px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        marginTop: "10px"
+                      }}
+                    >
+                      Đăng nhập ngay
+                    </button>
                   </div>
                 </div>
               </form>

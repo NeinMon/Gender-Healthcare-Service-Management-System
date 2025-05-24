@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import accounts from './data/accounts';
 
 const Login = () => {
   const [loginData, setLoginData] = useState({
@@ -22,20 +23,36 @@ const Login = () => {
       return;
     }
 
-    // Here you would call an API to validate login
-    setSuccess(true);
+    // Kiểm tra thông tin đăng nhập với danh sách accounts
+    const user = accounts.find(
+      account => account.email === loginData.email && account.password === loginData.password
+    );
     
-    // Redirect after successful login
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 2000);
+    if (user) {
+      // Lưu thông tin người dùng vào localStorage để giữ trạng thái đăng nhập
+      localStorage.setItem("currentUser", JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+      
+      setSuccess(true);
+      
+      // Redirect to services page after successful login
+      setTimeout(() => {
+        window.location.href = "/services";
+      }, 2000);
+    } else {
+      setError("Tài khoản hoặc mật khẩu không chính xác!");
+    }
   };
-
   return (
-    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh", width: "100vw", maxWidth: "100%", overflowX: "hidden" }}>
       <header style={{
         background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
-        padding: "20px 0"
+        padding: "20px 0",
+        width: "100%"
       }}>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
           <Link to="/">
@@ -79,9 +96,8 @@ const Login = () => {
               backgroundColor: "#e8f5e9",
               borderRadius: "8px",
               marginBottom: "20px"
-            }}>
-              <h3>Đăng nhập thành công!</h3>
-              <p>Đang chuyển hướng về trang chủ...</p>
+            }}>              <h3>Đăng nhập thành công!</h3>
+              <p>Đang chuyển hướng đến trang dịch vụ...</p>
             </div>
           ) : (
             <>
@@ -159,14 +175,26 @@ const Login = () => {
                   >
                     Đăng nhập
                   </button>
-                  
-                  <div style={{ textAlign: "center" }}>
+                    <div style={{ textAlign: "center" }}>
                     <p>
                       Chưa có tài khoản?{" "}
-                      <Link to="/register" style={{ color: "#11998e", textDecoration: "none", fontWeight: "600" }}>
-                        Đăng ký ngay
-                      </Link>
                     </p>
+                    <button 
+                      onClick={() => window.location.href = "/register"}
+                      style={{
+                        background: "#38ef7d",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "10px 24px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        marginTop: "10px"
+                      }}
+                    >
+                      Đăng ký ngay
+                    </button>
                   </div>
                 </div>
               </form>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import accounts from "./data/accounts";
 
 const STATUS_COLOR = {
   "Bắt đầu kinh nguyệt": "#43a047",
@@ -83,9 +84,27 @@ const App = () => {
       alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
       return;
     }
-    alert("Đăng nhập thành công!");
-    setShowLogin(false);
-    setLoginData({ email: "", password: "" });
+    
+    // Kiểm tra thông tin đăng nhập
+    const user = accounts.find(
+      account => account.email === loginData.email && account.password === loginData.password
+    );
+    
+    if (user) {
+      alert("Đăng nhập thành công!");
+      // Lưu thông tin người dùng vào localStorage để giữ trạng thái đăng nhập
+      localStorage.setItem("currentUser", JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+      setShowLogin(false);
+      setLoginData({ email: "", password: "" });
+      window.location.href = "/services";
+    } else {
+      alert("Tài khoản hoặc mật khẩu không chính xác!");
+    }
   };
 
   const handleCalculate = (e) => {

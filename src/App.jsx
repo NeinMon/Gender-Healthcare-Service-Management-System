@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const STATUS_COLOR = {
   "Bắt đầu kinh nguyệt": "#43a047",
@@ -473,7 +474,7 @@ const App = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            gap: 12,
+            gap: 16,
             margin: "0 0 8px 0",
             padding: "0 40px"
           }}
@@ -485,11 +486,13 @@ const App = () => {
               fontSize: 16,
               textDecoration: "none",
               background: "rgba(255,255,255,0.4)",
-              padding: "8px 16px",
+              padding: "12px 32px",
               borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.6)",
               transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              minWidth: "140px",
+              textAlign: "center"
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(255,255,255,0.5)";
@@ -511,11 +514,13 @@ const App = () => {
               fontSize: 16,
               textDecoration: "none",
               background: "rgba(255,255,255,0.4)",
-              padding: "8px 16px",
+              padding: "12px 32px",
               borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.6)",
               transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              minWidth: "140px",
+              textAlign: "center"
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(255,255,255,0.5)";
@@ -537,11 +542,13 @@ const App = () => {
               fontSize: 16,
               textDecoration: "none",
               background: "rgba(255,255,255,0.4)",
-              padding: "8px 16px",
+              padding: "12px 32px",
               borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.6)",
               transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              minWidth: "140px",
+              textAlign: "center"
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(255,255,255,0.5)";
@@ -563,11 +570,13 @@ const App = () => {
               fontSize: 16,
               textDecoration: "none",
               background: "rgba(255,255,255,0.4)",
-              padding: "8px 16px",
+              padding: "12px 32px",
               borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.6)",
               transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              minWidth: "140px",
+              textAlign: "center"
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(255,255,255,0.5)";
@@ -589,11 +598,13 @@ const App = () => {
               fontSize: 16,
               textDecoration: "none",
               background: "rgba(255,255,255,0.4)",
-              padding: "8px 16px",
+              padding: "12px 32px",
               borderRadius: 8,
               border: "1px solid rgba(255,255,255,0.6)",
               transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              minWidth: "140px",
+              textAlign: "center"
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "rgba(255,255,255,0.5)";
@@ -1540,14 +1551,47 @@ const App = () => {
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
               <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💰</div>
-              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>
-              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Bảng giá xét nghiệm minh bạch, cập nhật liên tục</li>
                 <li>Gói dịch vụ phù hợp cho từng đối tượng (nam, nữ, cặp đôi,...)</li>
               </ul>
             </div>
           </div>
-        </section>        {/* Testimonials Section */}
+          
+          {/* Use Services Button */}
+          <div style={{ 
+            textAlign: "center", 
+            marginTop: "30px" 
+          }}>
+            <Link 
+              to="/login"
+              style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
+                color: "#fff",
+                textDecoration: "none",
+                padding: "16px 40px",
+                borderRadius: "12px",
+                fontWeight: "600",
+                fontSize: "18px",
+                boxShadow: "0 6px 20px rgba(8, 145, 178, 0.3)",
+                transition: "all 0.3s ease",
+                border: "none",
+                cursor: "pointer"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 8px 25px rgba(8, 145, 178, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 6px 20px rgba(8, 145, 178, 0.3)";
+              }}
+            >
+              🚀 Sử dụng dịch vụ ngay
+            </Link>
+          </div>
+        </section>{/* Testimonials Section */}
         <section id="testimonials" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('testimonials') ? 'visible' : ''}`} style={{
           background: "#f8fffe",
           borderRadius: 12,
@@ -2030,28 +2074,33 @@ const App = () => {
             gap: 20, 
             justifyContent: "center", 
             flexWrap: "wrap" 
-          }}>
-            <button style={{              background: "#fff",
-              color: "#0891b2",
-              border: "none",
-              borderRadius: 25,
-              padding: "15px 30px",
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: "pointer",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-              transition: "all 0.3s ease"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.3)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
-            }}>
+          }}>            <Link 
+              to="/login" 
+              style={{
+                background: "#fff",
+                color: "#0891b2",
+                border: "none",
+                borderRadius: 25,
+                padding: "15px 30px",
+                fontSize: 16,
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                transition: "all 0.3s ease",
+                textDecoration: "none",
+                display: "inline-block"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 20px rgba(0,0,0,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+              }}
+            >
               🩺 Đặt Lịch Tư Vấn
-            </button>
+            </Link>
             <button style={{
               background: "transparent",
               color: "#fff",

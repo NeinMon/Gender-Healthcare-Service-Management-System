@@ -20,14 +20,12 @@ const Login = () => {
     if (!loginData.email || !loginData.password) {
       setError("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
       return;
-    }
-
-    // Here you would call an API to validate login
+    }    // Here you would call an API to validate login
     setSuccess(true);
     
     // Redirect after successful login
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/services";
     }, 2000);
   };
 

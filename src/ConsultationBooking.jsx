@@ -38,15 +38,19 @@ const ConsultationBooking = () => {
     console.log("Booking data:", formData);
     // Đây là nơi bạn sẽ gửi dữ liệu đến API
     setIsSubmitted(true);
-  };
-  return (
-    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh", width: "100vw", margin: 0, padding: 0, overflow: "hidden" }}>
-      {/* Header */}
+  };  return (
+    <div style={{
+      backgroundColor: "#f0f9ff !important",
+      background: "#f0f9ff !important",
+      colorScheme: "light",
+      minHeight: "100vh",
+      width: "100vw",
+      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    }}>
       <header style={{
-        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
-        position: "relative",
-        width: "100%"
+        position: "relative"
       }}>
         <div style={{
           position: "absolute",
@@ -57,27 +61,27 @@ const ConsultationBooking = () => {
           zIndex: 2
         }}>
           <Link 
-            to="/" 
+            to="/services" 
             style={{
-              background: "#11998e",
-              color: "#fff",
+              background: "#fff",
+              color: "#0891b2",
               textDecoration: "none",
               padding: "8px 20px",
               borderRadius: 6,
-              border: "2px solid #fff",
-              fontWeight: 600,
-              cursor: "pointer"
+              fontWeight: 600
             }}
           >
-            Đăng xuất
+            Quay lại
           </Link>
         </div>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
-          />
+          <Link to="/">
+            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ height: 100, width: 100, objectFit: "contain" }}
+            />
+          </Link>
         </div>
         <h1
           style={{
@@ -89,274 +93,374 @@ const ConsultationBooking = () => {
             letterSpacing: 1
           }}
         >
-          Đặt lịch tư vấn
+          👩‍⚕️ Đặt lịch tư vấn
         </h1>
-      </header>      {/* Main Content */}
+      </header>
+
       <main style={{
-        padding: "40px",
-        minHeight: "calc(100vh - 180px)",
-        width: "100%",
-        maxWidth: "100%",
-        margin: "0",
+        padding: "40px 20px",
+        minHeight: "calc(100vh - 200px)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "#fff",
-        boxSizing: "border-box",
-        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-        overflow: "auto"
+        background: "#f0f9ff !important",
+        backgroundColor: "#f0f9ff !important",
+        colorScheme: "light"
       }}>
-        {/* Navigation links */}
-        <div style={{ marginBottom: "30px", width: "100%" }}>
-          <Link 
-            to="/services" 
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#11998e",
-              textDecoration: "none",
-              fontWeight: 500
-            }}
-          >
-            ← Quay lại trang dịch vụ
-          </Link>
-        </div>
-
-        {isSubmitted ? (
-          <div style={{            textAlign: "center", 
-            padding: "40px", 
-            backgroundColor: "#e8f5e9", 
-            borderRadius: "12px",
-            width: "100%",
-            maxWidth: "800px",
-            margin: "0 auto"
-          }}>
-            <div style={{ fontSize: "72px", marginBottom: "20px" }}>✅</div>
-            <h2 style={{ color: "#2e7d32", marginBottom: "20px" }}>Đặt lịch thành công!</h2>
-            <p style={{ fontSize: "16px", lineHeight: 1.6, marginBottom: "30px" }}>
-              Chúng tôi đã nhận được yêu cầu đặt lịch tư vấn của bạn và sẽ xác nhận lại qua điện thoại.
-              Xin cảm ơn đã sử dụng dịch vụ của chúng tôi.
-            </p>
-            <div>
-              <button 
-                onClick={() => setIsSubmitted(false)}
-                style={{
-                  background: "#4ecdc4",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "25px",
-                  cursor: "pointer",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  marginRight: "15px"
-                }}
-              >
-                Đặt lịch khác
-              </button>
-              <Link 
-                to="/services"
-                style={{
-                  background: "#11998e",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "25px",
-                  cursor: "pointer",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  textDecoration: "none",
-                  display: "inline-block"
-                }}
-              >
-                Về trang dịch vụ
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div style={{ textAlign: "center", marginBottom: "40px" }}>              <h2 style={{ fontSize: "32px", color: "#2c3e50", marginBottom: "15px" }}>
-                Đặt lịch tư vấn với chuyên gia
-              </h2><p style={{ fontSize: "18px", color: "#7f8c8d", maxWidth: "1000px", margin: "0 auto" }}>
-                Vui lòng điền đầy đủ thông tin dưới đây để đặt lịch tư vấn với bác sĩ chuyên khoa
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "1000px" }}>
-              <div style={{ marginBottom: "30px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "12px 15px",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    fontSize: "16px"
-                  }}
-                  placeholder="Nhập họ và tên của bạn"
-                />
-              </div>
-
-              <div style={{ marginBottom: "30px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                  Số điện thoại *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "12px 15px",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    fontSize: "16px"
-                  }}
-                  placeholder="Nhập số điện thoại liên hệ"
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "20px", marginBottom: "30px" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                    Ngày hẹn *
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px 15px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "16px"
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                    Giờ hẹn *
-                  </label>
-                  <select
-                    name="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px 15px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "16px",
-                      appearance: "none",
-                      backgroundImage: "url('data:image/svg+xml;utf8,<svg fill=\"black\" height=\"24\" viewBox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/><path d=\"M0 0h24v24H0z\" fill=\"none\"/></svg>')",
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 10px center"
-                    }}
-                  >
-                    <option value="">Chọn giờ hẹn</option>
-                    {availableTimes.map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "30px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                  Chọn bác sĩ tư vấn *
-                </label>
-                <div style={{ 
-                  display: "grid",                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", 
-                  gap: "20px" 
+        <div style={{
+          background: "rgba(255, 255, 255, 0.95)",
+          borderRadius: "24px",
+          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
+          padding: "40px",
+          width: "100%",
+          maxWidth: "800px",
+          margin: "0 auto",
+          border: "1px solid rgba(8, 145, 178, 0.1)"
+        }}>
+          {isSubmitted ? (
+            <div style={{
+              textAlign: "center",
+              color: "#43a047",
+              padding: "40px"
+            }}>
+              <div style={{
+                background: "rgba(232, 245, 233, 0.9)",
+                borderRadius: "16px",
+                padding: "30px",
+                border: "2px solid rgba(67, 160, 71, 0.2)",
+                boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)"
+              }}>
+                <div style={{ fontSize: "64px", marginBottom: "20px" }}>✅</div>
+                <h2 style={{ 
+                  fontSize: "28px", 
+                  fontWeight: "600", 
+                  marginBottom: "15px",
+                  color: "#43a047"
                 }}>
-                  {consultants.map(consultant => (
-                    <div 
-                      key={consultant.id}
-                      style={{
-                        border: formData.consultantId === consultant.id.toString() 
-                          ? "2px solid #4ecdc4" 
-                          : "1px solid #ddd",
-                        borderRadius: "10px",
-                        padding: "15px",
-                        cursor: "pointer",
-                        textAlign: "center",
-                        backgroundColor: formData.consultantId === consultant.id.toString() 
-                          ? "#e8f7f6" 
-                          : "#fff"
-                      }}
-                      onClick={() => setFormData({...formData, consultantId: consultant.id.toString()})}
-                    >
-                      <div style={{ fontSize: "36px", marginBottom: "10px" }}>
-                        {consultant.avatar}
-                      </div>
-                      <div style={{ fontWeight: "600", marginBottom: "5px" }}>
-                        {consultant.name}
-                      </div>
-                      <div style={{ fontSize: "14px", color: "#7f8c8d" }}>
-                        {consultant.specialty}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "30px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                  Triệu chứng / Lý do tư vấn
-                </label>
-                <textarea
-                  name="symptoms"
-                  value={formData.symptoms}
-                  onChange={handleChange}
+                  Đặt lịch thành công!
+                </h2>
+                <p style={{ 
+                  fontSize: "16px", 
+                  color: "#666", 
+                  marginBottom: "20px",
+                  lineHeight: "1.6"
+                }}>
+                  Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ để xác nhận lịch hẹn.
+                  <br />
+                  Vui lòng kiểm tra điện thoại và email thường xuyên.
+                </p>
+                <Link
+                  to="/services"
                   style={{
-                    width: "100%",
-                    padding: "12px 15px",
+                    display: "inline-block",
+                    background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
+                    color: "#fff",
+                    textDecoration: "none",
+                    padding: "12px 30px",
                     borderRadius: "8px",
-                    border: "1px solid #ddd",
-                    fontSize: "16px",
-                    minHeight: "120px",
-                    resize: "vertical"
-                  }}
-                  placeholder="Mô tả triệu chứng hoặc lý do bạn muốn được tư vấn"
-                />
-              </div>
-
-              <div style={{ marginTop: "20px", textAlign: "center" }}>
-                <button
-                  type="submit"
-                  style={{
-                    background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
-                    color: "white",
-                    border: "none",
-                    padding: "14px 40px",
-                    borderRadius: "30px",
-                    cursor: "pointer",
-                    fontSize: "18px",
                     fontWeight: "600",
-                    boxShadow: "0 4px 15px rgba(56, 239, 125, 0.3)"
+                    transition: "all 0.3s ease"
                   }}
                 >
-                  Xác nhận đặt lịch
-                </button>
+                  🏠 Về trang dịch vụ
+                </Link>
               </div>
-            </form>
-          </>
-        )}
+            </div>
+          ) : (
+            <>
+              <div style={{
+                textAlign: "center",
+                marginBottom: "30px"
+              }}>
+                <h2 style={{
+                  fontSize: "28px",
+                  fontWeight: "600",
+                  color: "#0891b2",
+                  marginBottom: "10px"
+                }}>
+                  📋 Thông tin đặt lịch tư vấn
+                </h2>
+                <p style={{
+                  fontSize: "16px",
+                  color: "#666",
+                  margin: 0
+                }}>
+                  Vui lòng điền đầy đủ thông tin để chúng tôi phục vụ bạn tốt nhất
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                  gap: "20px",
+                  marginBottom: "25px"
+                }}>
+                  <div>
+                    <label style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#0891b2",
+                      fontSize: "15px"
+                    }}>
+                      👤 Họ và tên:
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        borderRadius: "12px",
+                        border: "2px solid rgba(8, 145, 178, 0.1)",
+                        fontSize: "16px",
+                        background: "rgba(255, 255, 255, 0.8)",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#0891b2",
+                      fontSize: "15px"
+                    }}>
+                      📱 Số điện thoại:
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        borderRadius: "12px",
+                        border: "2px solid rgba(8, 145, 178, 0.1)",
+                        fontSize: "16px",
+                        background: "rgba(255, 255, 255, 0.8)",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#0891b2",
+                      fontSize: "15px"
+                    }}>
+                      📅 Ngày tư vấn:
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        borderRadius: "12px",
+                        border: "2px solid rgba(8, 145, 178, 0.1)",
+                        fontSize: "16px",
+                        background: "rgba(255, 255, 255, 0.8)",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontWeight: "600",
+                      color: "#0891b2",
+                      fontSize: "15px"
+                    }}>
+                      ⏰ Giờ tư vấn:
+                    </label>
+                    <select
+                      name="time"
+                      value={formData.time}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        borderRadius: "12px",
+                        border: "2px solid rgba(8, 145, 178, 0.1)",
+                        fontSize: "16px",
+                        background: "rgba(255, 255, 255, 0.8)",
+                        transition: "all 0.3s ease",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+                    >
+                      <option value="">-- Chọn giờ --</option>
+                      {availableTimes.map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "25px" }}>
+                  <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                    color: "#0891b2",
+                    fontSize: "15px"
+                  }}>
+                    👩‍⚕️ Chọn tư vấn viên:
+                  </label>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: "15px"
+                  }}>
+                    {consultants.map(consultant => (
+                      <div
+                        key={consultant.id}
+                        onClick={() => setFormData(prev => ({ ...prev, consultantId: consultant.id }))}
+                        style={{
+                          background: formData.consultantId === consultant.id 
+                            ? "rgba(8, 145, 178, 0.1)" 
+                            : "rgba(255, 255, 255, 0.8)",
+                          border: formData.consultantId === consultant.id 
+                            ? "2px solid #0891b2" 
+                            : "2px solid rgba(8, 145, 178, 0.1)",
+                          borderRadius: "12px",
+                          padding: "15px",
+                          textAlign: "center",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease"
+                        }}
+                      >
+                        <div style={{ fontSize: "24px", marginBottom: "8px" }}>{consultant.avatar}</div>
+                        <h4 style={{ 
+                          margin: "0 0 5px 0", 
+                          color: "#0891b2",
+                          fontSize: "14px",
+                          fontWeight: "600"
+                        }}>
+                          {consultant.name}
+                        </h4>
+                        <p style={{ 
+                          margin: 0, 
+                          color: "#666", 
+                          fontSize: "12px"
+                        }}>
+                          {consultant.specialty}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: "30px" }}>
+                  <label style={{
+                    display: "block",
+                    marginBottom: "8px",
+                    fontWeight: "600",
+                    color: "#0891b2",
+                    fontSize: "15px"
+                  }}>
+                    📝 Triệu chứng/Mô tả vấn đề:
+                  </label>
+                  <textarea
+                    name="symptoms"
+                    value={formData.symptoms}
+                    onChange={handleChange}
+                    placeholder="Mô tả chi tiết triệu chứng hoặc vấn đề bạn muốn tư vấn..."
+                    rows="4"
+                    style={{
+                      width: "100%",
+                      padding: "16px 20px",
+                      borderRadius: "12px",
+                      border: "2px solid rgba(8, 145, 178, 0.1)",
+                      fontSize: "16px",
+                      background: "rgba(255, 255, 255, 0.8)",
+                      transition: "all 0.3s ease",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      resize: "vertical",
+                      fontFamily: "inherit"
+                    }}
+                    onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                    onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+                  />
+                </div>
+
+                <div style={{ textAlign: "center" }}>
+                  <button
+                    type="submit"
+                    style={{
+                      background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "12px",
+                      padding: "16px 40px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      fontSize: "16px",
+                      transition: "all 0.3s ease",
+                      boxShadow: "0 4px 12px rgba(8, 145, 178, 0.3)"
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 6px 16px rgba(8, 145, 178, 0.4)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 4px 12px rgba(8, 145, 178, 0.3)";
+                    }}
+                  >
+                    📅 Đặt lịch tư vấn
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
       </main>
+
+      <footer style={{ 
+        background: "#e0f2fe !important", 
+        backgroundColor: "#e0f2fe !important",
+        colorScheme: "light",
+        color: "#0891b2", 
+        padding: "20px", 
+        textAlign: "center" 
+      }}>
+        &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
+      </footer>
     </div>
   );
 };

@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  background-color: #f0f9ff !important;
+  color-scheme: light !important;
 }
 
 .logo {
@@ -39,4 +41,47 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Dark mode override - Force light mode throughout the application */
+* {
+  color-scheme: light !important;
+}
+
+html {
+  background-color: #f0f9ff !important;
+  color-scheme: light !important;
+}
+
+body {
+  background-color: #f0f9ff !important;
+  color-scheme: light !important;
+}
+
+/* Override any dark mode preferences */
+@media (prefers-color-scheme: dark) {
+  * {
+    color-scheme: light !important;
+    background-color: inherit !important;
+  }
+  
+  html {
+    background-color: #f0f9ff !important;
+    color-scheme: light !important;
+  }
+  
+  body {
+    background-color: #f0f9ff !important;
+    color-scheme: light !important;
+  }
+  
+  #root {
+    background-color: #f0f9ff !important;
+    color-scheme: light !important;
+  }
+}
+
+/* Ensure input elements are not affected by dark mode */
+input, textarea, select, button {
+  color-scheme: light !important;
 }

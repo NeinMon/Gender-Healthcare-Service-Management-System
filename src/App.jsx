@@ -2,9 +2,8 @@ import React, { useState } from "react";
 
 const STATUS_COLOR = {
   "Bắt đầu kinh nguyệt": "#43a047",
-  "Kết thúc kinh nguyệt": "#1de9b6",
-  "Rụng trứng": "#fbc02d",
-  "Dự kiến kinh nguyệt tiếp theo": "#1976d2"
+  "Kết thúc kinh nguyệt": "#1de9b6",  "Rụng trứng": "#fbc02d",
+  "Dự kiến kinh nguyệt tiếp theo": "#0891b2"
 };
 
 const STATUS_ICON = {
@@ -206,10 +205,16 @@ const App = () => {
       ]);
       setIsLoading(false);
     }, 1000);
-  };
-
-  return (
-    <div>
+  };  return (
+    <div style={{
+      backgroundColor: "#f0f9ff !important",
+      background: "#f0f9ff !important",
+      minHeight: "100vh",
+      colorScheme: "light",
+      width: "100vw",
+      margin: 0,
+      padding: 0
+    }}>
       <style>
         {`
           @keyframes spin {
@@ -403,9 +408,8 @@ const App = () => {
             animation: shimmer 1.5s infinite;
           }
         `}
-      </style>
-      <header style={{
-        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+      </style>      <header style={{
+        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
         position: "relative"
       }}>
@@ -420,7 +424,7 @@ const App = () => {
           <button
             style={{
               background: "#fff",
-              color: "#11998e",
+              color: "#0891b2",
               border: "none",
               borderRadius: 6,
               padding: "8px 20px",
@@ -433,7 +437,7 @@ const App = () => {
           </button>
           <button
             style={{
-              background: "#11998e",
+              background: "#0891b2",
               color: "#fff",
               border: "2px solid #fff",
               borderRadius: 6,
@@ -630,7 +634,7 @@ const App = () => {
               gap: 16
             }}
           >
-            <h2 style={{ color: "#11998e", margin: 0, textAlign: "center" }}>Đăng ký tài khoản</h2>
+            <h2 style={{ color: "#0891b2", margin: 0, textAlign: "center" }}>Đăng ký tài khoản</h2>
             <label>
               Họ và tên:
               <input
@@ -639,7 +643,7 @@ const App = () => {
                 value={registerData.name}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -650,7 +654,7 @@ const App = () => {
                 value={registerData.username}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -660,7 +664,7 @@ const App = () => {
                 value={registerData.gender}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               >
                 <option value="">-- Chọn giới tính --</option>
                 <option value="Nam">Nam</option>
@@ -676,7 +680,7 @@ const App = () => {
                 value={registerData.dob}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -687,7 +691,7 @@ const App = () => {
                 value={registerData.email}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -698,7 +702,7 @@ const App = () => {
                 value={registerData.phone}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -709,7 +713,7 @@ const App = () => {
                 value={registerData.address}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -720,7 +724,7 @@ const App = () => {
                 value={registerData.password}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -731,7 +735,7 @@ const App = () => {
                 value={registerData.confirmPassword}
                 onChange={handleRegisterChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -740,7 +744,7 @@ const App = () => {
                 onClick={() => setShowRegister(false)}
                 style={{
                   background: "#b2dfdb",
-                  color: "#11998e",
+                  color: "#0891b2",
                   border: "none",
                   borderRadius: 6,
                   padding: "8px 20px",
@@ -753,7 +757,7 @@ const App = () => {
               <button
                 type="submit"
                 style={{
-                  background: "#11998e",
+                  background: "#0891b2",
                   color: "#fff",
                   border: "none",
                   borderRadius: 6,
@@ -792,7 +796,7 @@ const App = () => {
               gap: 16
             }}
           >
-            <h2 style={{ color: "#11998e", margin: 0, textAlign: "center" }}>Đăng nhập</h2>
+            <h2 style={{ color: "#0891b2", margin: 0, textAlign: "center" }}>Đăng nhập</h2>
             <label>
               Tài khoản (Email):
               <input
@@ -801,7 +805,7 @@ const App = () => {
                 value={loginData.email}
                 onChange={handleLoginChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <label>
@@ -812,7 +816,7 @@ const App = () => {
                 value={loginData.password}
                 onChange={handleLoginChange}
                 required
-                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #11998e", marginTop: 4 }}
+                style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
             </label>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -821,7 +825,7 @@ const App = () => {
                 onClick={() => setShowLogin(false)}
                 style={{
                   background: "#b2dfdb",
-                  color: "#11998e",
+                  color: "#0891b2",
                   border: "none",
                   borderRadius: 6,
                   padding: "8px 20px",
@@ -834,7 +838,7 @@ const App = () => {
               <button
                 type="submit"
                 style={{
-                  background: "#11998e",
+                  background: "#0891b2",
                   color: "#fff",
                   border: "none",
                   borderRadius: 6,
@@ -912,7 +916,7 @@ const App = () => {
                   style={{
                     minWidth: "100%",
                     height: 300,
-                    background: `linear-gradient(45deg, #11998e, #38ef7d)`,
+                    background: `linear-gradient(45deg, #0891b2, #22d3ee)`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -972,7 +976,7 @@ const App = () => {
           
           <h1 className="text-glow" style={{
             fontSize: 42,
-            color: "#11998e",
+            color: "#0891b2",
             marginBottom: 20,
             fontWeight: 700,
             textShadow: "0 2px 4px rgba(0,0,0,0.1)"
@@ -1008,7 +1012,7 @@ const App = () => {
             }}>
               <div style={{ fontSize: 32 }}>🏥</div>
               <div>
-                <div style={{ fontWeight: 600, color: "#11998e" }}>Chuyên nghiệp</div>
+                <div style={{ fontWeight: 600, color: "#0891b2" }}>Chuyên nghiệp</div>
                 <div style={{ fontSize: 14, color: "#666" }}>Đội ngũ y bác sĩ</div>
               </div>
             </div>
@@ -1024,7 +1028,7 @@ const App = () => {
             }}>
               <div style={{ fontSize: 32 }}>🔒</div>
               <div>
-                <div style={{ fontWeight: 600, color: "#11998e" }}>Bảo mật</div>
+                <div style={{ fontWeight: 600, color: "#0891b2" }}>Bảo mật</div>
                 <div style={{ fontSize: 14, color: "#666" }}>Thông tin an toàn</div>
               </div>
             </div>
@@ -1040,7 +1044,7 @@ const App = () => {
             }}>
               <div style={{ fontSize: 32 }}>💬</div>
               <div>
-                <div style={{ fontWeight: 600, color: "#11998e" }}>Tư vấn 24/7</div>
+                <div style={{ fontWeight: 600, color: "#0891b2" }}>Tư vấn 24/7</div>
                 <div style={{ fontSize: 14, color: "#666" }}>Hỗ trợ liên tục</div>
               </div>
             </div>
@@ -1054,7 +1058,7 @@ const App = () => {
             <button
               onClick={() => setShowCalculator(v => !v)}
               style={{
-                background: "#11998e",
+                background: "#0891b2",
                 color: "#fff",
                 border: "none",
                 borderRadius: 6,
@@ -1090,7 +1094,7 @@ const App = () => {
                     required
                     style={{
                       marginLeft: 4,
-                      border: "1px solid #11998e",
+                      border: "1px solid #0891b2",
                       borderRadius: 6,
                       padding: "4px 8px"
                     }}
@@ -1108,7 +1112,7 @@ const App = () => {
                     style={{
                       width: 50,
                       marginLeft: 4,
-                      border: "1px solid #11998e",
+                      border: "1px solid #0891b2",
                       borderRadius: 6,
                       padding: "4px 8px"
                     }}
@@ -1126,13 +1130,13 @@ const App = () => {
                     style={{
                       width: 40,
                       marginLeft: 4,
-                      border: "1px solid #11998e",
+                      border: "1px solid #0891b2",
                       borderRadius: 6,
                       padding: "4px 8px"
                     }}
                   />
                 </label>                <button type="submit" disabled={isLoading} style={{
-                  background: isLoading ? "#81c784" : "#11998e",
+                  background: isLoading ? "#81c784" : "#0891b2",
                   color: "#fff",
                   border: "none",
                   borderRadius: 6,
@@ -1178,20 +1182,20 @@ const App = () => {
                         <th style={{
                           padding: 12,
                           background: "#b2dfdb",
-                          color: "#11998e",
+                          color: "#0891b2",
                           border: "none",
                           borderTopLeftRadius: 12
                         }}>Ngày</th>
                         <th style={{
                           padding: 12,
                           background: "#b2dfdb",
-                          color: "#11998e",
+                          color: "#0891b2",
                           border: "none"
                         }}>Trạng thái</th>
                         <th style={{
                           padding: 12,
                           background: "#b2dfdb",
-                          color: "#11998e",
+                          color: "#0891b2",
                           border: "none",
                           borderTopRightRadius: 12
                         }}>Ghi chú</th>
@@ -1211,7 +1215,7 @@ const App = () => {
                             padding: 12,
                             textAlign: "center",
                             borderBottom: "1px solid #b2dfdb",
-                            color: STATUS_COLOR[row.status] || "#11998e",
+                            color: STATUS_COLOR[row.status] || "#0891b2",
                             fontWeight: 600
                           }}>
                             <span style={{ fontSize: 20, marginRight: 6 }}>{STATUS_ICON[row.status]}</span>
@@ -1231,13 +1235,12 @@ const App = () => {
             </div>
           )}
         </section>        <section id="gioi-thieu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('gioi-thieu') ? 'visible' : ''}`} style={{
-          background: "#e6fff4",
+          background: "#e0f2fe",
           borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
+          boxShadow: "0 2px 8px rgba(8,145,178,0.07)",
           padding: 24,
-          margin: "32px 0"
-        }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          margin: "32px 0"        }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
             <span role="img" aria-label="health">🏥</span> Giới Thiệu Dịch Vụ
           </h2>
           <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
@@ -1274,7 +1277,7 @@ const App = () => {
                   minWidth: 100
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>🩺</div>
-                  <div style={{ fontSize: 12, color: "#11998e", fontWeight: 600 }}>Khám tổng quát</div>
+                  <div style={{ fontSize: 12, color: "#0891b2", fontWeight: 600 }}>Khám tổng quát</div>
                 </div>
                 <div style={{
                   background: "#fff",
@@ -1285,7 +1288,7 @@ const App = () => {
                   minWidth: 100
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>🧪</div>
-                  <div style={{ fontSize: 12, color: "#11998e", fontWeight: 600 }}>Xét nghiệm</div>
+                  <div style={{ fontSize: 12, color: "#0891b2", fontWeight: 600 }}>Xét nghiệm</div>
                 </div>
               </div>
             </div>
@@ -1293,7 +1296,7 @@ const App = () => {
               <p style={{ fontSize: 17, marginBottom: 16 }}>
                 Chúng tôi cung cấp dịch vụ chăm sóc sức khỏe giới tính toàn diện, chuyên nghiệp và bảo mật cho mọi đối tượng.
               </p>
-              <ul style={{ fontSize: 16, color: "#11998e", margin: 0, paddingLeft: 24 }}>
+              <ul style={{ fontSize: 16, color: "#0891b2", margin: 0, paddingLeft: 24 }}>
                 <li>🔸 Theo dõi chu kỳ kinh nguyệt thông minh</li>
                 <li>🔸 Xét nghiệm STIs chính xác và nhanh chóng</li>
                 <li>🔸 Tư vấn sức khỏe sinh sản chuyên sâu</li>
@@ -1304,7 +1307,7 @@ const App = () => {
           </div>
         </section>        {/* Statistics Section */}
         <section id="statistics" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('statistics') ? 'visible' : ''}`} style={{
-          background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+          background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
           borderRadius: 12,
           padding: 40,
           margin: "32px 0",
@@ -1377,7 +1380,7 @@ const App = () => {
                   <div
                     className="progress-bar"
                     style={{
-                      background: "linear-gradient(90deg, #fff, #38ef7d)",
+                      background: "linear-gradient(90deg, #fff, #22d3ee)",
                       height: "100%",
                       borderRadius: 10,
                       "--target-width": `${(animatedStats.customers / 10000) * 100}%`
@@ -1405,7 +1408,7 @@ const App = () => {
                   <div
                     className="progress-bar"
                     style={{
-                      background: "linear-gradient(90deg, #fff, #1976d2)",
+                      background: "linear-gradient(90deg, #fff, #0891b2)",
                       height: "100%",
                       borderRadius: 10,
                       "--target-width": `${(animatedStats.tests / 50000) * 100}%`
@@ -1472,13 +1475,13 @@ const App = () => {
             </div>
           </div>
         </section>        <section id="dich-vu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
-          background: "#e6fff4",
+          background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
           padding: 24,
           margin: "32px 0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
             <span role="img" aria-label="stethoscope">🩺</span> Dịch Vụ Cung Cấp
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 20 }}>
@@ -1490,8 +1493,8 @@ const App = () => {
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
               <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>📅</div>
-              <h3 style={{ color: "#11998e", textAlign: "center", marginBottom: 12 }}>Theo dõi chu kỳ sinh sản</h3>
-              <ul style={{ fontSize: 14, color: "#11998e", margin: 0, paddingLeft: 20 }}>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Theo dõi chu kỳ sinh sản</h3>
+              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Khai báo chu kỳ kinh nguyệt dễ dàng</li>
                 <li>Nhắc nhở thời điểm rụng trứng, khả năng mang thai cao/thấp</li>
                 <li>Nhắc uống thuốc tránh thai đúng giờ</li>
@@ -1506,8 +1509,8 @@ const App = () => {
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
               <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💬</div>
-              <h3 style={{ color: "#11998e", textAlign: "center", marginBottom: 12 }}>Tư vấn giới tính &amp; sức khỏe sinh sản</h3>
-              <ul style={{ fontSize: 14, color: "#11998e", margin: 0, paddingLeft: 20 }}>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Tư vấn giới tính &amp; sức khỏe sinh sản</h3>
+              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Đặt lịch tư vấn trực tuyến với chuyên gia</li>
                 <li>Được tư vấn riêng tư, bảo mật</li>
                 <li>Gửi câu hỏi, thắc mắc về giới tính, tâm sinh lý, mối quan hệ,...</li>
@@ -1521,8 +1524,8 @@ const App = () => {
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
               <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>🧪</div>
-              <h3 style={{ color: "#11998e", textAlign: "center", marginBottom: 12 }}>Xét nghiệm các bệnh STIs</h3>
-              <ul style={{ fontSize: 14, color: "#11998e", margin: 0, paddingLeft: 20 }}>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Xét nghiệm các bệnh STIs</h3>
+              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Danh sách dịch vụ xét nghiệm đa dạng: HIV, HPV, Lậu, Giang mai, Chlamydia,...</li>
                 <li>Đặt lịch và theo dõi quá trình xét nghiệm</li>
                 <li>Trả kết quả online an toàn và nhanh chóng</li>
@@ -1537,8 +1540,8 @@ const App = () => {
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
               <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💰</div>
-              <h3 style={{ color: "#11998e", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>
-              <ul style={{ fontSize: 14, color: "#11998e", margin: 0, paddingLeft: 20 }}>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>
+              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Bảng giá xét nghiệm minh bạch, cập nhật liên tục</li>
                 <li>Gói dịch vụ phù hợp cho từng đối tượng (nam, nữ, cặp đôi,...)</li>
               </ul>
@@ -1576,7 +1579,7 @@ const App = () => {
             </div>
           )}
           <h2 style={{ 
-            color: "#11998e", 
+            color: "#0891b2", 
             marginTop: 0, 
             display: "flex", 
             alignItems: "center", 
@@ -1603,7 +1606,7 @@ const App = () => {
                 position: "absolute",
                 top: -10,
                 left: 20,
-                background: "#11998e",
+                background: "#0891b2",
                 color: "#fff",
                 borderRadius: "50%",
                 width: 40,
@@ -1627,7 +1630,7 @@ const App = () => {
                   <div style={{
                     width: 40,
                     height: 40,
-                    background: "linear-gradient(135deg, #11998e, #38ef7d)",
+                    background: "linear-gradient(135deg, #0891b2, #22d3ee)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -1636,7 +1639,7 @@ const App = () => {
                     fontWeight: 600
                   }}>L</div>
                   <div>
-                    <div style={{ fontWeight: 600, color: "#11998e" }}>Linh Nguyen</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Linh Nguyen</div>
                     <div style={{ fontSize: 14, color: "#666" }}>Khách hàng thân thiết</div>
                   </div>
                 </div>
@@ -1655,7 +1658,7 @@ const App = () => {
                 position: "absolute",
                 top: -10,
                 left: 20,
-                background: "#38ef7d",
+                background: "#22d3ee",
                 color: "#fff",
                 borderRadius: "50%",
                 width: 40,
@@ -1679,7 +1682,7 @@ const App = () => {
                   <div style={{
                     width: 40,
                     height: 40,
-                    background: "linear-gradient(135deg, #38ef7d, #11998e)",
+                    background: "linear-gradient(135deg, #22d3ee, #0891b2)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -1688,7 +1691,7 @@ const App = () => {
                     fontWeight: 600
                   }}>M</div>
                   <div>
-                    <div style={{ fontWeight: 600, color: "#11998e" }}>Mai Tran</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Mai Tran</div>
                     <div style={{ fontSize: 14, color: "#666" }}>Đã sử dụng 2 năm</div>
                   </div>
                 </div>
@@ -1731,7 +1734,7 @@ const App = () => {
                   <div style={{
                     width: 40,
                     height: 40,
-                    background: "linear-gradient(135deg, #fbc02d, #11998e)",
+                    background: "linear-gradient(135deg, #fbc02d, #0891b2)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -1740,7 +1743,7 @@ const App = () => {
                     fontWeight: 600
                   }}>H</div>
                   <div>
-                    <div style={{ fontWeight: 600, color: "#11998e" }}>Huy Le</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Huy Le</div>
                     <div style={{ fontSize: 14, color: "#666" }}>Tư vấn trực tuyến</div>
                   </div>
                 </div>
@@ -1748,13 +1751,13 @@ const App = () => {
             </div>
           </div>
         </section>        <section id="nhan-vien" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('nhan-vien') ? 'visible' : ''}`} style={{
-          background: "#e6fff4",
+          background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
           padding: 24,
           margin: "32px 0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
             <span role="img" aria-label="doctor">👨‍⚕️</span> Đội Ngũ Nhân Viên Y Tế
           </h2>
           <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
@@ -1773,7 +1776,7 @@ const App = () => {
                   objectFit: "cover",
                   borderRadius: "50%",
                   boxShadow: "0 4px 12px rgba(17,153,142,0.15)",
-                  border: "4px solid #11998e"
+                  border: "4px solid #0891b2"
                 }}
               />
             </div>
@@ -1781,7 +1784,7 @@ const App = () => {
               <p style={{ fontSize: 17, marginBottom: 16 }}>
                 Đội ngũ nhân viên y tế chuyên nghiệp với kinh nghiệm nhiều năm trong lĩnh vực chăm sóc sức khỏe sinh sản và giới tính:
               </p>
-              <ul style={{ fontSize: 16, color: "#11998e", margin: 0, paddingLeft: 24 }}>
+              <ul style={{ fontSize: 16, color: "#0891b2", margin: 0, paddingLeft: 24 }}>
                 <li>🔸 Bác sĩ chuyên khoa Sản phụ khoa với hơn 10 năm kinh nghiệm</li>
                 <li>🔸 Bác sĩ chuyên khoa Nam học và Andrologia</li>
                 <li>🔸 Điều dưỡng viên được đào tạo chuyên sâu về chăm sóc sinh sản</li>
@@ -1791,13 +1794,13 @@ const App = () => {
             </div>
           </div>
         </section>        <section id="tu-van-vien" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('tu-van-vien') ? 'visible' : ''}`} style={{
-          background: "#e6fff4",
+          background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
           padding: 24,
           margin: "32px 0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
             <span role="img" aria-label="counselor">🧑‍💼</span> Tư Vấn Viên Chuyên Nghiệp
           </h2>
           <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap-reverse" }}>
@@ -1813,7 +1816,7 @@ const App = () => {
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
                 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🧠</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Tư vấn Tâm lý</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Tư vấn Tâm lý</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Chuyên về sức khỏe tình dục và tâm lý</p>
                 </div>
                 <div style={{
@@ -1823,7 +1826,7 @@ const App = () => {
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
                 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🎓</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Giáo dục Giới tính</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Giáo dục Giới tính</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Chứng chỉ quốc tế về giáo dục giới tính</p>
                 </div>
                 <div style={{
@@ -1833,7 +1836,7 @@ const App = () => {
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
                 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>❤️</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Mối quan hệ</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Mối quan hệ</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Hỗ trợ các vấn đề về mối quan hệ</p>
                 </div>
                 <div style={{
@@ -1843,7 +1846,7 @@ const App = () => {
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
                 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>👶</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Kế hoạch hóa gia đình</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Kế hoạch hóa gia đình</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Tư vấn chuyên nghiệp về kế hoạch sinh đẻ</p>
                 </div>
               </div>
@@ -1858,7 +1861,7 @@ const App = () => {
               <div style={{
                 width: 180,
                 height: 180,
-                background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
@@ -1874,7 +1877,7 @@ const App = () => {
                 boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
                 textAlign: "center"
               }}>
-                <p style={{ fontSize: 14, color: "#11998e", margin: 0, fontWeight: 600 }}>
+                <p style={{ fontSize: 14, color: "#0891b2", margin: 0, fontWeight: 600 }}>
                   🔒 Bảo mật tuyệt đối<br/>
                   💻 Tư vấn online & offline
                 </p>
@@ -1882,13 +1885,13 @@ const App = () => {
             </div>
           </div>
         </section>        <section id="blog" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('blog') ? 'visible' : ''}`} style={{
-          background: "#e6fff4",
+          background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
           padding: 24,
           margin: "32px 0"
         }}>
-          <h2 style={{ color: "#11998e", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
             <span role="img" aria-label="book">📚</span> Chuyên mục Blog: Kiến Thức Sức Khỏe Giới Tính
           </h2>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
@@ -1902,10 +1905,10 @@ const App = () => {
                   borderRadius: 8,
                   padding: 16,
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #11998e"
+                  borderLeft: "4px solid #0891b2"
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>🛡️</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Giáo dục giới tính an toàn</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Giáo dục giới tính an toàn</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Cho mọi lứa tuổi</p>
                 </div>
                 <div style={{
@@ -1913,10 +1916,10 @@ const App = () => {
                   borderRadius: 8,
                   padding: 16,
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #38ef7d"
+                  borderLeft: "4px solid #22d3ee"
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>⚕️</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Sức khỏe sinh sản</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Sức khỏe sinh sản</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Điều cần biết cho nữ giới & nam giới</p>
                 </div>
                 <div style={{
@@ -1927,7 +1930,7 @@ const App = () => {
                   borderLeft: "4px solid #fbc02d"
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>🦠</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Phòng tránh STIs</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Phòng tránh STIs</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Cách phòng tránh và nhận biết bệnh lây truyền</p>
                 </div>
                 <div style={{
@@ -1935,10 +1938,10 @@ const App = () => {
                   borderRadius: 8,
                   padding: 16,
                   boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #1976d2"
+                  borderLeft: "4px solid #0891b2"
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>📅</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Chu kỳ kinh nguyệt</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Chu kỳ kinh nguyệt</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Hiểu rõ chu kỳ và dấu hiệu rụng trứng</p>
                 </div>
                 <div style={{
@@ -1949,7 +1952,7 @@ const App = () => {
                   borderLeft: "4px solid #e91e63"
                 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>💝</div>
-                  <h4 style={{ color: "#11998e", margin: "0 0 8px 0" }}>Tư vấn tâm lý</h4>
+                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Tư vấn tâm lý</h4>
                   <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Tình dục học, quan hệ lành mạnh</p>
                 </div>
               </div>
@@ -1963,13 +1966,12 @@ const App = () => {
             }}>
               <div style={{
                 width: 150,
-                height: 150,
-                background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+                height: 150,                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
                 borderRadius: 12,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 6px 20px rgba(25,118,210,0.3)"
+                boxShadow: "0 6px 20px rgba(8,145,178,0.3)"
               }}>
                 <span style={{ fontSize: 56, color: "#fff" }}>📖</span>
               </div>
@@ -1980,7 +1982,7 @@ const App = () => {
                 boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
                 textAlign: "center"
               }}>
-                <p style={{ fontSize: 14, color: "#11998e", margin: 0, fontWeight: 600 }}>
+                <p style={{ fontSize: 14, color: "#0891b2", margin: 0, fontWeight: 600 }}>
                   📝 Bài viết khoa học<br/>
                   🔄 Cập nhật liên tục
                 </p>
@@ -1989,9 +1991,8 @@ const App = () => {
           </div>
         </section>      </main>
 
-      {/* Call to Action Section */}
-      <section style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      {/* Call to Action Section */}      <section style={{
+        background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
         padding: "50px 20px",
         textAlign: "center",
         color: "#fff",
@@ -2030,9 +2031,8 @@ const App = () => {
             justifyContent: "center", 
             flexWrap: "wrap" 
           }}>
-            <button style={{
-              background: "#fff",
-              color: "#667eea",
+            <button style={{              background: "#fff",
+              color: "#0891b2",
               border: "none",
               borderRadius: 25,
               padding: "15px 30px",
@@ -2065,7 +2065,7 @@ const App = () => {
             }}
             onMouseEnter={(e) => {
               e.target.style.background = "#fff";
-              e.target.style.color = "#667eea";
+              e.target.style.color = "#0891b2";
             }}
             onMouseLeave={(e) => {
               e.target.style.background = "transparent";
@@ -2112,7 +2112,7 @@ const App = () => {
           💬
         </div>
         <div style={{
-          background: "#11998e",
+          background: "#0891b2",
           color: "#fff",
           borderRadius: "50%",
           width: 60,
@@ -2161,7 +2161,14 @@ const App = () => {
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           ⬆️
         </div>
-      </div>      <footer style={{ background: "#e6fff4", color: "#11998e", padding: "20px", textAlign: "center" }}>
+      </div>      <footer style={{ 
+        background: "#e0f2fe !important", 
+        backgroundColor: "#e0f2fe !important",
+        colorScheme: "light",
+        color: "#0891b2", 
+        padding: "20px", 
+        textAlign: "center" 
+      }}>
         &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
       </footer>
     </div>

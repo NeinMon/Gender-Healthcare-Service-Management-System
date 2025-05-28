@@ -36,14 +36,21 @@ const Services = () => {
       path: "/ask-question"
     }
   ];
-
-  return (    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh" }}>
-      {/* Header */}
+  return (
+    <div style={{ 
+      backgroundColor: "#f0f9ff !important", 
+      background: "#f0f9ff !important",
+      colorScheme: "light",
+      minHeight: "100vh",
+      width: "100vw",
+      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    }}>
       <header style={{
-        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
         position: "relative"
-      }}>        <div style={{
+      }}>
+        <div style={{
           position: "absolute",
           top: 20,
           right: 25,
@@ -54,7 +61,7 @@ const Services = () => {
           <Link 
             to="/" 
             style={{
-              background: "#11998e",
+              background: "#0891b2",
               color: "#fff",
               textDecoration: "none",
               padding: "8px 20px",
@@ -82,188 +89,176 @@ const Services = () => {
             textAlign: "center",
             fontWeight: 700,
             letterSpacing: 1
-          }}        >
+          }}
+        >
           Dịch vụ Chăm sóc Sức khỏe Phụ nữ
         </h1>
-      </header>      {/* Main Content */}
+      </header>
+
       <main style={{
-        padding: "40px",
-        minHeight: "100vh",
-        width: "100vw",
+        padding: "40px 20px",
+        minHeight: "calc(100vh - 200px)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-start",
         alignItems: "center",
-        background: "#fff",
-        boxSizing: "border-box"
-      }}>        <div style={{
-          textAlign: "center",
-          marginBottom: "40px",
-          width: "100%"
-        }}>
-          <h2 style={{
-            fontSize: "32px",
-            color: "#2c3e50",
-            marginBottom: "10px",
-            fontWeight: "600"
-          }}>
-            Chào mừng bạn đến với hệ thống chăm sóc sức khỏe
-          </h2>          <p style={{
-            fontSize: "18px",
-            color: "#7f8c8d",
-            width: "100%",
-            margin: "0 auto"
-          }}>
-            Chọn một trong các dịch vụ dưới đây để bắt đầu chăm sóc sức khỏe của bạn
-          </p>
-        </div>        {/* Feature Grid */}
+        background: "#f0f9ff !important",
+        backgroundColor: "#f0f9ff !important",
+        colorScheme: "light"
+      }}>
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "40px",
-          marginTop: "40px",
+          maxWidth: "1200px",
           width: "100%",
-          maxWidth: "1200px"
+          margin: "0 auto"
         }}>
-          {features.map((feature) => (
-            <Link
-              key={feature.id}
-              to={feature.path}
-              style={{
-                textDecoration: "none",
-                color: "inherit"
-              }}
-            >
-              <div
+          <div style={{
+            textAlign: "center",
+            marginBottom: "40px"
+          }}>
+            <h2 style={{
+              fontSize: "32px",
+              fontWeight: "700",
+              color: "#0891b2",
+              marginBottom: "16px"
+            }}>
+              🌟 Dịch vụ của chúng tôi
+            </h2>
+            <p style={{
+              fontSize: "18px",
+              color: "#666",
+              maxWidth: "600px",
+              margin: "0 auto"
+            }}>
+              Chúng tôi cung cấp các dịch vụ chăm sóc sức khỏe toàn diện cho phụ nữ
+            </p>
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "30px",
+            marginBottom: "40px"
+          }}>
+            {features.map((feature) => (
+              <Link
+                key={feature.id}
+                to={feature.path}
                 style={{
-                  background: "#fff",
-                  borderRadius: "16px",
-                  padding: "30px",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                  transition: "all 0.3s ease",
-                  cursor: "pointer",
-                  border: "1px solid #e9ecef",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center"
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = "translateY(-8px)";
-                  e.target.style.boxShadow = "0 16px 48px rgba(0,0,0,0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "0 8px 32px rgba(0,0,0,0.1)";
+                  textDecoration: "none",
+                  color: "inherit"
                 }}
               >
                 <div
                   style={{
-                    fontSize: "48px",
-                    marginBottom: "20px",
-                    padding: "15px",
-                    borderRadius: "50%",
-                    backgroundColor: feature.color + "20",
-                    border: `3px solid ${feature.color}`,
+                    background: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "20px",
+                    padding: "30px",
+                    textAlign: "center",
+                    boxShadow: "0 10px 30px rgba(8, 145, 178, 0.1)",
+                    border: "1px solid rgba(8, 145, 178, 0.1)",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    height: "200px",
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: "column",
                     justifyContent: "center",
-                    width: "80px",
-                    height: "80px"
+                    alignItems: "center"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-10px)";
+                    e.currentTarget.style.boxShadow = "0 20px 40px rgba(8, 145, 178, 0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 10px 30px rgba(8, 145, 178, 0.1)";
                   }}
                 >
-                  {feature.icon}
-                </div>
-                <h3
-                  style={{
+                  <div style={{
+                    fontSize: "48px",
+                    marginBottom: "15px"
+                  }}>
+                    {feature.icon}
+                  </div>
+                  <h3 style={{
                     fontSize: "20px",
                     fontWeight: "600",
-                    color: "#2c3e50",
-                    marginBottom: "12px",
-                    lineHeight: "1.3"
-                  }}
-                >
-                  {feature.title}
-                </h3>
-                <p
-                  style={{
+                    color: "#0891b2",
+                    marginBottom: "10px",
+                    margin: 0
+                  }}>
+                    {feature.title}
+                  </h3>
+                  <p style={{
                     fontSize: "14px",
-                    color: "#7f8c8d",
+                    color: "#666",
                     lineHeight: "1.5",
-                    margin: 0,
-                    flexGrow: 1
-                  }}
-                >
-                  {feature.description}
-                </p>
-                <div
-                  style={{
-                    marginTop: "20px",
-                    padding: "10px 20px",
-                    backgroundColor: feature.color,
-                    color: "#fff",
-                    borderRadius: "25px",
-                    fontSize: "14px",
-                    fontWeight: "500"
-                  }}
-                >
-                  Truy cập ngay
+                    margin: "10px 0 0 0"
+                  }}>
+                    {feature.description}
+                  </p>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>        {/* Additional Info Section */}
-        <div style={{
-          marginTop: "60px",
-          padding: "30px",
-          backgroundColor: "#f8fffc",
-          borderRadius: "16px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          textAlign: "center",
-          width: "100%",
-          maxWidth: "1200px"
-        }}>
-          <h3 style={{
-            fontSize: "24px",
-            color: "#2c3e50",
-            marginBottom: "15px"
-          }}>
-            Hỗ trợ 24/7
-          </h3>
-          <p style={{
-            fontSize: "16px",
-            color: "#7f8c8d",
-            marginBottom: "20px"
-          }}>
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn trong việc chăm sóc sức khỏe. 
-            Liên hệ với chúng tôi bất cứ khi nào bạn cần.
-          </p>
+              </Link>
+            ))}
+          </div>
+
           <div style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "20px",
-            flexWrap: "wrap"
+            textAlign: "center",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "20px",
+            padding: "40px",
+            boxShadow: "0 10px 30px rgba(8, 145, 178, 0.1)",
+            border: "1px solid rgba(8, 145, 178, 0.1)"
           }}>
-            <div style={{
-              padding: "10px 20px",
-              backgroundColor: "#e8f5e9",
-              borderRadius: "20px",
-              color: "#2e7d32"
+            <h3 style={{
+              fontSize: "24px",
+              fontWeight: "600",
+              color: "#0891b2",
+              marginBottom: "20px"
             }}>
-              📞 Hotline: 1900-xxxx
-            </div>
+              🏥 Cam kết của chúng tôi
+            </h3>
             <div style={{
-              padding: "10px 20px",
-              backgroundColor: "#e3f2fd",
-              borderRadius: "20px",
-              color: "#1565c0"
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+              gap: "20px",
+              marginTop: "30px"
             }}>
-              📧 Email: support@healthcare.com
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>🔒</div>
+                <h4 style={{ color: "#0891b2", marginBottom: "8px" }}>Bảo mật tuyệt đối</h4>
+                <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
+                  Thông tin cá nhân được bảo vệ an toàn
+                </p>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>⚡</div>
+                <h4 style={{ color: "#0891b2", marginBottom: "8px" }}>Phản hồi nhanh</h4>
+                <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
+                  Hỗ trợ và tư vấn 24/7
+                </p>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px" }}>👩‍⚕️</div>
+                <h4 style={{ color: "#0891b2", marginBottom: "8px" }}>Chuyên gia giàu kinh nghiệm</h4>
+                <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
+                  Đội ngũ bác sĩ chuyên khoa
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </main>
+
+      <footer style={{ 
+        background: "#e0f2fe !important", 
+        backgroundColor: "#e0f2fe !important",
+        colorScheme: "light",
+        color: "#0891b2", 
+        padding: "20px", 
+        textAlign: "center" 
+      }}>
+        &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
+      </footer>
     </div>
   );
 };

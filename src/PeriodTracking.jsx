@@ -54,12 +54,19 @@ const PeriodTracking = () => {
       day: 'numeric'
     });
   };  return (
-    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh", width: "100vw", margin: 0, padding: 0, overflow: "hidden" }}>
-      {/* Header */}      <header style={{
-        background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+    <div style={{
+      backgroundColor: "#f0f9ff !important",
+      background: "#f0f9ff !important",
+      colorScheme: "light",
+      minHeight: "100vh",
+      width: "100vw",
+      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    }}>
+      <header style={{
+        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
-        position: "relative",
-        width: "100%"      }}>
+        position: "relative"
+      }}>
         <div style={{
           position: "absolute",
           top: 20,
@@ -69,361 +76,359 @@ const PeriodTracking = () => {
           zIndex: 2
         }}>
           <Link 
-            to="/" 
+            to="/services" 
             style={{
-              background: "#11998e",
-              color: "#fff",
+              background: "#fff",
+              color: "#0891b2",
               textDecoration: "none",
               padding: "8px 20px",
               borderRadius: 6,
-              border: "2px solid #fff",
-              fontWeight: 600,
-              cursor: "pointer"
+              fontWeight: 600
             }}
           >
-            Đăng xuất
+            Quay lại
           </Link>
         </div>
-
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
-          />
+          <Link to="/">
+            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ height: 100, width: 100, objectFit: "contain" }}
+            />
+          </Link>
         </div>
-
-        <h1 style={{
-          color: "#fff",
-          margin: 0,
-          padding: "24px 0 16px 0",
-          textAlign: "center",
-          fontWeight: 700,
-          letterSpacing: 1
-        }}>
-          Theo dõi Chu kỳ Kinh nguyệt 📅
+        <h1
+          style={{
+            color: "#fff",
+            margin: 0,
+            padding: "24px 0 16px 0",
+            textAlign: "center",
+            fontWeight: 700,
+            letterSpacing: 1
+          }}
+        >
+          📅 Theo dõi chu kỳ kinh nguyệt
         </h1>
-      </header>      <main style={{
-        padding: "40px",
-        minHeight: "calc(100vh - 180px)",
-        width: "100%",
-        maxWidth: "100%",
-        margin: "0",
+      </header>
+
+      <main style={{
+        padding: "40px 20px",
+        minHeight: "calc(100vh - 200px)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "#fff",
-        boxSizing: "border-box",
-        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-        overflow: "auto"
+        background: "#f0f9ff !important",
+        backgroundColor: "#f0f9ff !important",
+        colorScheme: "light"
       }}>
-        {/* Navigation links */}
-        <div style={{ marginBottom: "30px", width: "100%" }}>
-          <Link 
-            to="/services" 
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#11998e",
-              textDecoration: "none",
-              fontWeight: 500
-            }}
-          >
-            ← Quay lại trang dịch vụ
-          </Link>
-        </div>
-
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <h2 style={{ fontSize: "32px", color: "#2c3e50", marginBottom: "15px" }}>
-            Theo dõi chu kỳ kinh nguyệt
-          </h2>
-          <p style={{ fontSize: "18px", color: "#7f8c8d", maxWidth: "1000px", margin: "0 auto" }}>
-            Công cụ tính toán chu kỳ kinh nguyệt giúp bạn theo dõi và dự đoán chu kỳ một cách chính xác
-          </p>
-        </div>        <section id="period-tracking-section" style={{
-          maxWidth: "1000px",
-          width: "100%"
+        <div style={{
+          background: "rgba(255, 255, 255, 0.95)",
+          borderRadius: "24px",
+          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
+          padding: "40px",
+          width: "100%",
+          maxWidth: "800px",
+          margin: "0 auto",
+          border: "1px solid rgba(8, 145, 178, 0.1)"
         }}>
-          {/* Calculator Section */}
           <div style={{
-            background: "#fff",
-            borderRadius: 12,
-            boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-            padding: 40,
-            marginBottom: 30,
-            width: "100%",
-            boxSizing: "border-box"
+            textAlign: "center",
+            marginBottom: "30px"
           }}>
             <h2 style={{
-              fontSize: "24px",
-              color: "#2c3e50",
-              marginBottom: "20px",
-              textAlign: "center"
+              fontSize: "28px",
+              fontWeight: "600",
+              color: "#0891b2",
+              marginBottom: "10px"
             }}>
-              🧮 Công cụ Tính toán Chu kỳ
-            </h2>            <form onSubmit={(e) => { e.preventDefault(); calculateCycle(); }} style={{ width: "100%", maxWidth: "1000px" }}>
-              <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: "300px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                    Ngày bắt đầu kinh nguyệt gần nhất *
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "12px 15px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "16px"
-                    }}
-                  />
-                </div>
-                
-                <div style={{ flex: 1, minWidth: "200px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                    Chu kỳ (ngày) *
-                  </label>
-                  <input
-                    type="number"
-                    min="21"
-                    max="35"
-                    value={cycleLength}
-                    onChange={(e) => setCycleLength(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px 15px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "16px"
-                    }}
-                  />
-                </div>
-                
-                <div style={{ flex: 1, minWidth: "200px" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
-                    Số ngày kinh nguyệt *
-                  </label>
-                  <input
-                    type="number"
-                    min="3"
-                    max="8"
-                    value={periodLength}
-                    onChange={(e) => setPeriodLength(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px 15px",
-                      borderRadius: "8px",
-                      border: "1px solid #ddd",
-                      fontSize: "16px"
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div style={{ textAlign: "center" }}>
-                <button
-                  type="submit"
-                  style={{
-                    background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
-                    color: "white",
-                    border: "none",
-                    padding: "14px 40px",
-                    borderRadius: "30px",
-                    cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: "600",
-                    boxShadow: "0 4px 15px rgba(56, 239, 125, 0.3)"
-                  }}
-                >
-                  📊 Tính toán chu kỳ
-                </button>
-              </div>
-            </form>{/* Results Table */}
-            {results && (
-              <div style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: 24,
-                boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-                marginTop: 24
-              }}>                <h3 style={{ color: "#11998e", marginBottom: 16 }}>📋 Kết quả Tính toán</h3>
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                  gap: "20px",
-                  marginBottom: "16px"
-                }}>
-                  <div style={{ 
-                    background: "#fff2f2", 
-                    padding: "16px", 
-                    borderRadius: "8px",
-                    border: "2px solid #ff6b6b",
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>🩸</div>
-                    <strong style={{ color: "#d63031" }}>Kinh nguyệt</strong>
-                    <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-                      {results.startDate} đến {results.periodEnd}
-                    </p>
-                  </div>
-                  
-                  <div style={{ 
-                    background: "#fff9e6", 
-                    padding: "16px", 
-                    borderRadius: "8px",
-                    border: "2px solid #fbc02d",
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>🌼</div>
-                    <strong style={{ color: "#d68910" }}>Rụng trứng</strong>
-                    <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-                      {results.ovulationDate}
-                    </p>
-                  </div>
-                  
-                  <div style={{ 
-                    background: "#f0f9ff", 
-                    padding: "16px", 
-                    borderRadius: "8px",
-                    border: "2px solid #4ecdc4",
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>💕</div>
-                    <strong style={{ color: "#00b894" }}>Thời kỳ sinh sản</strong>
-                    <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-                      {results.fertileWindow}
-                    </p>
-                  </div>
-                  
-                  <div style={{ 
-                    background: "#e8f4fd", 
-                    padding: "16px", 
-                    borderRadius: "8px",
-                    border: "2px solid #1976d2",
-                    textAlign: "center"
-                  }}>
-                    <div style={{ fontSize: "24px", marginBottom: "8px" }}>🔔</div>
-                    <strong style={{ color: "#1976d2" }}>Kinh nguyệt tiếp theo</strong>
-                    <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-                      {results.nextPeriod}
-                    </p>
-                  </div>
-                </div>
-                
-                <div style={{
-                  marginTop: "16px",
-                  padding: "12px",
-                  background: "#f8f9fa",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  color: "#6c757d",
-                  textAlign: "center"
-                }}>
-                  ℹ️ <strong>Lưu ý:</strong> Kết quả này chỉ mang tính chất tham khảo.
-                </div>
-              </div>
-            )}
+              🌸 Tính toán chu kỳ kinh nguyệt
+            </h2>
+            <p style={{
+              fontSize: "16px",
+              color: "#666",
+              margin: 0
+            }}>
+              Nhập thông tin để theo dõi chu kỳ kinh nguyệt của bạn
+            </p>
+          </div>
 
-            {/* History Table */}
-            {history.length > 0 && (              <div style={{
-                background: "#fff",
-                borderRadius: 12,
-                padding: 24,
-                boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-                marginTop: 24,
-                width: "100%",
-                boxSizing: "border-box"
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: "20px",
+            marginBottom: "30px"
+          }}>
+            <div>
+              <label style={{
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: "600",
+                color: "#0891b2",
+                fontSize: "15px"
               }}>
-                <h3 style={{ color: "#11998e", marginBottom: 16 }}>📚 Lịch sử Theo dõi</h3>
-                <div style={{ overflowX: "auto", width: "100%" }}>
-                  <table style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: "14px",
-                    minWidth: "600px"
-                  }}>                    <thead>
-                      <tr style={{ background: "#f8f9fa" }}>
-                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6", minWidth: "100px" }}>Bắt đầu</th>
-                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6", minWidth: "100px" }}>Kết thúc KN</th>
-                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6", minWidth: "100px" }}>Rụng trứng</th>
-                        <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #dee2e6", minWidth: "120px" }}>KN tiếp theo</th>
-                        <th style={{ padding: "12px", textAlign: "center", borderBottom: "1px solid #dee2e6", minWidth: "80px" }}>Chu kỳ</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((record, index) => (
-                        <tr key={record.id} style={{ 
-                          background: index % 2 === 0 ? "#fff" : "#f8f9fa",
-                          borderBottom: "1px solid #dee2e6"
-                        }}>
-                          <td style={{ padding: "12px" }}>{record.startDate}</td>
-                          <td style={{ padding: "12px" }}>{record.periodEnd}</td>
-                          <td style={{ padding: "12px" }}>{record.ovulationDate}</td>
-                          <td style={{ padding: "12px" }}>{record.nextPeriod}</td>
-                          <td style={{ padding: "12px", textAlign: "center" }}>{record.cycleLength} ngày</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+                📅 Ngày bắt đầu kinh nguyệt gần nhất:
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "16px 20px",
+                  borderRadius: "12px",
+                  border: "2px solid rgba(8, 145, 178, 0.1)",
+                  fontSize: "16px",
+                  background: "rgba(255, 255, 255, 0.8)",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
+                onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+              />
+            </div>
 
-            {/* Tips Section */}            <div style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-              marginTop: 24,
-              width: "100%",
-              boxSizing: "border-box"
+            <div>
+              <label style={{
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: "600",
+                color: "#0891b2",
+                fontSize: "15px"
+              }}>
+                🔄 Độ dài chu kỳ (ngày):
+              </label>
+              <input
+                type="number"
+                value={cycleLength}
+                onChange={(e) => setCycleLength(e.target.value)}
+                min="21"
+                max="35"
+                style={{
+                  width: "100%",
+                  padding: "16px 20px",
+                  borderRadius: "12px",
+                  border: "2px solid rgba(8, 145, 178, 0.1)",
+                  fontSize: "16px",
+                  background: "rgba(255, 255, 255, 0.8)",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
+                onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: "600",
+                color: "#0891b2",
+                fontSize: "15px"
+              }}>
+                🩸 Độ dài kinh nguyệt (ngày):
+              </label>
+              <input
+                type="number"
+                value={periodLength}
+                onChange={(e) => setPeriodLength(e.target.value)}
+                min="3"
+                max="10"
+                style={{
+                  width: "100%",
+                  padding: "16px 20px",
+                  borderRadius: "12px",
+                  border: "2px solid rgba(8, 145, 178, 0.1)",
+                  fontSize: "16px",
+                  background: "rgba(255, 255, 255, 0.8)",
+                  transition: "all 0.3s ease",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
+                onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
+                onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
+              />
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center", marginBottom: "30px" }}>
+            <button
+              onClick={calculateCycle}
+              style={{
+                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "12px",
+                padding: "16px 40px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontSize: "16px",
+                transition: "all 0.3s ease",
+                boxShadow: "0 4px 12px rgba(8, 145, 178, 0.3)"
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 16px rgba(8, 145, 178, 0.4)";
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 12px rgba(8, 145, 178, 0.3)";
+              }}
+            >
+              🔮 Tính toán chu kỳ
+            </button>
+          </div>
+
+          {results && (
+            <div style={{
+              background: "rgba(8, 145, 178, 0.05)",
+              borderRadius: "16px",
+              padding: "30px",
+              border: "2px solid rgba(8, 145, 178, 0.1)",
+              marginBottom: "30px"
             }}>
-              <h3 style={{ color: "#11998e", marginBottom: 16 }}>💡 Mẹo Theo dõi Chu kỳ</h3>
+              <h3 style={{
+                color: "#0891b2",
+                fontSize: "22px",
+                fontWeight: "600",
+                marginBottom: "20px",
+                textAlign: "center"
+              }}>
+                📊 Kết quả tính toán
+              </h3>
+              
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                 gap: "20px"
               }}>
                 <div style={{
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef"
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: "1px solid rgba(8, 145, 178, 0.1)"
                 }}>
-                  <h4 style={{ color: "#11998e", marginBottom: "8px", fontSize: "16px" }}>📝 Ghi chép thường xuyên</h4>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#6c757d" }}>
-                    Ghi lại ngày bắt đầu và kết thúc kinh nguyệt mỗi tháng để có dữ liệu chính xác nhất.
-                  </p>
+                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>🩸</div>
+                  <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Bắt đầu kinh nguyệt</h4>
+                  <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.startDate}</p>
                 </div>
 
                 <div style={{
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef"
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: "1px solid rgba(8, 145, 178, 0.1)"
                 }}>
-                  <h4 style={{ color: "#11998e", marginBottom: "8px", fontSize: "16px" }}>🌡️ Theo dõi nhiệt độ cơ thể</h4>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#6c757d" }}>
-                    Nhiệt độ cơ thể tăng nhẹ sau khi rụng trứng, giúp xác định thời điểm rụng trứng chính xác hơn.
-                  </p>
+                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>✅</div>
+                  <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Kết thúc kinh nguyệt</h4>
+                  <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.periodEnd}</p>
                 </div>
 
                 <div style={{
-                  padding: "16px",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef"
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: "1px solid rgba(8, 145, 178, 0.1)"
                 }}>
-                  <h4 style={{ color: "#11998e", marginBottom: "8px", fontSize: "16px" }}>💪 Chăm sóc sức khỏe</h4>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#6c757d" }}>
-                    Duy trì chế độ ăn uống lành mạnh và tập thể dục đều đặn để chu kỳ ổn định hơn.
-                  </p>
+                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>🌼</div>
+                  <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Ngày rụng trứng</h4>
+                  <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.ovulationDate}</p>
+                </div>
+
+                <div style={{
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>💕</div>
+                  <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Giai đoạn dễ thụ thai</h4>
+                  <p style={{ margin: 0, fontWeight: "600", color: "#333", fontSize: "12px" }}>{results.fertileWindow}</p>
+                </div>
+
+                <div style={{
+                  background: "rgba(255, 255, 255, 0.8)",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                }}>
+                  <div style={{ fontSize: "24px", marginBottom: "8px" }}>🔔</div>
+                  <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Kinh nguyệt tiếp theo</h4>
+                  <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.nextPeriod}</p>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          )}
+
+          {history.length > 0 && (
+            <div style={{
+              background: "rgba(255, 255, 255, 0.8)",
+              borderRadius: "16px",
+              padding: "20px",
+              border: "1px solid rgba(8, 145, 178, 0.1)"
+            }}>
+              <h3 style={{
+                color: "#0891b2",
+                fontSize: "20px",
+                fontWeight: "600",
+                marginBottom: "15px",
+                textAlign: "center"
+              }}>
+                📈 Lịch sử theo dõi
+              </h3>
+              
+              <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+                {history.map((record, index) => (
+                  <div
+                    key={record.id}
+                    style={{
+                      background: "rgba(8, 145, 178, 0.05)",
+                      padding: "15px",
+                      borderRadius: "8px",
+                      marginBottom: "10px",
+                      border: "1px solid rgba(8, 145, 178, 0.1)"
+                    }}
+                  >
+                    <div style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "10px"
+                    }}>
+                      <span style={{ fontWeight: "600", color: "#0891b2" }}>
+                        Lần {index + 1}: {record.startDate}
+                      </span>
+                      <span style={{ color: "#666", fontSize: "14px" }}>
+                        Chu kỳ: {record.cycleLength} ngày
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </main>
+
+      <footer style={{ 
+        background: "#e0f2fe !important", 
+        backgroundColor: "#e0f2fe !important",
+        colorScheme: "light",
+        color: "#0891b2", 
+        padding: "20px", 
+        textAlign: "center" 
+      }}>
+        &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
+      </footer>
     </div>
   );
 };

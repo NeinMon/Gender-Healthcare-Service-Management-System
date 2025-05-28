@@ -53,38 +53,13 @@ const PeriodTracking = () => {
       month: 'long',
       day: 'numeric'
     });
-  };
-  return (
-    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh" }}>
-      {/* Header */}
-      <header style={{
+  };  return (
+    <div style={{ backgroundColor: "#f8fffc", minHeight: "100vh", width: "100vw", margin: 0, padding: 0, overflow: "hidden" }}>
+      {/* Header */}      <header style={{
         background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
         paddingBottom: 0,
-        position: "relative"
-      }}>
-        <div style={{
-          position: "absolute",
-          top: 20,
-          left: 25,
-          zIndex: 2
-        }}>
-          <Link 
-            to="/services" 
-            style={{
-              background: "#11998e",
-              color: "#fff",
-              textDecoration: "none",
-              padding: "8px 20px",
-              borderRadius: 6,
-              border: "2px solid #fff",
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-          >
-            ← Quay lại
-          </Link>
-        </div>
-
+        position: "relative",
+        width: "100%"      }}>
         <div style={{
           position: "absolute",
           top: 20,
@@ -129,23 +104,53 @@ const PeriodTracking = () => {
           Theo dõi Chu kỳ Kinh nguyệt 📅
         </h1>
       </header>      <main style={{
-        padding: "20px",
-        minHeight: "calc(100vh - 140px)",
-        width: "100vw",
+        padding: "40px",
+        minHeight: "calc(100vh - 180px)",
+        width: "100%",
+        maxWidth: "100%",
+        margin: "0",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        background: "#fff",
         boxSizing: "border-box",
-        margin: 0
+        boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+        overflow: "auto"
       }}>
-        <section id="period-tracking-section" style={{
-          maxWidth: "none",
+        {/* Navigation links */}
+        <div style={{ marginBottom: "30px", width: "100%" }}>
+          <Link 
+            to="/services" 
+            style={{
+              display: "flex",
+              alignItems: "center",
+              color: "#11998e",
+              textDecoration: "none",
+              fontWeight: 500
+            }}
+          >
+            ← Quay lại trang dịch vụ
+          </Link>
+        </div>
+
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <h2 style={{ fontSize: "32px", color: "#2c3e50", marginBottom: "15px" }}>
+            Theo dõi chu kỳ kinh nguyệt
+          </h2>
+          <p style={{ fontSize: "18px", color: "#7f8c8d", maxWidth: "1000px", margin: "0 auto" }}>
+            Công cụ tính toán chu kỳ kinh nguyệt giúp bạn theo dõi và dự đoán chu kỳ một cách chính xác
+          </p>
+        </div>        <section id="period-tracking-section" style={{
+          maxWidth: "1000px",
           width: "100%"
         }}>
           {/* Calculator Section */}
           <div style={{
-            background: "#f4fff8",
+            background: "#fff",
             borderRadius: 12,
             boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-            padding: 24,
-            marginTop: 18,
+            padding: 40,
+            marginBottom: 30,
             width: "100%",
             boxSizing: "border-box"
           }}>
@@ -156,34 +161,31 @@ const PeriodTracking = () => {
               textAlign: "center"
             }}>
               🧮 Công cụ Tính toán Chu kỳ
-            </h2>            <form onSubmit={(e) => { e.preventDefault(); calculateCycle(); }} style={{
-              marginBottom: 24,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 18,
-              alignItems: "center",
-              justifyContent: "space-between"
-            }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center", flex: 1 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "280px" }}>
-                  📅 Ngày bắt đầu kinh nguyệt gần nhất:
+            </h2>            <form onSubmit={(e) => { e.preventDefault(); calculateCycle(); }} style={{ width: "100%", maxWidth: "1000px" }}>
+              <div style={{ display: "flex", gap: "20px", marginBottom: "30px", flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: "300px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
+                    Ngày bắt đầu kinh nguyệt gần nhất *
+                  </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
                     style={{
-                      marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "6px 10px",
-                      fontSize: "14px"
+                      width: "100%",
+                      padding: "12px 15px",
+                      borderRadius: "8px",
+                      border: "1px solid #ddd",
+                      fontSize: "16px"
                     }}
                   />
-                </label>
+                </div>
                 
-                <label style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "160px" }}>
-                  🔄 Chu kỳ (ngày):
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
+                    Chu kỳ (ngày) *
+                  </label>
                   <input
                     type="number"
                     min="21"
@@ -191,18 +193,19 @@ const PeriodTracking = () => {
                     value={cycleLength}
                     onChange={(e) => setCycleLength(e.target.value)}
                     style={{
-                      marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "6px 10px",
-                      width: 80,
-                      fontSize: "14px"
+                      width: "100%",
+                      padding: "12px 15px",
+                      borderRadius: "8px",
+                      border: "1px solid #ddd",
+                      fontSize: "16px"
                     }}
                   />
-                </label>
+                </div>
                 
-                <label style={{ display: "flex", alignItems: "center", gap: 6, minWidth: "180px" }}>
-                  🩸 Số ngày kinh nguyệt:
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#2c3e50" }}>
+                    Số ngày kinh nguyệt *
+                  </label>
                   <input
                     type="number"
                     min="3"
@@ -210,33 +213,34 @@ const PeriodTracking = () => {
                     value={periodLength}
                     onChange={(e) => setPeriodLength(e.target.value)}
                     style={{
-                      marginLeft: 4,
-                      border: "1px solid #11998e",
-                      borderRadius: 6,
-                      padding: "6px 10px",
-                      width: 80,
-                      fontSize: "14px"
+                      width: "100%",
+                      padding: "12px 15px",
+                      borderRadius: "8px",
+                      border: "1px solid #ddd",
+                      fontSize: "16px"
                     }}
                   />
-                </label>
+                </div>
               </div>
               
-              <button
-                type="submit"
-                style={{
-                  background: "#11998e",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "10px 24px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontSize: "15px",
-                  minWidth: "120px"
-                }}
-              >
-                📊 Tính toán
-              </button>
+              <div style={{ textAlign: "center" }}>
+                <button
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #11998e 0%, #38ef7d 100%)",
+                    color: "white",
+                    border: "none",
+                    padding: "14px 40px",
+                    borderRadius: "30px",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    boxShadow: "0 4px 15px rgba(56, 239, 125, 0.3)"
+                  }}
+                >
+                  📊 Tính toán chu kỳ
+                </button>
+              </div>
             </form>{/* Results Table */}
             {results && (
               <div style={{

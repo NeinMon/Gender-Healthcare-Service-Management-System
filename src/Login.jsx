@@ -85,8 +85,7 @@ const Login = () => {
             alignItems: "center",
           }}
         >
-          {success ? (
-            <div style={{
+          {success ? (            <div style={{
               textAlign: "center",
               color: "#43a047",
               padding: "20px",
@@ -95,7 +94,7 @@ const Login = () => {
               marginBottom: "20px"
             }}>
               <h3>Đăng nhập thành công!</h3>
-              <p>Đang chuyển hướng về trang chủ...</p>
+              <p>Đang chuyển hướng đến trang dịch vụ...</p>
             </div>
           ) : (
             <>

@@ -8,6 +8,9 @@ const PeriodTracking = () => {
   const [results, setResults] = useState(null);
   const [history, setHistory] = useState([]);
 
+  // Check if screen is mobile
+  const isMobile = window.innerWidth <= 768;
+
   const calculateCycle = () => {
     if (!startDate) {
       alert("Vui lòng chọn ngày bắt đầu kinh nguyệt gần nhất!");
@@ -66,8 +69,7 @@ const PeriodTracking = () => {
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
         position: "relative"
-      }}>
-        <div style={{
+      }}>        <div style={{
           position: "absolute",
           top: 20,
           right: 25,
@@ -76,17 +78,19 @@ const PeriodTracking = () => {
           zIndex: 2
         }}>
           <Link 
-            to="/services" 
+            to="/" 
             style={{
-              background: "#fff",
-              color: "#0891b2",
+              background: "#0891b2",
+              color: "#fff",
               textDecoration: "none",
               padding: "8px 20px",
               borderRadius: 6,
-              fontWeight: 600
+              border: "2px solid #fff",
+              fontWeight: 600,
+              cursor: "pointer"
             }}
           >
-            Quay lại
+            Đăng xuất
           </Link>
         </div>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
@@ -110,10 +114,8 @@ const PeriodTracking = () => {
         >
           📅 Theo dõi chu kỳ kinh nguyệt
         </h1>
-      </header>
-
-      <main style={{
-        padding: "40px 20px",
+      </header>      <main style={{
+        padding: isMobile ? "30px 15px" : "40px 20px",
         minHeight: "calc(100vh - 200px)",
         display: "flex",
         flexDirection: "column",
@@ -121,43 +123,55 @@ const PeriodTracking = () => {
         background: "#f0f9ff !important",
         backgroundColor: "#f0f9ff !important",
         colorScheme: "light"
-      }}>
-        <div style={{
+      }}>        <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "24px",
           boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
-          padding: "40px",
+          padding: isMobile ? "30px 20px" : "40px",
           width: "100%",
-          maxWidth: "800px",
+          maxWidth: "900px",
           margin: "0 auto",
           border: "1px solid rgba(8, 145, 178, 0.1)"
         }}>
-          <div style={{
+          {/* Back to Services Link */}
+          <div style={{ marginBottom: "20px" }}>
+            <Link 
+              to="/services" 
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: "#0891b2",
+                textDecoration: "none",
+                fontWeight: 500
+              }}
+            >
+              ← Quay lại trang dịch vụ
+            </Link>
+          </div><div style={{
             textAlign: "center",
-            marginBottom: "30px"
+            marginBottom: "35px"
           }}>
             <h2 style={{
-              fontSize: "28px",
+              fontSize: isMobile ? "24px" : "28px",
               fontWeight: "600",
               color: "#0891b2",
-              marginBottom: "10px"
+              marginBottom: "12px"
             }}>
               🌸 Tính toán chu kỳ kinh nguyệt
-            </h2>
-            <p style={{
-              fontSize: "16px",
+            </h2>            <p style={{
+              fontSize: isMobile ? "15px" : "16px",
               color: "#666",
-              margin: 0
+              maxWidth: "500px",
+              margin: "0 auto"
             }}>
               Nhập thông tin để theo dõi chu kỳ kinh nguyệt của bạn
             </p>
-          </div>
-
-          <div style={{
+          </div><div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "20px",
-            marginBottom: "30px"
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+            gap: "25px",
+            marginBottom: "35px",
+            alignItems: "end"
           }}>
             <div>
               <label style={{
@@ -252,9 +266,7 @@ const PeriodTracking = () => {
                 onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
               />
             </div>
-          </div>
-
-          <div style={{ textAlign: "center", marginBottom: "30px" }}>
+          </div>          <div style={{ textAlign: "center", marginBottom: "35px" }}>
             <button
               onClick={calculateCycle}
               style={{
@@ -262,12 +274,13 @@ const PeriodTracking = () => {
                 color: "#fff",
                 border: "none",
                 borderRadius: "12px",
-                padding: "16px 40px",
+                padding: isMobile ? "14px 30px" : "16px 40px",
                 fontWeight: "600",
                 cursor: "pointer",
-                fontSize: "16px",
+                fontSize: isMobile ? "15px" : "16px",
                 transition: "all 0.3s ease",
-                boxShadow: "0 4px 12px rgba(8, 145, 178, 0.3)"
+                boxShadow: "0 4px 12px rgba(8, 145, 178, 0.3)",
+                minWidth: "200px"
               }}
               onMouseOver={(e) => {
                 e.target.style.transform = "translateY(-2px)";
@@ -282,13 +295,12 @@ const PeriodTracking = () => {
             </button>
           </div>
 
-          {results && (
-            <div style={{
+          {results && (            <div style={{
               background: "rgba(8, 145, 178, 0.05)",
-              borderRadius: "16px",
-              padding: "30px",
+              borderRadius: "20px",
+              padding: isMobile ? "25px 20px" : "35px",
               border: "2px solid rgba(8, 145, 178, 0.1)",
-              marginBottom: "30px"
+              marginBottom: "35px"
             }}>
               <h3 style={{
                 color: "#0891b2",
@@ -299,66 +311,73 @@ const PeriodTracking = () => {
               }}>
                 📊 Kết quả tính toán
               </h3>
-              
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "20px"
-              }}>
                 <div style={{
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "20px",
-                  borderRadius: "12px",
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: isMobile ? "15px" : "20px",
+                maxWidth: "900px",
+                margin: "0 auto"
+              }}>                <div style={{
+                  background: "rgba(255, 255, 255, 0.9)",
+                  padding: isMobile ? "18px 15px" : "22px 20px",
+                  borderRadius: "16px",
                   textAlign: "center",
-                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                  border: "1px solid rgba(8, 145, 178, 0.15)",
+                  boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)",
+                  transition: "all 0.3s ease",
+                  height: "fit-content"
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>🩸</div>
                   <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Bắt đầu kinh nguyệt</h4>
                   <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.startDate}</p>
-                </div>
-
-                <div style={{
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "20px",
-                  borderRadius: "12px",
+                </div>                <div style={{
+                  background: "rgba(255, 255, 255, 0.9)",
+                  padding: isMobile ? "18px 15px" : "22px 20px",
+                  borderRadius: "16px",
                   textAlign: "center",
-                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                  border: "1px solid rgba(8, 145, 178, 0.15)",
+                  boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)",
+                  transition: "all 0.3s ease",
+                  height: "fit-content"
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>✅</div>
                   <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Kết thúc kinh nguyệt</h4>
                   <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.periodEnd}</p>
-                </div>
-
-                <div style={{
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "20px",
-                  borderRadius: "12px",
+                </div>                <div style={{
+                  background: "rgba(255, 255, 255, 0.9)",
+                  padding: isMobile ? "18px 15px" : "22px 20px",
+                  borderRadius: "16px",
                   textAlign: "center",
-                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                  border: "1px solid rgba(8, 145, 178, 0.15)",
+                  boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)",
+                  transition: "all 0.3s ease",
+                  height: "fit-content"
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>🌼</div>
                   <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Ngày rụng trứng</h4>
                   <p style={{ margin: 0, fontWeight: "600", color: "#333" }}>{results.ovulationDate}</p>
-                </div>
-
-                <div style={{
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "20px",
-                  borderRadius: "12px",
+                </div>                <div style={{
+                  background: "rgba(255, 255, 255, 0.9)",
+                  padding: isMobile ? "18px 15px" : "22px 20px",
+                  borderRadius: "16px",
                   textAlign: "center",
-                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                  border: "1px solid rgba(8, 145, 178, 0.15)",
+                  boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)",
+                  transition: "all 0.3s ease",
+                  height: "fit-content"
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>💕</div>
                   <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Giai đoạn dễ thụ thai</h4>
                   <p style={{ margin: 0, fontWeight: "600", color: "#333", fontSize: "12px" }}>{results.fertileWindow}</p>
-                </div>
-
-                <div style={{
-                  background: "rgba(255, 255, 255, 0.8)",
-                  padding: "20px",
-                  borderRadius: "12px",
+                </div>                <div style={{
+                  background: "rgba(255, 255, 255, 0.9)",
+                  padding: isMobile ? "18px 15px" : "22px 20px",
+                  borderRadius: "16px",
                   textAlign: "center",
-                  border: "1px solid rgba(8, 145, 178, 0.1)"
+                  border: "1px solid rgba(8, 145, 178, 0.15)",
+                  boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)",
+                  transition: "all 0.3s ease",
+                  height: "fit-content"
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>🔔</div>
                   <h4 style={{ color: "#0891b2", marginBottom: "5px", fontSize: "14px" }}>Kinh nguyệt tiếp theo</h4>
@@ -366,35 +385,38 @@ const PeriodTracking = () => {
                 </div>
               </div>
             </div>
-          )}
-
-          {history.length > 0 && (
+          )}          {history.length > 0 && (
             <div style={{
-              background: "rgba(255, 255, 255, 0.8)",
-              borderRadius: "16px",
-              padding: "20px",
-              border: "1px solid rgba(8, 145, 178, 0.1)"
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "20px",
+              padding: isMobile ? "25px 20px" : "30px",
+              border: "1px solid rgba(8, 145, 178, 0.15)",
+              boxShadow: "0 4px 12px rgba(8, 145, 178, 0.08)"
             }}>
               <h3 style={{
                 color: "#0891b2",
-                fontSize: "20px",
+                fontSize: isMobile ? "18px" : "20px",
                 fontWeight: "600",
-                marginBottom: "15px",
+                marginBottom: "20px",
                 textAlign: "center"
               }}>
                 📈 Lịch sử theo dõi
               </h3>
               
-              <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                {history.map((record, index) => (
-                  <div
+              <div style={{ 
+                maxHeight: isMobile ? "250px" : "300px", 
+                overflowY: "auto",
+                paddingRight: "5px"
+              }}>
+                {history.map((record, index) => (                  <div
                     key={record.id}
                     style={{
-                      background: "rgba(8, 145, 178, 0.05)",
-                      padding: "15px",
-                      borderRadius: "8px",
-                      marginBottom: "10px",
-                      border: "1px solid rgba(8, 145, 178, 0.1)"
+                      background: "rgba(8, 145, 178, 0.08)",
+                      padding: isMobile ? "12px 15px" : "18px 20px",
+                      borderRadius: "12px",
+                      marginBottom: "12px",
+                      border: "1px solid rgba(8, 145, 178, 0.15)",
+                      transition: "all 0.3s ease"
                     }}
                   >
                     <div style={{
@@ -404,10 +426,17 @@ const PeriodTracking = () => {
                       flexWrap: "wrap",
                       gap: "10px"
                     }}>
-                      <span style={{ fontWeight: "600", color: "#0891b2" }}>
+                      <span style={{ 
+                        fontWeight: "600", 
+                        color: "#0891b2",
+                        fontSize: isMobile ? "14px" : "15px"
+                      }}>
                         Lần {index + 1}: {record.startDate}
                       </span>
-                      <span style={{ color: "#666", fontSize: "14px" }}>
+                      <span style={{ 
+                        color: "#666", 
+                        fontSize: isMobile ? "12px" : "14px"
+                      }}>
                         Chu kỳ: {record.cycleLength} ngày
                       </span>
                     </div>

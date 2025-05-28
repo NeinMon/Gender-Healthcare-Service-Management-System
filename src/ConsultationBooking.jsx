@@ -51,8 +51,7 @@ const ConsultationBooking = () => {
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
         position: "relative"
-      }}>
-        <div style={{
+      }}>        <div style={{
           position: "absolute",
           top: 20,
           right: 25,
@@ -61,17 +60,19 @@ const ConsultationBooking = () => {
           zIndex: 2
         }}>
           <Link 
-            to="/services" 
+            to="/" 
             style={{
-              background: "#fff",
-              color: "#0891b2",
+              background: "#0891b2",
+              color: "#fff",
               textDecoration: "none",
               padding: "8px 20px",
               borderRadius: 6,
-              fontWeight: 600
+              border: "2px solid #fff",
+              fontWeight: 600,
+              cursor: "pointer"
             }}
           >
-            Quay lại
+            Đăng xuất
           </Link>
         </div>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
@@ -106,8 +107,7 @@ const ConsultationBooking = () => {
         background: "#f0f9ff !important",
         backgroundColor: "#f0f9ff !important",
         colorScheme: "light"
-      }}>
-        <div style={{
+      }}>        <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "24px",
           boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
@@ -117,6 +117,21 @@ const ConsultationBooking = () => {
           margin: "0 auto",
           border: "1px solid rgba(8, 145, 178, 0.1)"
         }}>
+          {/* Back to Services Link */}
+          <div style={{ marginBottom: "20px" }}>
+            <Link 
+              to="/services" 
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: "#0891b2",
+                textDecoration: "none",
+                fontWeight: 500
+              }}
+            >
+              ← Quay lại trang dịch vụ
+            </Link>
+          </div>
           {isSubmitted ? (
             <div style={{
               textAlign: "center",

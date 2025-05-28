@@ -36,6 +36,9 @@ const Services = () => {
       path: "/ask-question"
     }
   ];
+
+  // Check if screen is mobile
+  const isMobile = window.innerWidth <= 768;
   return (
     <div style={{ 
       backgroundColor: "#f0f9ff !important", 
@@ -131,13 +134,14 @@ const Services = () => {
             }}>
               Chúng tôi cung cấp các dịch vụ chăm sóc sức khỏe toàn diện cho phụ nữ
             </p>
-          </div>
-
-          <div style={{
+          </div>          <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
             gap: "30px",
-            marginBottom: "40px"
+            marginBottom: "40px",
+            maxWidth: "900px",
+            margin: "0 auto 40px auto",
+            padding: isMobile ? "0 10px" : "0"
           }}>
             {features.map((feature) => (
               <Link
@@ -147,8 +151,7 @@ const Services = () => {
                   textDecoration: "none",
                   color: "inherit"
                 }}
-              >
-                <div
+              >                <div
                   style={{
                     background: "rgba(255, 255, 255, 0.95)",
                     borderRadius: "20px",
@@ -158,11 +161,12 @@ const Services = () => {
                     border: "1px solid rgba(8, 145, 178, 0.1)",
                     transition: "all 0.3s ease",
                     cursor: "pointer",
-                    height: "200px",
+                    height: "220px",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    alignItems: "center"
+                    alignItems: "center",
+                    minWidth: "0"
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "translateY(-10px)";

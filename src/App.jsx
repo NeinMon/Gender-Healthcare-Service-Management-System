@@ -1042,8 +1042,7 @@ const App = () => {
                 <div style={{ fontWeight: 600, color: "#0891b2" }}>Bảo mật</div>
                 <div style={{ fontSize: 14, color: "#666" }}>Thông tin an toàn</div>
               </div>
-            </div>
-            <div style={{
+            </div>            <div style={{
               background: "#fff",
               borderRadius: 16,
               padding: 20,
@@ -1061,26 +1060,51 @@ const App = () => {
             </div>
           </div>
         </div>
-      </section>
-
-      <main style={{ padding: "40px 20px" }}>
+        
+        {/* Period Calculator Button - Prominent Central Position */}
+        <div style={{
+          marginTop: 50,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+          <button
+            onClick={() => setShowCalculator(v => !v)}
+            style={{
+              background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 25,
+              padding: "20px 40px",
+              fontSize: 18,
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "0 8px 25px rgba(8,145,178,0.4)",
+              transition: "all 0.3s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+              position: "relative",
+              overflow: "hidden"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-3px) scale(1.05)";
+              e.target.style.boxShadow = "0 12px 35px rgba(8,145,178,0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0) scale(1)";
+              e.target.style.boxShadow = "0 8px 25px rgba(8,145,178,0.4)";
+            }}
+          >
+            <span style={{ fontSize: 24 }}>📅</span>
+            {showCalculator ? "Ẩn bảng tính chu kỳ" : "Hiện bảng tính chu kỳ"}
+            <span style={{ fontSize: 24 }}>✨</span>
+          </button>
+        </div>
+      </section><main style={{ padding: "40px 20px" }}>
         <section id="demo-chu-ky">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginBottom: 8 }}>
-            <button
-              onClick={() => setShowCalculator(v => !v)}
-              style={{
-                background: "#0891b2",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-                padding: "6px 18px",
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              {showCalculator ? "Ẩn bảng tính chu kỳ" : "Hiện bảng tính chu kỳ"}
-            </button>
-          </div>
           {showCalculator && (
             <div style={{
               background: "#f4fff8",

@@ -100,13 +100,12 @@ const App = () => {
 
     return () => observer.disconnect();
   }, []);
-
   // Image carousel data
   const carouselImages = [
-    { src: "/healthcare-banner.jpg", alt: "Dịch vụ chăm sóc sức khỏe" },
-    { src: "/medical-team.jpg", alt: "Đội ngũ y bác sĩ" },
-    { src: "/lab-testing.jpg", alt: "Xét nghiệm chuyên nghiệp" },
-    { src: "/medical-equipment.jpg", alt: "Thiết bị y tế hiện đại" }
+    { src: "/dichvuchamsoc.jpg", alt: "Dịch vụ chăm sóc sức khỏe" },
+    { src: "/Doctor2.jpg", alt: "Đội ngũ y bác sĩ" },
+    { src: "/ongnghiem.jpg", alt: "Xét nghiệm chuyên nghiệp" },
+    { src: "/thietbi.jpg", alt: "Thiết bị y tế hiện đại" }
   ];
 
   // Auto-rotate carousel
@@ -919,14 +918,12 @@ const App = () => {
               display: "flex",
               transition: "transform 0.5s ease-in-out",
               transform: `translateX(-${currentImageIndex * 100}%)`
-            }}>
-              {carouselImages.map((image, index) => (
+            }}>              {carouselImages.map((image, index) => (
                 <div
                   key={index}
                   style={{
                     minWidth: "100%",
                     height: 300,
-                    background: `linear-gradient(45deg, #0891b2, #22d3ee)`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -936,6 +933,18 @@ const App = () => {
                     position: "relative"
                   }}
                 >
+                  <img 
+                    src={image.src}
+                    alt={image.alt}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      position: "absolute",
+                      top: 0,
+                      left: 0
+                    }}
+                  />
                   <div style={{
                     position: "absolute",
                     top: 0,
@@ -949,7 +958,7 @@ const App = () => {
                   }}>
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontSize: 48, marginBottom: 12 }}>
-                        {index === 0 ? "🏥" : index === 1 ? "👨‍⚕️" : index === 2 ? "🧪" : "🔬"}
+                        {index === 0 ? "" : index === 1 ? "" : index === 2 ? "" :"" }
                       </div>
                       <div>{image.alt}</div>
                     </div>
@@ -1338,177 +1347,7 @@ const App = () => {
                 <li>🔸 Bảo mật thông tin tuyệt đối</li>
               </ul>
             </div>
-          </div>
-        </section>        {/* Statistics Section */}
-        <section id="statistics" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('statistics') ? 'visible' : ''}`} style={{
-          background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-          borderRadius: 12,
-          padding: 40,
-          margin: "32px 0",
-          color: "#fff",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          {/* Additional floating particles for statistics section */}
-          {showParticles && (
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none", zIndex: 1 }}>
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={`stat-particle-${i}`}
-                  style={{
-                    position: "absolute",
-                    left: `${15 + i * 20}%`,
-                    top: `${30 + i * 15}%`,
-                    width: `${6 + i * 2}px`,
-                    height: `${6 + i * 2}px`,
-                    background: `rgba(255,255,255,${0.2 + i * 0.1})`,
-                    borderRadius: "50%",
-                    animation: `particleFloat ${4 + i}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.8}s`
-                  }}
-                />
-              ))}
-            </div>
-          )}
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><defs><pattern id=\"grid\" width=\"10\" height=\"10\" patternUnits=\"userSpaceOnUse\"><path d=\"M 10 0 L 0 0 0 10\" fill=\"none\" stroke=\"rgba(255,255,255,0.1)\" stroke-width=\"1\"/></pattern></defs><rect width=\"100\" height=\"100\" fill=\"url(%23grid)\"/></svg>')",
-            opacity: 0.3
-          }}></div>
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <h2 style={{ 
-              textAlign: "center", 
-              marginBottom: 40, 
-              fontSize: 28,
-              fontWeight: 700,
-              textShadow: "0 2px 4px rgba(0,0,0,0.2)"
-            }}>
-              📊 Thành Tích Đáng Tự Hào
-            </h2>
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", 
-              gap: 30,
-              textAlign: "center"
-            }}>              <div style={{
-                background: "rgba(255,255,255,0.15)",
-                borderRadius: 16,
-                padding: 24,
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                position: "relative"
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>👥</div>
-                <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>{animatedStats.customers}+</div>
-                <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 12 }}>Khách hàng tin tưởng</div>
-                <div style={{
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: 10,
-                  height: 8,
-                  overflow: "hidden"
-                }}>
-                  <div
-                    className="progress-bar"
-                    style={{
-                      background: "linear-gradient(90deg, #fff, #22d3ee)",
-                      height: "100%",
-                      borderRadius: 10,
-                      "--target-width": `${(animatedStats.customers / 10000) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-              <div style={{
-                background: "rgba(255,255,255,0.15)",
-                borderRadius: 16,
-                padding: 24,
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                position: "relative"
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🧪</div>
-                <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>{animatedStats.tests}+</div>
-                <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 12 }}>Xét nghiệm thực hiện</div>
-                <div style={{
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: 10,
-                  height: 8,
-                  overflow: "hidden"
-                }}>
-                  <div
-                    className="progress-bar"
-                    style={{
-                      background: "linear-gradient(90deg, #fff, #0891b2)",
-                      height: "100%",
-                      borderRadius: 10,
-                      "--target-width": `${(animatedStats.tests / 50000) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-              <div style={{
-                background: "rgba(255,255,255,0.15)",
-                borderRadius: 16,
-                padding: 24,
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                position: "relative"
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>⭐</div>
-                <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>{animatedStats.satisfaction}%</div>
-                <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 12 }}>Độ hài lòng khách hàng</div>
-                <div style={{
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: 10,
-                  height: 8,
-                  overflow: "hidden"
-                }}>
-                  <div
-                    className="progress-bar"
-                    style={{
-                      background: "linear-gradient(90deg, #fff, #fbc02d)",
-                      height: "100%",
-                      borderRadius: 10,
-                      "--target-width": `${animatedStats.satisfaction}%`
-                    }}
-                  />
-                </div>
-              </div>
-              <div style={{
-                background: "rgba(255,255,255,0.15)",
-                borderRadius: 16,
-                padding: 24,
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                position: "relative"
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🏆</div>
-                <div style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>{animatedStats.experience}+</div>
-                <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 12 }}>Năm kinh nghiệm</div>
-                <div style={{
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: 10,
-                  height: 8,
-                  overflow: "hidden"
-                }}>
-                  <div
-                    className="progress-bar"
-                    style={{
-                      background: "linear-gradient(90deg, #fff, #e91e63)",
-                      height: "100%",
-                      borderRadius: 10,
-                      "--target-width": `${(animatedStats.experience / 5) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>        <section id="dich-vu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
+          </div>        </section>        <section id="dich-vu"data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
           background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
@@ -2147,13 +1986,67 @@ const App = () => {
             </button>
           </div>
         </div>
-      </section>      {/* Scroll to Top Button */}
+      </section>
+
+      {/* Floating Action Buttons */}
       <div style={{
         position: "fixed",
         bottom: 30,
         right: 30,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
         zIndex: 1000
       }}>
+        <div style={{
+          background: "#25d366",
+          color: "#fff",
+          borderRadius: "50%",
+          width: 60,
+          height: 60,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 4px 12px rgba(37,211,102,0.4)",
+          fontSize: 24,
+          transition: "all 0.3s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.1)";
+          e.target.style.boxShadow = "0 6px 16px rgba(37,211,102,0.6)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0 4px 12px rgba(37,211,102,0.4)";
+        }}>
+          💬
+        </div>
+        <div style={{
+          background: "#0891b2",
+          color: "#fff",
+          borderRadius: "50%",
+          width: 60,
+          height: 60,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 4px 12px rgba(17,153,142,0.4)",
+          fontSize: 24,
+          transition: "all 0.3s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = "scale(1.1)";
+          e.target.style.boxShadow = "0 6px 16px rgba(17,153,142,0.6)";
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = "scale(1)";
+          e.target.style.boxShadow = "0 4px 12px rgba(17,153,142,0.4)";
+        }}
+        onClick={() => setShowCalculator(true)}>
+          📅
+        </div>
         <div style={{
           background: "#e91e63",
           color: "#fff",
@@ -2179,7 +2072,7 @@ const App = () => {
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           ⬆️
         </div>
-      </div><footer style={{ 
+      </div>      <footer style={{ 
         background: "#e0f2fe !important", 
         backgroundColor: "#e0f2fe !important",
         colorScheme: "light",

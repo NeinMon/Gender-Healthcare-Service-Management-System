@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import UserAvatar from './UserAvatar';
 
 const TestBooking = () => {
   const [formData, setFormData] = useState({
@@ -43,35 +44,21 @@ const TestBooking = () => {
         paddingBottom: 0,
         position: "relative",
         width: "100%"
-      }}><div style={{
-          position: "absolute",
-          top: 20,
-          right: 25,
-          display: "flex",
-          gap: 10,
-          zIndex: 2
-        }}>          <Link 
-            to="/" 
-            style={{
-              background: "#0891b2",
-              color: "#fff",
-              textDecoration: "none",
-              padding: "8px 20px",
-              borderRadius: 6,
-              border: "2px solid #fff",
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-          >
-            Đăng xuất
-          </Link>
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
+      }}>
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          paddingTop: 18,
+          paddingLeft: 20,
+          paddingRight: 20
+        }}>
           <img
             src="/Logo.png"
             alt="Logo"
             style={{ height: 100, width: 100, objectFit: "contain" }}
           />
+          <UserAvatar userName="Nguyễn Thị A" />
         </div>
         <h1
           style={{

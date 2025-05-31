@@ -413,11 +413,10 @@ const App = () => {
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
         position: "relative"
-      }}>
-        <div style={{
+      }}>        <div style={{
           position: "absolute",
-          top: 170, // tăng top để xuống dưới
-          right: 25, // sang phải
+          top: 15, // moved to top corner
+          right: 25, // keep right position
           display: "flex",
           gap: 10,
           zIndex: 2

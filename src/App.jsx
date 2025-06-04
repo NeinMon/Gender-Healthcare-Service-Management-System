@@ -1,24 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const STATUS_COLOR = {
-  "Bắt đầu kinh nguyệt": "#43a047",
-  "Kết thúc kinh nguyệt": "#1de9b6",  "Rụng trứng": "#fbc02d",
-  "Dự kiến kinh nguyệt tiếp theo": "#0891b2"
-};
-
-const STATUS_ICON = {
-  "Bắt đầu kinh nguyệt": "🩸",
-  "Kết thúc kinh nguyệt": "✅",
-  "Rụng trứng": "🌼",
-  "Dự kiến kinh nguyệt tiếp theo": "🔔"
-};
-
 const App = () => {
-  const [startDate, setStartDate] = useState("");
-  const [cycleLength, setCycleLength] = useState(28);  const [periodLength, setPeriodLength] = useState(5);
-  const [tableData, setTableData] = useState([]);
-  const [showCalculator, setShowCalculator] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [registerData, setRegisterData] = useState({
     name: "",
@@ -31,12 +14,10 @@ const App = () => {
     password: "",
     confirmPassword: ""
   });
-  const [showLogin, setShowLogin] = useState(false);
-  const [loginData, setLoginData] = useState({
+  const [showLogin, setShowLogin] = useState(false);  const [loginData, setLoginData] = useState({
     email: "",
     password: ""
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [animatedStats, setAnimatedStats] = useState({
     customers: 0,
     tests: 0,
@@ -161,51 +142,11 @@ const App = () => {
       alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
       return;
     }
-    alert("Đăng nhập thành công!");
-    setShowLogin(false);
+    alert("Đăng nhập thành công!");    setShowLogin(false);
     setLoginData({ email: "", password: "" });
   };
 
-  const handleCalculate = (e) => {
-    e.preventDefault();
-    if (!startDate || cycleLength < 20 || periodLength < 2) return;
-
-    setIsLoading(true);
-    
-    // Simulate loading for better UX
-    setTimeout(() => {
-      const start = new Date(startDate);
-      const ovulation = new Date(start);
-      ovulation.setDate(start.getDate() + cycleLength - 14);
-
-      const nextPeriod = new Date(start);
-      nextPeriod.setDate(start.getDate() + cycleLength);
-
-      setTableData([
-        {
-          date: start.toLocaleDateString("vi-VN"),
-          status: "Bắt đầu kinh nguyệt",
-          note: "Ngày đầu chu kỳ"
-        },
-        {
-          date: new Date(start.getTime() + (periodLength - 1) * 86400000).toLocaleDateString("vi-VN"),
-          status: "Kết thúc kinh nguyệt",
-          note: "Ngày cuối kinh"
-        },
-        {
-          date: ovulation.toLocaleDateString("vi-VN"),
-          status: "Rụng trứng",
-          note: "Khả năng thụ thai cao"
-        },
-        {
-          date: nextPeriod.toLocaleDateString("vi-VN"),
-          status: "Dự kiến kinh nguyệt tiếp theo",
-          note: "Chu kỳ mới"
-        }
-      ]);
-      setIsLoading(false);
-    }, 1000);
-  };  return (
+  return (
     <div style={{
       backgroundColor: "#f0f9ff !important",
       background: "#f0f9ff !important",
@@ -1066,218 +1007,12 @@ const App = () => {
                 <div style={{ fontSize: 14, color: "#666" }}>Hỗ trợ liên tục</div>
               </div>
             </div>
-          </div>
-        </div>
+          </div>        </div>
         
-        {/* Period Calculator Button - Prominent Central Position */}
-        <div style={{
-          marginTop: 50,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center"
-        }}>
-          <button
-            onClick={() => setShowCalculator(v => !v)}
-            style={{
-              background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 25,
-              padding: "20px 40px",
-              fontSize: 18,
-              fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: "0 8px 25px rgba(8,145,178,0.4)",
-              transition: "all 0.3s ease",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              position: "relative",
-              overflow: "hidden"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "translateY(-3px) scale(1.05)";
-              e.target.style.boxShadow = "0 12px 35px rgba(8,145,178,0.5)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "translateY(0) scale(1)";
-              e.target.style.boxShadow = "0 8px 25px rgba(8,145,178,0.4)";
-            }}
-          >
-            <span style={{ fontSize: 24 }}>📅</span>
-            {showCalculator ? "Ẩn bảng tính chu kỳ" : "Hiện bảng tính chu kỳ"}
-            <span style={{ fontSize: 24 }}>✨</span>
-          </button>
-        </div>
-      </section><main style={{ padding: "40px 20px" }}>
-        <section id="demo-chu-ky">
-          {showCalculator && (
-            <div style={{
-              background: "#f4fff8",
-              borderRadius: 12,
-              boxShadow: "0 2px 12px rgba(17,153,142,0.07)",
-              padding: 24,
-              marginTop: 18
-            }}>
-              <form onSubmit={handleCalculate} style={{
-                marginBottom: 24,
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 18,
-                alignItems: "center"
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  Ngày bắt đầu:
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
-                    required
-                    style={{
-                      marginLeft: 4,
-                      border: "1px solid #0891b2",
-                      borderRadius: 6,
-                      padding: "4px 8px"
-                    }}
-                  />
-                </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  Chu kỳ (ngày):
-                  <input
-                    type="number"
-                    min={20}
-                    max={40}
-                    value={cycleLength}
-                    onChange={e => setCycleLength(Number(e.target.value))}
-                    required
-                    style={{
-                      width: 50,
-                      marginLeft: 4,
-                      border: "1px solid #0891b2",
-                      borderRadius: 6,
-                      padding: "4px 8px"
-                    }}
-                  />
-                </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  Số ngày kinh:
-                  <input
-                    type="number"
-                    min={2}
-                    max={10}
-                    value={periodLength}
-                    onChange={e => setPeriodLength(Number(e.target.value))}
-                    required
-                    style={{
-                      width: 40,
-                      marginLeft: 4,
-                      border: "1px solid #0891b2",
-                      borderRadius: 6,
-                      padding: "4px 8px"
-                    }}
-                  />
-                </label>                <button type="submit" disabled={isLoading} style={{
-                  background: isLoading ? "#81c784" : "#0891b2",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "8px 20px",
-                  fontWeight: 600,
-                  cursor: isLoading ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  transition: "all 0.3s ease"
-                }}>
-                  {isLoading ? (
-                    <>
-                      <div style={{
-                        width: 16,
-                        height: 16,
-                        border: "2px solid transparent",
-                        borderTop: "2px solid #fff",
-                        borderRadius: "50%",
-                        animation: "spin 1s linear infinite"
-                      }}></div>
-                      Đang tính...
-                    </>
-                  ) : (
-                    <>📊 Tính toán</>
-                  )}
-                </button>
-              </form>
-              {tableData.length > 0 && (
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{
-                    width: "100%",
-                    borderCollapse: "separate",
-                    borderSpacing: 0,
-                    background: "#e0f2f1",
-                    borderRadius: 12,
-                    boxShadow: "0 2px 8px rgba(17,153,142,0.06)",
-                    marginBottom: 0,
-                    fontSize: 16
-                  }}>
-                    <thead>
-                      <tr>
-                        <th style={{
-                          padding: 12,
-                          background: "#b2dfdb",
-                          color: "#0891b2",
-                          border: "none",
-                          borderTopLeftRadius: 12
-                        }}>Ngày</th>
-                        <th style={{
-                          padding: 12,
-                          background: "#b2dfdb",
-                          color: "#0891b2",
-                          border: "none"
-                        }}>Trạng thái</th>
-                        <th style={{
-                          padding: 12,
-                          background: "#b2dfdb",
-                          color: "#0891b2",
-                          border: "none",
-                          borderTopRightRadius: 12
-                        }}>Ghi chú</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableData.map((row, idx) => (
-                        <tr key={idx} style={{
-                          background: idx % 2 === 0 ? "#e0f2f1" : "#f4fff8"
-                        }}>
-                          <td style={{
-                            padding: 12,
-                            textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb"
-                          }}>{row.date}</td>
-                          <td style={{
-                            padding: 12,
-                            textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb",
-                            color: STATUS_COLOR[row.status] || "#0891b2",
-                            fontWeight: 600
-                          }}>
-                            <span style={{ fontSize: 20, marginRight: 6 }}>{STATUS_ICON[row.status]}</span>
-                            {row.status}
-                          </td>
-                          <td style={{
-                            padding: 12,
-                            textAlign: "center",
-                            borderBottom: "1px solid #b2dfdb"
-                          }}>{row.note}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-        </section>        <section id="gioi-thieu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('gioi-thieu') ? 'visible' : ''}`} style={{
+      </section>
+
+      <main style={{ padding: "40px 20px" }}>
+        <section id="gioi-thieu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('gioi-thieu') ? 'visible' : ''}`} style={{
           background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(8,145,178,0.07)",

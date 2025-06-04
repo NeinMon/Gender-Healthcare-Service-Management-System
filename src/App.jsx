@@ -1985,68 +1985,15 @@ const App = () => {
               📞 Hotline: 1900-1234
             </button>
           </div>
-        </div>
-      </section>
+        </div>      </section>
 
-      {/* Floating Action Buttons */}
+      {/* Scroll to Top Button */}
       <div style={{
         position: "fixed",
         bottom: 30,
         right: 30,
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
         zIndex: 1000
       }}>
-        <div style={{
-          background: "#25d366",
-          color: "#fff",
-          borderRadius: "50%",
-          width: 60,
-          height: 60,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(37,211,102,0.4)",
-          fontSize: 24,
-          transition: "all 0.3s ease"
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.1)";
-          e.target.style.boxShadow = "0 6px 16px rgba(37,211,102,0.6)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "scale(1)";
-          e.target.style.boxShadow = "0 4px 12px rgba(37,211,102,0.4)";
-        }}>
-          💬
-        </div>
-        <div style={{
-          background: "#0891b2",
-          color: "#fff",
-          borderRadius: "50%",
-          width: 60,
-          height: 60,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(17,153,142,0.4)",
-          fontSize: 24,
-          transition: "all 0.3s ease"
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.1)";
-          e.target.style.boxShadow = "0 6px 16px rgba(17,153,142,0.6)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = "scale(1)";
-          e.target.style.boxShadow = "0 4px 12px rgba(17,153,142,0.4)";
-        }}
-        onClick={() => setShowCalculator(true)}>
-          📅
-        </div>
         <div style={{
           background: "#e91e63",
           color: "#fff",
@@ -2072,7 +2019,9 @@ const App = () => {
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           ⬆️
         </div>
-      </div>      <footer style={{ 
+      </div>
+
+      <footer style={{ 
         background: "#e0f2fe !important", 
         backgroundColor: "#e0f2fe !important",
         colorScheme: "light",

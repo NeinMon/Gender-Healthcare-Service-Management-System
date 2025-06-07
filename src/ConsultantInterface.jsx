@@ -211,11 +211,12 @@ const ConsultantInterface = () => {
     }
   };
 
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
+  return (    <div style={{ 
+      height: '100vh', 
       backgroundColor: '#f5f5f5', 
-      fontFamily: 'Arial, sans-serif' 
+      fontFamily: 'Arial, sans-serif',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       {/* Header */}
       <header style={{ 
@@ -257,18 +258,15 @@ const ConsultantInterface = () => {
             Đăng Xuất
           </button>
         </div>
-      </header>
-
-      <div style={{ display: 'flex', maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      </header>      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar */}
         <div style={{ 
-          width: '25%', 
-          marginRight: '2rem', 
+          width: '320px', 
           backgroundColor: 'white', 
-          borderRadius: '8px',
           padding: '1.5rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          height: 'fit-content'
+          boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
+          minHeight: '100%',
+          borderRight: '1px solid #e0e0e0'
         }}>
           <div style={{ 
             textAlign: 'center', 
@@ -344,14 +342,11 @@ const ConsultantInterface = () => {
               ❓ Câu hỏi
             </button>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div style={{ width: '75%' }}>
-          {activeTab === 'consultations' && (
-            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ marginTop: 0 }}>Cuộc tư vấn</h2>
-              <div>
+        </div>        {/* Main Content */}
+        <div style={{ flex: 1, padding: '1.5rem', backgroundColor: '#f5f5f5', overflow: 'auto' }}>
+          {activeTab === 'consultations' && (            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+              <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Cuộc tư vấn</h2>
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                 {consultations.map(consultation => (
                   <div 
                     key={consultation.id}
@@ -421,12 +416,9 @@ const ConsultantInterface = () => {
                 ))}
               </div>
             </div>
-          )}
-
-          {activeTab === 'questions' && (
-            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ marginTop: 0 }}>Câu hỏi từ bệnh nhân</h2>
-              <div>
+          )}          {activeTab === 'questions' && (            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+              <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Câu hỏi từ bệnh nhân</h2>
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                 {questions.map(question => (
                   <div 
                     key={question.id}
@@ -608,17 +600,17 @@ const ConsultantInterface = () => {
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1000
-        }}>
-          <div style={{
-            width: '80%',
-            maxWidth: '800px',
-            height: '80%',
+        }}>          <div style={{
+            width: '95%',
+            height: '95%',
             backgroundColor: 'white',
             borderRadius: '8px',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
-          }}>            {/* Chat Header */}
+            overflow: 'hidden',
+            maxWidth: 'none',
+            maxHeight: 'none'
+          }}>{/* Chat Header */}
             <div style={{
               padding: '1rem',
               backgroundColor: '#0891b2',

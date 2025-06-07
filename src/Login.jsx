@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import accounts from '../data/accounts.js';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [loginData, setLoginData] = useState({
     email: "",
     password: ""
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
-
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     setError("");
@@ -20,14 +22,34 @@ const Login = () => {
     if (!loginData.email || !loginData.password) {
       setError("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
       return;
-    }    // Here you would call an API to validate login
+    }
+
+    // Find user in accounts data
+    const user = accounts.find(account => 
+      account.email === loginData.email && account.password === loginData.password
+    );
+
+    if (!user) {
+      setError("Email hoặc mật khẩu không đúng!");
+      return;
+    }    // Store user info and show success
+    setUserInfo(user);
     setSuccess(true);
     
-    // Redirect after successful login
+    // Store user info in localStorage
+    localStorage.setItem('loggedInUser', JSON.stringify(user));
+    
+    // Redirect based on user role
     setTimeout(() => {
-      window.location.href = "/services";
+      if (user.role === 'consultant') {
+        navigate('/consultant-interface');
+      } else if (user.role === 'admin') {
+        navigate('/services'); // You can create an admin interface later
+      } else {
+        navigate('/services');
+      }
     }, 2000);
-  };  return (
+  };return (
     <div style={{ 
       backgroundColor: "#f0f9ff !important", 
       background: "#f0f9ff !important",
@@ -103,10 +125,16 @@ const Login = () => {
               marginBottom: "20px",
               border: "2px solid rgba(67, 160, 71, 0.2)",
               boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)"
-            }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
+            }}>              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
               <h3 style={{ margin: "0 0 12px 0", fontSize: "20px", fontWeight: 600 }}>Đăng nhập thành công!</h3>
-              <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>Đang chuyển hướng đến trang dịch vụ...</p>
+              <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
+                {userInfo?.role === 'consultant' 
+                  ? 'Đang chuyển hướng đến giao diện tư vấn...' 
+                  : userInfo?.role === 'admin'
+                  ? 'Đang chuyển hướng đến trang quản trị...'
+                  : 'Đang chuyển hướng đến trang dịch vụ...'
+                }
+              </p>
             </div>
           ) : (
             <>

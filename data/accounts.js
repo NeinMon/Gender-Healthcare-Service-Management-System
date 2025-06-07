@@ -70,6 +70,66 @@ const accounts = [
     phone: "0901234567",
     address: "123 Đường ABC, Quận 1, TP.HCM",
     role: "admin"
+  },
+  {
+    id: 7,
+    username: "bs.linhchi",
+    name: "BS. Nguyễn Linh Chi",
+    email: "linhchi.nguyen@suckhoegioitinh.vn",
+    password: "LinhChi123",
+    gender: "Nữ",
+    dob: "1987-04-12",
+    phone: "0967123456",
+    address: "45 Pasteur, Quận 1, TP.HCM",
+    role: "consultant"
+  },
+  {
+    id: 8,
+    username: "bs.minhtuan",
+    name: "BS. Trần Minh Tuấn",
+    email: "minhtuan.tran@suckhoegioitinh.vn",
+    password: "MinhTuan123",
+    gender: "Nam",
+    dob: "1984-09-28",
+    phone: "0978234567",
+    address: "67 Điện Biên Phủ, Quận 3, TP.HCM",
+    role: "consultant"
+  },
+  {
+    id: 9,
+    username: "bs.hoainam",
+    name: "BS. Lê Hoài Nam",
+    email: "hoainam.le@suckhoegioitinh.vn",
+    password: "HoaiNam123",
+    gender: "Nam",
+    dob: "1989-11-15",
+    phone: "0989345678",
+    address: "89 Cách Mạng Tháng 8, Quận 10, TP.HCM",
+    role: "consultant"
+  },
+  {
+    id: 10,
+    username: "bs.thanhthuy",
+    name: "BS. Phạm Thanh Thúy",
+    email: "thanhthuy.pham@suckhoegioitinh.vn",
+    password: "ThanhThuy123",
+    gender: "Nữ",
+    dob: "1991-06-22",
+    phone: "0990456789",
+    address: "12 Trường Chinh, Quận Tân Bình, TP.HCM",
+    role: "consultant"
+  },
+  {
+    id: 11,
+    username: "bs.quangminh",
+    name: "BS. Võ Quang Minh",
+    email: "quangminh.vo@suckhoegioitinh.vn",
+    password: "QuangMinh123",
+    gender: "Nam",
+    dob: "1986-02-08",
+    phone: "0901567890",
+    address: "34 Lý Thường Kiệt, Quận 11, TP.HCM",
+    role: "consultant"
   }
 ];
 

@@ -40,6 +40,18 @@ const ConsultantInterface = () => {
       });
     }
   }, []);
+
+  // Manage full screen mode for consultant interface
+  useEffect(() => {
+    // Add CSS class to body when component mounts
+    document.body.classList.add('consultant-fullscreen-active');
+    
+    // Remove CSS class when component unmounts
+    return () => {
+      document.body.classList.remove('consultant-fullscreen-active');
+    };
+  }, []);
+
   // Initialize data from imported files
   useEffect(() => {
     setConsultations(consultationsData);
@@ -209,15 +221,16 @@ const ConsultantInterface = () => {
       case 'answered': return 'Đã trả lời';
       default: return status;
     }
-  };
-
-  return (    <div style={{ 
-      height: '100vh', 
-      backgroundColor: '#f5f5f5', 
-      fontFamily: 'Arial, sans-serif',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+  };  return (
+    <div 
+      className="consultant-fullscreen"
+      style={{ 
+        backgroundColor: '#f5f5f5', 
+        fontFamily: 'Arial, sans-serif',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {/* Header */}
       <header style={{ 
         backgroundColor: '#0891b2', 
@@ -343,8 +356,9 @@ const ConsultantInterface = () => {
             </button>
           </div>
         </div>        {/* Main Content */}
-        <div style={{ flex: 1, padding: '1.5rem', backgroundColor: '#f5f5f5', overflow: 'auto' }}>
-          {activeTab === 'consultations' && (            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, padding: '0', backgroundColor: 'white', overflow: 'auto' }}>
+          {activeTab === 'consultations' && (
+            <div style={{ backgroundColor: 'white', padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
               <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Cuộc tư vấn</h2>
               <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                 {consultations.map(consultation => (
@@ -416,7 +430,8 @@ const ConsultantInterface = () => {
                 ))}
               </div>
             </div>
-          )}          {activeTab === 'questions' && (            <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+          )}          {activeTab === 'questions' && (
+            <div style={{ backgroundColor: 'white', padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
               <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Câu hỏi từ bệnh nhân</h2>
               <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
                 {questions.map(question => (
@@ -479,10 +494,8 @@ const ConsultantInterface = () => {
           {activeTab === 'questions' && selectedItem && (
             <div style={{ 
               backgroundColor: 'white', 
-              borderRadius: '8px', 
               padding: '1.5rem', 
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              marginTop: '1.5rem' 
+              borderTop: '1px solid #e0e0e0'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ margin: 0 }}>Chi tiết câu hỏi</h2>

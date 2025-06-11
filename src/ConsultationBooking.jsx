@@ -254,21 +254,6 @@ const ConsultationBooking = () => {
                 <br />
                 Vui lòng kiểm tra điện thoại và email thường xuyên.
               </p>
-              <Link
-                to="/services"
-                style={{
-                  display: "inline-block",
-                  background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  padding: "12px 30px",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  transition: "all 0.3s ease"
-                }}
-              >
-                Về trang dịch vụ
-              </Link>
             </div>
           </div>
         )}

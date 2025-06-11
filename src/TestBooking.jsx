@@ -250,7 +250,8 @@ const TestBooking = () => {
             </form>
           </>
         ) : (
-          <div style={{ textAlign: "center", padding: "40px 20px" }}>            <div style={{ 
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ 
               fontSize: "64px", 
               marginBottom: "20px",
               color: "#0891b2"
@@ -261,21 +262,6 @@ const TestBooking = () => {
             <p style={{ fontSize: "16px", color: "#7f8c8d", marginBottom: "30px" }}>
               Cảm ơn bạn đã đặt lịch. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận lịch hẹn.
             </p>
-            <div style={{ marginTop: "30px" }}>              <Link
-                to="/services"
-                style={{
-                  display: "inline-block",
-                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  padding: "12px 30px",
-                  borderRadius: "30px",
-                  fontWeight: "600",
-                }}
-              >
-                Quay lại trang chủ
-              </Link>
-            </div>
           </div>
         )}        {/* Thông tin thêm */}        <div style={{ 
           marginTop: "40px", 

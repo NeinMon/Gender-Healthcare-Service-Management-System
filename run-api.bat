@@ -1,0 +1,3 @@
+@echo off
+echo Running API Server...
+node api-server.cjs

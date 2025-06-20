@@ -4,14 +4,12 @@ import { Link } from 'react-router-dom';
 const Register = () => {
   const [registerData, setRegisterData] = useState({
     name: "",
-    username: "",
-    gender: "",
+    address: "",
     dob: "",
     email: "",
-    phone: "",
-    address: "",
+    gender: "",
     password: "",
-    confirmPassword: ""
+    phone: ""
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -20,39 +18,50 @@ const Register = () => {
     setRegisterData({ ...registerData, [e.target.name]: e.target.value });
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     // Validate form
     if (
       !registerData.name ||
-      !registerData.username ||
-      !registerData.gender ||
+      !registerData.address ||
       !registerData.dob ||
       !registerData.email ||
-      !registerData.phone ||
-      !registerData.address ||
-      !registerData.password
+      !registerData.gender ||
+      !registerData.password ||
+      !registerData.phone
     ) {
       setError("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
-    if (registerData.password !== registerData.confirmPassword) {
-      setError("Mật khẩu và xác nhận mật khẩu không trùng khớp!");
-      return;
+    try {
+      const response = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...registerData, roleid: 1 }), // Thêm roleid: 1 mặc định
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.message || 'Đăng ký thất bại!');
+        setSuccess(false);
+        return;
+      }
+      setSuccess(true);
+      setError("");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    } catch (err) {
+      setError("Không thể kết nối tới máy chủ. Vui lòng thử lại!");
+      setSuccess(false);
     }
+  };
 
-    // Here you would typically call an API to register the user
-    setSuccess(true);
-    setError("");
-    
-    // Clear form after successful registration
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 2000);
-  };  return (
+  return (
     <div style={{ 
       backgroundColor: "#f0f9ff !important", 
       background: "#f0f9ff !important",
@@ -109,7 +118,7 @@ const Register = () => {
             boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1), 0 1px 3px rgba(0,0,0,0.1)",
             padding: "40px",
             width: "100%",
-            maxWidth: "1000px",
+            maxWidth: "600px",
             margin: "0 auto",
             backdropFilter: "blur(10px)",
             border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -158,7 +167,7 @@ const Register = () => {
               )}
               <form onSubmit={handleRegisterSubmit} style={{ width: "100%" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                  <div>
+                  <div style={{ gridColumn: "1 / span 2" }}>
                     <label style={{ 
                       display: "block", 
                       marginBottom: "8px", 
@@ -197,12 +206,12 @@ const Register = () => {
                       color: "#0891b2",
                       fontSize: "15px"
                     }}>
-                      🆔 Tên đăng nhập:
+                      🏠 Địa chỉ:
                     </label>
                     <input
                       type="text"
-                      name="username"
-                      value={registerData.username}
+                      name="address"
+                      value={registerData.address}
                       onChange={handleRegisterChange}
                       style={{ 
                         width: "100%", 
@@ -219,41 +228,6 @@ const Register = () => {
                       onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
                       onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
                     />
-                  </div>
-                  <div>
-                    <label style={{ 
-                      display: "block", 
-                      marginBottom: "8px", 
-                      fontWeight: "600", 
-                      color: "#0891b2",
-                      fontSize: "15px"
-                    }}>
-                      ⚧️ Giới tính:
-                    </label>
-                    <select
-                      name="gender"
-                      value={registerData.gender}
-                      onChange={handleRegisterChange}
-                      style={{ 
-                        width: "100%", 
-                        padding: "16px 20px", 
-                        borderRadius: "12px", 
-                        border: "2px solid rgba(8, 145, 178, 0.1)", 
-                        fontSize: "16px",
-                        background: "rgba(255, 255, 255, 0.8)",
-                        transition: "all 0.3s ease",
-                        outline: "none",
-                        boxSizing: "border-box",
-                        marginBottom: "15px"
-                      }}
-                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
-                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
-                    >
-                      <option value="">-- Chọn giới tính --</option>
-                      <option value="Nam">Nam</option>
-                      <option value="Nữ">Nữ</option>
-                      <option value="Khác">Khác</option>
-                    </select>
                   </div>
                   <div>
                     <label style={{ 
@@ -325,12 +299,11 @@ const Register = () => {
                       color: "#0891b2",
                       fontSize: "15px"
                     }}>
-                      📱 Số điện thoại:
+                      ⚧️ Giới tính:
                     </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={registerData.phone}
+                    <select
+                      name="gender"
+                      value={registerData.gender}
                       onChange={handleRegisterChange}
                       style={{ 
                         width: "100%", 
@@ -346,38 +319,12 @@ const Register = () => {
                       }}
                       onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
                       onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
-                    />
-                  </div>
-                  <div style={{ gridColumn: "1 / span 2" }}>
-                    <label style={{ 
-                      display: "block", 
-                      marginBottom: "8px", 
-                      fontWeight: "600", 
-                      color: "#0891b2",
-                      fontSize: "15px"
-                    }}>
-                      🏠 Địa chỉ:
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={registerData.address}
-                      onChange={handleRegisterChange}
-                      style={{ 
-                        width: "100%", 
-                        padding: "16px 20px", 
-                        borderRadius: "12px", 
-                        border: "2px solid rgba(8, 145, 178, 0.1)", 
-                        fontSize: "16px",
-                        background: "rgba(255, 255, 255, 0.8)",
-                        transition: "all 0.3s ease",
-                        outline: "none",
-                        boxSizing: "border-box",
-                        marginBottom: "15px"
-                      }}
-                      onFocus={(e) => e.target.style.border = "2px solid #0891b2"}
-                      onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
-                    />
+                    >
+                      <option value="">-- Chọn giới tính --</option>
+                      <option value="Male">Nam</option>
+                      <option value="Female">Nữ</option>
+                      <option value="Other">Khác</option>
+                    </select>
                   </div>
                   <div>
                     <label style={{ 
@@ -418,12 +365,12 @@ const Register = () => {
                       color: "#0891b2",
                       fontSize: "15px"
                     }}>
-                      🔑 Xác nhận mật khẩu:
+                      📱 Số điện thoại:
                     </label>
                     <input
-                      type="password"
-                      name="confirmPassword"
-                      value={registerData.confirmPassword}
+                      type="tel"
+                      name="phone"
+                      value={registerData.phone}
                       onChange={handleRegisterChange}
                       style={{ 
                         width: "100%", 

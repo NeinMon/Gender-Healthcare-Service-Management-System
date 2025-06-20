@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import accounts from '../data/accounts.js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,7 +14,8 @@ const Login = () => {
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
-  const handleLoginSubmit = (e) => {
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -24,31 +24,42 @@ const Login = () => {
       return;
     }
 
-    // Find user in accounts data
-    const user = accounts.find(account => 
-      account.email === loginData.email && account.password === loginData.password
-    );
-
-    if (!user) {
-      setError("Email hoặc mật khẩu không đúng!");
-      return;
-    }    // Store user info and show success
-    setUserInfo(user);
-    setSuccess(true);
-    
-    // Store user info in localStorage
-    localStorage.setItem('loggedInUser', JSON.stringify(user));
-    
-    // Redirect based on user role
-    setTimeout(() => {
-      if (user.role === 'consultant') {
-        navigate('/consultant-interface');
-      } else if (user.role === 'admin') {
-        navigate('/services'); // You can create an admin interface later
-      } else {
-        navigate('/services');
+    try {
+      // Gọi API backend để kiểm tra đăng nhập
+      const response = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+      if (!response.ok) {
+        throw new Error('Email hoặc mật khẩu không đúng!');
       }
-    }, 2000);
+      const user = await response.json();
+      setUserInfo(user);
+      setSuccess(true);
+      
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      // Lưu email riêng biệt để các trang khác dễ truy xuất
+      if (user.email) {
+        localStorage.setItem('email', user.email);
+      }
+      
+      // Chuyển hướng dựa trên vai trò người dùng
+      setTimeout(() => {
+        if (user.role === 'consultant') {
+          navigate('/consultant-interface');
+        } else if (user.role === 'admin') {
+          navigate('/services'); // Bạn có thể tạo giao diện quản trị sau
+        } else {
+          navigate('/services');
+        }
+      }, 2000);
+    } catch (err) {
+      setError(err.message || 'Đăng nhập thất bại!');
+    }
   };return (
     <div style={{ 
       backgroundColor: "#f0f9ff !important", 

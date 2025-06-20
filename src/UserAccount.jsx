@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const UserAccount = () => {
   const [userInfo, setUserInfo] = useState({
-    name: "Nguyễn Thị A",
-    email: "nguyenthia@email.com",
-    phone: "0123456789",
-    address: "123 Đường ABC, Quận 1, TP.HCM",
-    gender: "Nữ",
-    dob: "1990-01-01"
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    gender: '',
+    dob: ''
   });
-
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...userInfo });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // Giả sử email lưu ở localStorage sau khi đăng nhập
+    const email = localStorage.getItem('email');
+    if (!email) {
+      setError('Không tìm thấy thông tin tài khoản.');
+      setLoading(false);
+      return;
+    }
+    fetch(`http://localhost:8080/api/users/info?email=${encodeURIComponent(email)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.email) {
+          setError('Không tìm thấy thông tin tài khoản.');
+          setLoading(false);
+          return;
+        }
+        setUserInfo(data);
+        setEditData(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Không thể lấy thông tin tài khoản.');
+        setLoading(false);
+      });
+  }, []);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -97,6 +124,11 @@ const UserAccount = () => {
         maxWidth: "800px",
         margin: "0 auto"
       }}>
+        {loading ? (
+          <div>Đang tải thông tin tài khoản...</div>
+        ) : error ? (
+          <div style={{ color: 'red' }}>{error}</div>
+        ) : (
         <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "20px",
@@ -177,98 +209,103 @@ const UserAccount = () => {
             gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
             gap: "20px"
           }}>
-            {Object.entries(isEditing ? editData : userInfo).map(([key, value]) => (
-              <div key={key} style={{
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0"
-              }}>
-                <label style={{
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  marginBottom: "8px",
-                  display: "block",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px"
+            {Object.entries(isEditing ? editData : userInfo).map(([key, value]) => {
+              if (typeof value === 'object' && value !== null) return null; // Bỏ qua trường object
+              if (key.toLowerCase() === 'userid') return null; // Bỏ qua trường userid
+              return (
+                <div key={key} style={{
+                  padding: "20px",
+                  backgroundColor: "#f8fafc",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0"
                 }}>
-                  {key === 'name' ? 'Họ Tên' :
-                   key === 'email' ? 'Email' :
-                   key === 'phone' ? 'Số Điện Thoại' :
-                   key === 'address' ? 'Địa Chỉ' :
-                   key === 'gender' ? 'Giới Tính' :
-                   key === 'dob' ? 'Ngày Sinh' : key}
-                </label>
-                
-                {isEditing ? (
-                  key === 'gender' ? (
-                    <select
-                      name={key}
-                      value={value}
-                      onChange={handleChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "16px",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border-color 0.3s ease"
-                      }}
-                    >
-                      <option value="Nam">Nam</option>
-                      <option value="Nữ">Nữ</option>
-                      <option value="Khác">Khác</option>
-                    </select>
-                  ) : key === 'dob' ? (
-                    <input
-                      type="date"
-                      name={key}
-                      value={value}
-                      onChange={handleChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "16px",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border-color 0.3s ease"
-                      }}
-                    />
-                  ) : (
-                    <input
-                      type={key === 'email' ? 'email' : 'text'}
-                      name={key}
-                      value={value}
-                      onChange={handleChange}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        fontSize: "16px",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "8px",
-                        outline: "none",
-                        transition: "border-color 0.3s ease"
-                      }}
-                    />
-                  )
-                ) : (
-                  <div style={{
-                    fontSize: "16px",
-                    fontWeight: "500",
-                    color: "#1e293b",
-                    padding: "12px 0"
+                  <label style={{
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: "#64748b",
+                    marginBottom: "8px",
+                    display: "block",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
                   }}>
-                    {value}
-                  </div>
-                )}
-              </div>
-            ))}
+                    {key === 'name' ? 'Họ Tên' :
+                     key === 'email' ? 'Email' :
+                     key === 'phone' ? 'Số Điện Thoại' :
+                     key === 'address' ? 'Địa Chỉ' :
+                     key === 'gender' ? 'Giới Tính' :
+                     key === 'dob' ? 'Ngày Sinh' : key}
+                  </label>
+                  {isEditing ? (
+                    key === 'gender' ? (
+                      <select
+                        name={key}
+                        value={value}
+                        onChange={handleChange}
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          fontSize: "16px",
+                          border: "2px solid #e2e8f0",
+                          borderRadius: "8px",
+                          outline: "none",
+                          transition: "border-color 0.3s ease"
+                        }}
+                      >
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                      </select>
+                    ) : key === 'dob' ? (
+                      <input
+                        type="date"
+                        name={key}
+                        value={value}
+                        onChange={handleChange}
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          fontSize: "16px",
+                          border: "2px solid #e2e8f0",
+                          borderRadius: "8px",
+                          outline: "none",
+                          transition: "border-color 0.3s ease"
+                        }}
+                      />
+                    ) : (
+                      <input
+                        type={key === 'email' ? 'email' : 'text'}
+                        name={key}
+                        value={value}
+                        onChange={handleChange}
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          fontSize: "16px",
+                          border: "2px solid #e2e8f0",
+                          borderRadius: "8px",
+                          outline: "none",
+                          transition: "border-color 0.3s ease"
+                        }}
+                      />
+                    )
+                  ) : (
+                    <div style={{
+                      fontSize: "16px",
+                      fontWeight: "500",
+                      color: "#1e293b",
+                      padding: "12px 0"
+                    }}>
+                      {key === 'dob' && typeof value === 'string' && value.includes('T')
+                        ? new Date(value).toLocaleDateString('vi-VN')
+                        : value}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
-
+        )}
         <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "20px",

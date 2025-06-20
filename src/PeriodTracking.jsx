@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
@@ -8,9 +8,51 @@ const PeriodTracking = () => {
     cycleLength: 28,
     periodLength: 5
   });
-
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Lấy email từ localStorage
+  const email = localStorage.getItem('email');
+
+  // Hàm lấy dữ liệu chu kỳ mới nhất từ API
+  useEffect(() => {
+    async function fetchLatestCycle() {
+      setLoading(true);
+      setError('');
+      try {
+        if (!email) {
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(`http://localhost:8080/api/menstrualcycles?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.startDate) {
+            // Hiện kết quả luôn nếu đã có dữ liệu
+            setResults({
+              periodStart: new Date(data.startDate).toLocaleDateString('vi-VN'),
+              periodEnd: new Date(new Date(data.startDate).getTime() + (data.periodLength - 1) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              ovulationStart: new Date(new Date(data.startDate).getTime() + (data.cycleLength - 15) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              ovulationEnd: new Date(new Date(data.startDate).getTime() + (data.cycleLength - 13) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              fertilityStart: new Date(new Date(data.startDate).getTime() + (data.cycleLength - 19) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              fertilityEnd: new Date(new Date(data.startDate).getTime() + (data.cycleLength - 13) * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              nextCycleStart: new Date(new Date(data.startDate).getTime() + data.cycleLength * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+              cycleLength: data.cycleLength,
+              periodLength: data.periodLength
+            });
+            setIsSubmitted(true);
+          }
+        }
+      } catch (err) {
+        setError('Không thể lấy dữ liệu chu kỳ.');
+      }
+      setLoading(false);
+    }
+    fetchLatestCycle();
+    // eslint-disable-next-line
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,7 +60,35 @@ const PeriodTracking = () => {
       ...formData,
       [name]: value
     });
-  };  const calculateCycle = () => {
+  };
+
+  // Hàm lưu dữ liệu chu kỳ mới vào API
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!formData.startDate) {
+      setError('Vui lòng chọn ngày bắt đầu kinh nguyệt gần nhất!');
+      return;
+    }
+    try {
+      const payload = {
+        ...formData,
+        email: email || ''
+      };
+      const res = await fetch('http://localhost:8080/api/menstrualcycles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Lưu thông tin chu kỳ thất bại!');
+      // Tính toán lại kết quả và hiện ra
+      calculateCycle();
+    } catch (err) {
+      setError(err.message || 'Có lỗi xảy ra khi lưu thông tin!');
+    }
+  };
+
+  const calculateCycle = () => {
     if (!formData.startDate) {
       alert("Vui lòng chọn ngày bắt đầu kinh nguyệt gần nhất!");
       return;
@@ -54,47 +124,77 @@ const PeriodTracking = () => {
 
     setResults(calculationResults);
     setIsSubmitted(true);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    calculateCycle();
-  };  return (
-    <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>
-      {/* Header */}
-      <header style={{
-        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
+  };  // Giữ nguyên phần render, chỉ thay đổi logic hiển thị form/kết quả
+  return (
+    <div style={{ 
+      backgroundColor: "#f0f9ff", 
+      minHeight: "100vh", 
+      display: "flex", 
+      flexDirection: "column", 
+      width: "100vw",
+      margin: 0,
+      padding: 0,
+      overflow: "hidden"
+    }}>
+      {/* Header */}      <header style={{
+        background: "#19bdd4",
+        width: "100%",
+        padding: "22px 0",
+        margin: 0,
+        border: "none",
         position: "relative",
-        width: "100%"
-      }}>
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
+        minHeight: 90,
+        boxShadow: "0 4px 20px rgba(8,145,178,0.15)",
+        overflow: "hidden"
+      }}><div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          margin: 0,
+          padding: 0,
+          position: "relative"
         }}>
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
-          />
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            zIndex: 1
+          }}>            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ 
+                height: 48, 
+                width: 48, 
+                objectFit: "contain", 
+                marginRight: 15,
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+              }}
+            />
+            <h1
+              style={{
+                color: "#fff",
+                margin: 0,
+                fontWeight: 800,
+                letterSpacing: 0.5,
+                fontSize: 30,
+                lineHeight: 1.1,
+                fontFamily: 'Montserrat, Arial, sans-serif',
+                textShadow: "0 2px 4px rgba(0,0,0,0.2)"
+              }}
+            >
+              Theo dõi chu kỳ
+            </h1>
+          </div>
+        </div>        <div style={{ 
+          position: "absolute", 
+          top: 20, 
+          right: 24,
+          zIndex: 10
+        }}>
           <UserAvatar userName="Nguyễn Thị A" />
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Theo dõi chu kỳ kinh nguyệt
-        </h1>
       </header>
 
       {/* Main Content */}
@@ -122,115 +222,14 @@ const PeriodTracking = () => {
           </Link>
         </div>
 
-        {!isSubmitted ? (
-          <>
-            <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
-              Tính toán chu kỳ kinh nguyệt
-            </h2>
-            
-            <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "25px", width: "100%" }}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle}>Ngày bắt đầu kinh nguyệt gần nhất *</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-                
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle}>Độ dài chu kỳ (ngày) *</label>
-                  <input
-                    type="number"
-                    name="cycleLength"
-                    value={formData.cycleLength}
-                    onChange={handleChange}
-                    min="21"
-                    max="35"
-                    required
-                    style={inputStyle}
-                    placeholder="28"
-                  />
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle}>Thời gian kinh nguyệt (ngày) *</label>
-                  <input
-                    type="number"
-                    name="periodLength"
-                    value={formData.periodLength}
-                    onChange={handleChange}
-                    min="3"
-                    max="10"
-                    required
-                    style={inputStyle}
-                    placeholder="5"
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: "35px", textAlign: "center" }}>
-                <button
-                  type="submit"
-                  style={{
-                    background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                    color: "#fff",
-                    border: "none",
-                    padding: "14px 35px",
-                    borderRadius: "30px",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease"
-                  }}
-                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-                >
-                  Tính toán chu kỳ
-                </button>
-              </div>
-            </form>
-          </>        ) : (
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "50px", fontSize: "18px", color: "#666" }}>
+            Đang tải dữ liệu chu kỳ mới nhất...
+          </div>
+        ) : isSubmitted && results ? (
           <div style={{ textAlign: "center", padding: "20px" }}>
-            <div style={{ 
-              background: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
-              borderRadius: "50%",
-              width: "80px",
-              height: "80px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 25px auto",
-              boxShadow: "0 8px 25px rgba(16, 185, 129, 0.3)"
-            }}>
-              <span style={{ fontSize: "36px", color: "white" }}>✓</span>
-            </div>
-            
-            <h2 style={{ 
-              color: "#2c3e50", 
-              marginBottom: "15px", 
-              fontSize: "24px", 
-              fontWeight: "700" 
-            }}>
-              Tính toán chu kỳ thành công!
-            </h2>
-            
-            <p style={{ 
-              fontSize: "16px", 
-              color: "#7f8c8d", 
-              marginBottom: "40px",
-              maxWidth: "600px",
-              margin: "0 auto 40px auto",
-              lineHeight: "1.6"
-            }}>
-              Dưới đây là kết quả tính toán chu kỳ kinh nguyệt của bạn dựa trên thông tin đã cung cấp. 
-              Hãy lưu lại thông tin này để theo dõi sức khỏe sinh sản của bạn.
-            </p>
-              <div style={{
+            {/* Bỏ phần thông báo thành công, chỉ hiển thị kết quả */}
+            <div style={{
               background: "rgba(8, 145, 178, 0.05)",
               borderRadius: "20px",
               padding: "40px",
@@ -240,9 +239,9 @@ const PeriodTracking = () => {
               maxWidth: "1200px",
               margin: "0 auto 35px auto"
             }}>
-              <h3 style={{ 
-                color: "#0891b2", 
-                textAlign: "center", 
+              <h3 style={{
+                color: "#0891b2",
+                textAlign: "center",
                 marginBottom: "30px",
                 fontSize: "20px",
                 fontWeight: "700"
@@ -510,7 +509,79 @@ const PeriodTracking = () => {
               </Link>
             </div>
           </div>
-        )}
+        ) : (
+          <>
+            <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
+              Tính toán chu kỳ kinh nguyệt
+            </h2>
+            
+            <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "25px", width: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={labelStyle}>Ngày bắt đầu kinh nguyệt gần nhất *</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={labelStyle}>Độ dài chu kỳ (ngày) *</label>
+                  <input
+                    type="number"
+                    name="cycleLength"
+                    value={formData.cycleLength}
+                    onChange={handleChange}
+                    min="21"
+                    max="35"
+                    required
+                    style={inputStyle}
+                    placeholder="28"
+                  />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={labelStyle}>Thời gian kinh nguyệt (ngày) *</label>
+                  <input
+                    type="number"
+                    name="periodLength"
+                    value={formData.periodLength}
+                    onChange={handleChange}
+                    min="3"
+                    max="10"
+                    required
+                    style={inputStyle}
+                    placeholder="5"
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: "35px", textAlign: "center" }}>
+                <button
+                  type="submit"
+                  style={{
+                    background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                    color: "#fff",
+                    border: "none",
+                    padding: "14px 35px",
+                    borderRadius: "30px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease"
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                >
+                  Tính toán chu kỳ
+                </button>
+              </div>
+            </form>
+          </>        )}
       </main>
 
       {/* Footer */}

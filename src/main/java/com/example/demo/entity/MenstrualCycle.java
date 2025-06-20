@@ -11,6 +11,8 @@ public class MenstrualCycle {
     private LocalDate startDate;
     private LocalDate endDate;
     private int cycleLength;
+    private Integer periodLength;
+    private String email;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -21,4 +23,8 @@ public class MenstrualCycle {
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public int getCycleLength() { return cycleLength; }
     public void setCycleLength(int cycleLength) { this.cycleLength = cycleLength; }
+    public Integer getPeriodLength() { return periodLength; }
+    public void setPeriodLength(Integer periodLength) { this.periodLength = periodLength; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }

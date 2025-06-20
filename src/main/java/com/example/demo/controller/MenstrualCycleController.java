@@ -19,7 +19,26 @@ public class MenstrualCycleController {
     }
 
     @PostMapping
-    public MenstrualCycle create(@RequestBody MenstrualCycle menstrualCycle) {
-        return menstrualCycleRepository.save(menstrualCycle);
+    public MenstrualCycle createOrUpdate(@RequestBody MenstrualCycle menstrualCycle) {
+        // Tính endDate từ startDate và cycleLength
+        if (menstrualCycle.getStartDate() != null && menstrualCycle.getCycleLength() > 0) {
+            menstrualCycle.setEndDate(menstrualCycle.getStartDate().plusDays(menstrualCycle.getCycleLength() - 1));
+        }
+        List<MenstrualCycle> cycles = menstrualCycleRepository.findTop1ByEmailOrderByStartDateDesc(menstrualCycle.getEmail());
+        if (!cycles.isEmpty()) {
+            MenstrualCycle existing = cycles.get(0);
+            existing.setStartDate(menstrualCycle.getStartDate());
+            existing.setEndDate(menstrualCycle.getEndDate());
+            existing.setCycleLength(menstrualCycle.getCycleLength());
+            return menstrualCycleRepository.save(existing);
+        } else {
+            return menstrualCycleRepository.save(menstrualCycle);
+        }
+    }
+
+    @GetMapping(params = "email")
+    public MenstrualCycle getLatestByEmail(@RequestParam String email) {
+        List<MenstrualCycle> cycles = menstrualCycleRepository.findTop1ByEmailOrderByStartDateDesc(email);
+        return cycles.isEmpty() ? null : cycles.get(0);
     }
 }

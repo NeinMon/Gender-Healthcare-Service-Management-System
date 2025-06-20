@@ -14,7 +14,7 @@
 	<name>Gender Health Care</name>
 	<description>Gender Health Care Project</description>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>24</java.version>
 	</properties>
 	<dependencies>
 		<!-- Spring Boot Web -->

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const Register = () => {
-  const [registerData, setRegisterData] = useState({
-    name: "",
+const Register = () => {  const [registerData, setRegisterData] = useState({
+    fullName: "",
     address: "",
     dob: "",
     email: "",
@@ -20,12 +19,9 @@ const Register = () => {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    // Validate form
+    setError("");    // Validate form
     if (
-      !registerData.name ||
-      !registerData.address ||
+      !registerData.fullName ||
       !registerData.dob ||
       !registerData.email ||
       !registerData.gender ||
@@ -35,26 +31,50 @@ const Register = () => {
       setError("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-
-    try {
-      const response = await fetch('http://localhost:8080/api/users/register', {
+    
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(registerData.email)) {
+      setError("Email không đúng định dạng!");
+      return;
+    }
+    
+    // Validate password length
+    if (registerData.password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự!");
+      return;
+    }
+    
+    // Validate phone format
+    const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+    if (!phoneRegex.test(registerData.phone)) {
+      setError("Số điện thoại không hợp lệ (phải bắt đầu bằng 0 hoặc +84, và có 10 số)");
+      return;
+    }    try {
+      // Format date for the backend
+      const formattedData = {
+        ...registerData,
+        // Convert date string to datetime format required by backend
+        dob: registerData.dob ? new Date(registerData.dob).toISOString() : null
+      };
+      
+      const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...registerData, roleid: 1 }), // Thêm roleid: 1 mặc định
+        body: JSON.stringify(formattedData),
       });
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
         setError(data.message || 'Đăng ký thất bại!');
         setSuccess(false);
         return;
       }
-      setSuccess(true);
+        setSuccess(true);
       setError("");
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
     } catch (err) {
       setError("Không thể kết nối tới máy chủ. Vui lòng thử lại!");
       setSuccess(false);
@@ -137,12 +157,35 @@ const Register = () => {
               marginBottom: "20px",
               border: "2px solid rgba(67, 160, 71, 0.2)",
               boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)"
-            }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
+            }}>              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
               <h3 style={{ margin: "0 0 12px 0", fontSize: "20px", fontWeight: 600 }}>Đăng ký thành công!</h3>
-              <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-                Đang chuyển hướng về trang chủ...
+              <p style={{ margin: 0, color: "#666", fontSize: "14px", marginBottom: "20px" }}>
+                Cảm ơn bạn đã đăng ký tài khoản.
               </p>
+              <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
+                <Link to="/" style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  fontWeight: "500",
+                  fontSize: "14px"
+                }}>
+                  Trang chủ
+                </Link>
+                <Link to="/login" style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  fontWeight: "500",
+                  fontSize: "14px"
+                }}>
+                  Đăng nhập
+                </Link>
+              </div>
             </div>
           ) : (
             <>
@@ -176,11 +219,10 @@ const Register = () => {
                       fontSize: "15px"
                     }}>
                       👤 Họ và tên:
-                    </label>
-                    <input
+                    </label>                    <input
                       type="text"
-                      name="name"
-                      value={registerData.name}
+                      name="fullName"
+                      value={registerData.fullName}
                       onChange={handleRegisterChange}
                       style={{ 
                         width: "100%", 

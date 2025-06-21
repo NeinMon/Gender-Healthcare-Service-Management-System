@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import CustomerAvatar from './components/CustomerAvatar';
-import consultationsData from '../data/consultations';
-import questionsData from '../data/questions';
-import chatMessagesData from '../data/chatMessages';
+import consultationsData from './data/consultations';
+import questionsData from './data/questions';
+import chatMessagesData from './data/chatMessages';
 
 const ConsultantInterface = () => {
   const navigate = useNavigate();

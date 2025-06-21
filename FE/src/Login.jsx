@@ -14,7 +14,6 @@ const Login = () => {
   const handleLoginChange = (e) => {
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
   };
-
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -26,34 +25,35 @@ const Login = () => {
 
     try {
       // Gọi API backend để kiểm tra đăng nhập
-      const response = await fetch('http://localhost:8080/api/users/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(loginData),
       });
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Email hoặc mật khẩu không đúng!');
+        throw new Error(data.message || 'Email hoặc mật khẩu không đúng!');
       }
-      const user = await response.json();
-      setUserInfo(user);
+      
+      setUserInfo(data);
       setSuccess(true);
       
-      // Lưu thông tin người dùng vào localStorage
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
-      // Lưu email riêng biệt để các trang khác dễ truy xuất
-      if (user.email) {
-        localStorage.setItem('email', user.email);
-      }
+      // Lưu thông tin người dùng vào localStorage      localStorage.setItem('loggedInUser', JSON.stringify(data));
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('email', data.email);
+      localStorage.setItem('fullName', data.fullName);      localStorage.setItem('roleId', data.roleId);
+      localStorage.setItem('roleName', data.roleName);
       
-      // Chuyển hướng dựa trên vai trò người dùng
+      // Chuyển hướng dựa trên redirectUrl từ server sau 2 giây
       setTimeout(() => {
-        if (user.role === 'consultant') {
-          navigate('/consultant-interface');
-        } else if (user.role === 'admin') {
-          navigate('/services'); // Bạn có thể tạo giao diện quản trị sau
+        if (data.redirectUrl) {
+          navigate(data.redirectUrl);
         } else {
+          // Fallback nếu server không gửi redirectUrl
           navigate('/services');
         }
       }, 2000);
@@ -137,12 +137,13 @@ const Login = () => {
               border: "2px solid rgba(67, 160, 71, 0.2)",
               boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)"
             }}>              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
-              <h3 style={{ margin: "0 0 12px 0", fontSize: "20px", fontWeight: 600 }}>Đăng nhập thành công!</h3>
-              <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-                {userInfo?.role === 'consultant' 
+              <h3 style={{ margin: "0 0 12px 0", fontSize: "20px", fontWeight: 600 }}>Đăng nhập thành công!</h3>              <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
+                {userInfo?.roleName === 'CONSULTANT' 
                   ? 'Đang chuyển hướng đến giao diện tư vấn...' 
-                  : userInfo?.role === 'admin'
+                  : userInfo?.roleName === 'ADMIN'
                   ? 'Đang chuyển hướng đến trang quản trị...'
+                  : userInfo?.roleName === 'MANAGER'
+                  ? 'Đang chuyển hướng đến trang quản lý...'
                   : 'Đang chuyển hướng đến trang dịch vụ...'
                 }
               </p>

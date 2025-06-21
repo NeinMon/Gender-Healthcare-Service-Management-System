@@ -1,41 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const UserAccount = () => {
-  const [userInfo, setUserInfo] = useState({
-    name: '',
+const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
+    userID: '',
+    fullName: '',
     email: '',
     phone: '',
     address: '',
     gender: '',
-    dob: ''
+    dob: '',
+    formattedDob: '',
+    role: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...userInfo });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   useEffect(() => {
-    // Giả sử email lưu ở localStorage sau khi đăng nhập
-    const email = localStorage.getItem('email');
-    if (!email) {
-      setError('Không tìm thấy thông tin tài khoản.');
+    // Lấy userId từ localStorage sau khi đăng nhập
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setError('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.');
       setLoading(false);
       return;
     }
-    fetch(`http://localhost:8080/api/users/info?email=${encodeURIComponent(email)}`)
-      .then(res => res.json())
+    // Gọi API để lấy thông tin người dùng theo userId
+    fetch(`http://localhost:8080/api/users/${userId}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Không thể lấy thông tin tài khoản.');
+        }
+        return res.json();
+      })
       .then(data => {
         if (!data || !data.email) {
           setError('Không tìm thấy thông tin tài khoản.');
           setLoading(false);
           return;
         }
+        
+        // Định dạng lại ngày tháng nếu có
+        if (data.dob) {
+          const dobDate = new Date(data.dob);
+          data.formattedDob = dobDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        }
+        
         setUserInfo(data);
         setEditData(data);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Error fetching user data:", err);
         setError('Không thể lấy thông tin tài khoản.');
         setLoading(false);
       });
@@ -45,10 +60,45 @@ const UserAccount = () => {
     setIsEditing(true);
     setEditData({ ...userInfo });
   };
-
-  const handleSave = () => {
-    setUserInfo({ ...editData });
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      // Prepare the data to be sent
+      const updateData = { ...editData };
+      
+      // Convert formattedDob back to dob if needed
+      if (updateData.formattedDob) {
+        updateData.dob = new Date(updateData.formattedDob).toISOString();
+        delete updateData.formattedDob;
+      }
+      
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật thông tin.');
+      }
+      
+      const updatedUser = await response.json();
+      
+      // Format the date for display
+      if (updatedUser.dob) {
+        updatedUser.formattedDob = new Date(updatedUser.dob).toISOString().split('T')[0];
+      }
+      
+      setUserInfo(updatedUser);
+      setEditData(updatedUser);
+      setIsEditing(false);
+      alert('Cập nhật thông tin thành công!');
+    } catch (err) {
+      console.error("Error updating user:", err);
+      alert('Không thể cập nhật thông tin. Vui lòng thử lại sau.');
+    }
   };
 
   const handleCancel = () => {
@@ -88,8 +138,7 @@ const UserAccount = () => {
               alt="Logo"
               style={{ height: 80, width: 80, objectFit: "contain" }}
             />
-          </Link>
-          <div style={{ 
+          </Link>          <div style={{ 
             width: 40, 
             height: 40, 
             borderRadius: "50%", 
@@ -102,7 +151,7 @@ const UserAccount = () => {
             fontSize: "16px",
             border: "2px solid rgba(255,255,255,0.5)"
           }}>
-            {userInfo.name.charAt(0)}
+            {userInfo.fullName ? userInfo.fullName.charAt(0) : "U"}
           </div>
         </div>
         <h1
@@ -208,18 +257,18 @@ const UserAccount = () => {
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
             gap: "20px"
-          }}>
-            {Object.entries(isEditing ? editData : userInfo).map(([key, value]) => {
-              if (typeof value === 'object' && value !== null) return null; // Bỏ qua trường object
-              if (key.toLowerCase() === 'userid') return null; // Bỏ qua trường userid
+          }}>            {Object.entries(isEditing ? editData : userInfo).map(([key, value]) => {
+              // Skip certain fields
+              if (typeof value === 'object' && value !== null) return null;
+              if (['userID', 'password', 'createdAt', 'updateAt', 'role'].includes(key)) return null; // Added 'role' to excluded fields
+              if (key === 'dob' && userInfo.formattedDob) return null; // Skip dob if formattedDob exists
               return (
                 <div key={key} style={{
                   padding: "20px",
                   backgroundColor: "#f8fafc",
                   borderRadius: "12px",
                   border: "1px solid #e2e8f0"
-                }}>
-                  <label style={{
+                }}>                  <label style={{
                     fontSize: "14px",
                     fontWeight: "600",
                     color: "#64748b",
@@ -227,13 +276,13 @@ const UserAccount = () => {
                     display: "block",
                     textTransform: "uppercase",
                     letterSpacing: "0.5px"
-                  }}>
-                    {key === 'name' ? 'Họ Tên' :
+                  }}>                    {key === 'fullName' ? 'Họ Tên' :
                      key === 'email' ? 'Email' :
                      key === 'phone' ? 'Số Điện Thoại' :
                      key === 'address' ? 'Địa Chỉ' :
                      key === 'gender' ? 'Giới Tính' :
-                     key === 'dob' ? 'Ngày Sinh' : key}
+                     key === 'dob' ? 'Ngày Sinh' : 
+                     key === 'formattedDob' ? 'Ngày Sinh' : key}
                   </label>
                   {isEditing ? (
                     key === 'gender' ? (
@@ -254,12 +303,11 @@ const UserAccount = () => {
                         <option value="Nam">Nam</option>
                         <option value="Nữ">Nữ</option>
                         <option value="Khác">Khác</option>
-                      </select>
-                    ) : key === 'dob' ? (
+                      </select>                    ) : key === 'formattedDob' || key === 'dob' ? (
                       <input
                         type="date"
                         name={key}
-                        value={value}
+                        value={key === 'formattedDob' ? value : value.split('T')[0]}
                         onChange={handleChange}
                         style={{
                           width: "100%",
@@ -288,16 +336,14 @@ const UserAccount = () => {
                         }}
                       />
                     )
-                  ) : (
-                    <div style={{
+                  ) : (                    <div style={{
                       fontSize: "16px",
                       fontWeight: "500",
                       color: "#1e293b",
                       padding: "12px 0"
-                    }}>
-                      {key === 'dob' && typeof value === 'string' && value.includes('T')
-                        ? new Date(value).toLocaleDateString('vi-VN')
-                        : value}
+                    }}>                      {key === 'dob' || key === 'formattedDob' ? 
+                        (value ? new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Chưa cập nhật') :
+                       value || 'Chưa cập nhật'}
                     </div>
                   )}
                 </div>

@@ -1,80 +1,63 @@
-const questions = [
+/**
+ * Sample questions data for the ConsultantInterface component
+ */
+const questionsData = [
   {
     id: 1,
-    patientName: "Nguyễn Thị Lan",
-    patientGender: "Nữ",
-    question: "Tôi bị đau bụng dưới khi đến ngày kinh nguyệt, điều này có bình thường không?",
-    category: "Chu kỳ kinh nguyệt",
-    status: "pending",
-    date: "2024-12-01",
-    createdAt: "2024-12-01 14:30:00",
-    priority: "normal",
-    avatar: "👩"
+    title: 'Triệu chứng đau bụng dưới ở phụ nữ',
+    content: 'Tôi thường xuyên bị đau bụng dưới, nhất là trong những ngày hành kinh. Đau nhiều đến mức khó đi làm. Tôi nên làm gì và có cần khám bác sĩ không?',
+    askedBy: 'Nguyễn Thị H.',
+    dateAsked: '2025-06-10T08:45:00',
+    status: 'pending', // pending, answered, closed
+    tags: ['đau bụng', 'kinh nguyệt', 'phụ nữ'],
+    anonymousQuestion: false
   },
   {
     id: 2,
-    patientName: "Trần Thị Mai",
-    patientGender: "Nữ",
-    question: "Tôi đã 35 tuổi và muốn có con. Những xét nghiệm nào tôi nên làm trước khi mang thai?",
-    category: "Mang thai",
-    status: "pending",
-    date: "2024-12-01",
-    createdAt: "2024-12-01 10:15:00",
-    priority: "high",
-    avatar: "👩"
+    title: 'Quan hệ an toàn và phòng tránh STIs',
+    content: 'Tôi muốn tìm hiểu về các phương pháp quan hệ an toàn và làm thế nào để phòng tránh các bệnh lây qua đường tình dục hiệu quả nhất? Đặc biệt là trong các mối quan hệ mới.',
+    askedBy: 'Ẩn danh',
+    dateAsked: '2025-06-12T15:23:00',
+    status: 'answered',
+    answer: 'Quan hệ tình dục an toàn bao gồm việc sử dụng bao cao su đúng cách, là phương pháp hiệu quả nhất để phòng tránh STIs. Ngoài ra, bạn nên kiểm tra sức khỏe định kỳ, đặc biệt sau khi có quan hệ không an toàn hoặc bắt đầu mối quan hệ mới. Trao đổi thẳng thắn với đối tác về lịch sử tình dục và kiểm tra sức khỏe cũng rất quan trọng. Nếu có bất kỳ triệu chứng bất thường nào, hãy tìm gặp bác sĩ ngay.',
+    answeredBy: 'Bác sĩ Nguyễn Văn A',
+    dateAnswered: '2025-06-13T09:10:00',
+    tags: ['STI', 'quan hệ an toàn', 'sức khỏe tình dục'],
+    anonymousQuestion: true
   },
   {
     id: 3,
-    patientName: "Lê Thị Hương",
-    patientGender: "Nữ",
-    question: "Tôi bị ngứa và có dịch bất thường ở vùng kín, có thể là bệnh gì?",
-    category: "Sức khỏe sinh sản",
-    status: "answered",
-    reply: "Dựa trên các triệu chứng bạn mô tả, có thể bạn đang bị nhiễm trùng âm đạo. Tôi khuyên bạn nên đến khám trực tiếp để được chẩn đoán chính xác và điều trị kịp thời.",
-    date: "2024-11-30",
-    createdAt: "2024-11-30 16:45:00",
-    answeredAt: "2024-11-30 17:20:00",
-    priority: "high",
-    avatar: "👩"
+    title: 'Vấn đề về tinh trùng yếu',
+    content: 'Tôi và vợ đã cố gắng có con trong 2 năm nhưng chưa thành công. Tôi đã kiểm tra và bác sĩ nói rằng tinh trùng của tôi hơi yếu. Có phương pháp tự nhiên nào để cải thiện chất lượng tinh trùng không?',
+    askedBy: 'Trần V.D.',
+    dateAsked: '2025-06-14T11:35:00',
+    status: 'answered',
+    answer: 'Để cải thiện chất lượng tinh trùng, anh có thể áp dụng các biện pháp như: duy trì chế độ ăn uống lành mạnh (nhiều trái cây, rau xanh, ngũ cốc nguyên hạt), tập thể dục đều đặn, tránh rượu bia và thuốc lá, giảm stress, tránh nhiệt độ cao ở vùng bìu (không tắm nước quá nóng, không mặc quần quá chật). Bổ sung một số vitamin như kẽm, selenium, vitamin C và E cũng có thể hữu ích. Tuy nhiên, tốt nhất nên tham khảo ý kiến bác sĩ chuyên khoa để có hướng điều trị phù hợp với tình trạng cụ thể.',
+    answeredBy: 'Bác sĩ Lê Thị B',
+    dateAnswered: '2025-06-15T14:20:00',
+    tags: ['hiếm muộn', 'nam khoa', 'tinh trùng'],
+    anonymousQuestion: false
   },
   {
     id: 4,
-    patientName: "Phạm Thị Linh",
-    patientGender: "Nữ",
-    question: "Thuốc tránh thai khẩn cấp có tác dụng phụ gì không? Tôi có thể dùng bao nhiều lần trong 1 tháng?",
-    category: "Kế hoạch hóa gia đình",
-    status: "pending",
-    date: "2024-12-01",
-    createdAt: "2024-12-01 09:20:00",
-    priority: "high",
-    avatar: "👩"
+    title: 'Thuốc tránh thai khẩn cấp',
+    content: 'Tôi đã quan hệ không an toàn cách đây 30 giờ. Tôi có thể uống thuốc tránh thai khẩn cấp không và có tác dụng phụ gì không?',
+    askedBy: 'Ẩn danh',
+    dateAsked: '2025-06-16T09:55:00',
+    status: 'pending',
+    tags: ['tránh thai khẩn cấp', 'thuốc tránh thai', 'sức khỏe tình dục'],
+    anonymousQuestion: true
   },
   {
     id: 5,
-    patientName: "Võ Thị Nga",
-    patientGender: "Nữ",
-    question: "Tôi 45 tuổi, kinh nguyệt không đều và thường xuyên bốc hỏa. Đây có phải là tiền mãn kinh?",
-    category: "Tiền mãn kinh",
-    status: "answered",
-    reply: "Các triệu chứng bạn mô tả rất phù hợp với giai đoạn tiền mãn kinh. Tôi khuyên bạn nên theo dõi chu kỳ kinh nguyệt và có thể làm xét nghiệm hormone để xác định chính xác.",
-    date: "2024-11-29",
-    createdAt: "2024-11-29 11:30:00",
-    answeredAt: "2024-11-29 14:15:00",
-    priority: "normal",
-    avatar: "👩"
-  },
-  {
-    id: 6,
-    patientName: "Nguyễn Văn Đức",
-    patientGender: "Nam",
-    question: "Tôi 30 tuổi, gần đây thấy có vấn đề về sinh lý nam giới. Tôi nên khám ở đâu?",
-    category: "Sức khỏe nam giới",
-    status: "pending",
-    date: "2024-12-01",
-    createdAt: "2024-12-01 15:10:00",
-    priority: "normal",
-    avatar: "👨"
+    title: 'Thay đổi hormone ở tuổi 40',
+    content: 'Tôi năm nay 42 tuổi và thấy cơ thể có nhiều thay đổi như đổ mồ hôi đêm, tâm trạng thất thường, chu kỳ kinh nguyệt không đều. Đây có phải là dấu hiệu của tiền mãn kinh không và tôi nên làm gì?',
+    askedBy: 'Phạm T.H.',
+    dateAsked: '2025-06-17T16:40:00',
+    status: 'pending',
+    tags: ['tiền mãn kinh', 'hormone', 'phụ nữ trung niên'],
+    anonymousQuestion: false
   }
 ];
 
-export default questions;
+export default questionsData;

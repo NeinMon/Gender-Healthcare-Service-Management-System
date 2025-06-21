@@ -147,22 +147,8 @@ const AskQuestion = () => {
       console.log('Available categories:', questionCategories);
       console.log('Selected category ID:', formData.questionCategory);
       console.log('Found category name:', categoryName);
-      
-      // Tạo content từ thông tin form
-      const content = `
-Thông tin người hỏi:
-- Họ và tên: ${formData.fullName}
-- Tuổi: ${formData.age}
-- Giới tính: ${formData.gender === 'female' ? 'Nữ' : formData.gender === 'male' ? 'Nam' : 'Khác'}
-- Số điện thoại: ${formData.phone}
-- Email: ${formData.email}
-- Chủ đề: ${categoryName}
-
-Câu hỏi:
-${formData.question}
-      `.trim();
-        // Đảm bảo content không quá dài (max 5000 ký tự theo validation)
-      const finalContent = content.length > 5000 ? content.substring(0, 4997) + "..." : content;
+        // Chỉ lấy nội dung câu hỏi, không bao gồm thông tin cá nhân
+      const finalContent = formData.question.trim();
         // Chuẩn bị dữ liệu gửi API với format chính xác
       const questionData = {
         userID: userIdNumber, // Đảm bảo là số nguyên

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
@@ -13,8 +13,82 @@ const AskQuestion = () => {
     question: '',
     privacy: false
   });
-
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Hàm tính tuổi từ ngày sinh
+  const calculateAge = (dateOfBirth) => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+  // Lấy thông tin user từ API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        
+        // Lấy userId từ localStorage, sessionStorage, hoặc từ props/context
+        // Bạn có thể thay đổi cách lấy userId tùy theo cách bạn quản lý authentication
+        const userId = localStorage.getItem('userId') || 
+                      sessionStorage.getItem('userId') || 
+                      '1'; // Default userId cho test
+        
+        const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+        
+        if (!response.ok) {
+          throw new Error('Không thể lấy thông tin người dùng');
+        }
+          const userData = await response.json();
+        console.log('User data received:', userData); // Debug log để xem dữ liệu
+        
+        // Hàm mapping giá trị gender từ database sang option trong select
+        const mapGenderValue = (genderFromDB) => {
+          if (!genderFromDB) return '';
+          
+          const gender = genderFromDB.toLowerCase().trim();
+          console.log('Original gender from DB:', genderFromDB, 'Normalized:', gender); // Debug log
+          
+          // Mapping các giá trị có thể có
+          if (gender === 'female' || gender === 'nữ' || gender === 'nu' || gender === 'f' || gender === 'woman') {
+            return 'female';
+          } else if (gender === 'male' || gender === 'nam' || gender === 'm' || gender === 'man') {
+            return 'male';
+          } else {
+            return 'other';
+          }
+        };
+        
+        // Cập nhật form với thông tin user
+        setFormData(prevData => ({
+          ...prevData,
+          fullName: userData.fullName || '',
+          age: userData.dob ? calculateAge(userData.dob).toString() : '',
+          gender: mapGenderValue(userData.gender),
+          phone: userData.phone || '',
+          email: userData.email || ''
+        }));
+        
+        setError('');
+      } catch (err) {
+        setError('Không thể lấy thông tin người dùng: ' + err.message);
+        console.error('Error fetching user data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const questionCategories = [
     { id: 1, name: "Sức khỏe sinh sản" },
@@ -31,12 +105,148 @@ const AskQuestion = () => {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
-  };
-
-  const handleSubmit = (e) => {
+  };  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form data submitted:', formData);
-    setIsSubmitted(true);
+    
+    try {
+      setSubmitting(true);
+      setError(''); // Clear any previous errors
+        // Lấy userId từ localStorage hoặc sessionStorage
+      const userId = localStorage.getItem('userId') || 
+                    sessionStorage.getItem('userId') || 
+                    '1'; // Default userId cho test
+      
+      // Validation client-side trước khi gửi
+      if (!formData.question || formData.question.trim().length < 10) {
+        throw new Error('Câu hỏi phải có ít nhất 10 ký tự');
+      }
+      
+      if (!formData.fullName || formData.fullName.trim().length === 0) {
+        throw new Error('Vui lòng nhập họ và tên');
+      }
+      
+      if (!formData.questionCategory) {
+        throw new Error('Vui lòng chọn chủ đề câu hỏi');
+      }
+      
+      // Kiểm tra userId hợp lệ
+      const userIdNumber = parseInt(userId);
+      if (isNaN(userIdNumber) || userIdNumber <= 0) {
+        throw new Error('Thông tin người dùng không hợp lệ');      }// Tạo title từ category - chỉ sử dụng tên category để đáp ứng backend validation
+      const categoryName = questionCategories.find(cat => cat.id == formData.questionCategory)?.name;
+      
+      // Kiểm tra nếu không tìm thấy category, sử dụng default
+      if (!categoryName) {
+        throw new Error('Vui lòng chọn chủ đề câu hỏi hợp lệ');
+      }
+      
+      // Backend chỉ chấp nhận exact match với các category names đã định nghĩa
+      const title = categoryName;
+      
+      console.log('Generated title:', title, 'Length:', title.length);
+      console.log('Available categories:', questionCategories);
+      console.log('Selected category ID:', formData.questionCategory);
+      console.log('Found category name:', categoryName);
+      
+      // Tạo content từ thông tin form
+      const content = `
+Thông tin người hỏi:
+- Họ và tên: ${formData.fullName}
+- Tuổi: ${formData.age}
+- Giới tính: ${formData.gender === 'female' ? 'Nữ' : formData.gender === 'male' ? 'Nam' : 'Khác'}
+- Số điện thoại: ${formData.phone}
+- Email: ${formData.email}
+- Chủ đề: ${categoryName}
+
+Câu hỏi:
+${formData.question}
+      `.trim();
+        // Đảm bảo content không quá dài (max 5000 ký tự theo validation)
+      const finalContent = content.length > 5000 ? content.substring(0, 4997) + "..." : content;
+        // Chuẩn bị dữ liệu gửi API với format chính xác
+      const questionData = {
+        userID: userIdNumber, // Đảm bảo là số nguyên
+        title: title.trim(), // Chỉ là tên category
+        content: finalContent.trim() // Loại bỏ khoảng trắng thừa
+      };
+      
+      // Validation cuối cùng trước khi gửi
+      if (!questionData.title || questionData.title.length < 5) {
+        throw new Error('Tiêu đề không hợp lệ');
+      }
+      
+      if (questionData.content.length < 10 || questionData.content.length > 5000) {
+        throw new Error('Nội dung phải từ 10-5000 ký tự');
+      }
+      
+      console.log('Sending question data:', questionData);
+      console.log('Title:', questionData.title);
+      console.log('Content length:', questionData.content.length);
+      console.log('UserID type:', typeof questionData.userID, 'Value:', questionData.userID);
+      
+      // Gửi request tới API
+      const response = await fetch('http://localhost:8080/api/questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(questionData)
+      });
+      
+      // Log response để debug
+      const responseText = await response.text();
+      console.log('Response status:', response.status);
+      console.log('Response text:', responseText);
+        if (!response.ok) {
+        let errorMessage = 'Không thể gửi câu hỏi. Vui lòng thử lại.';
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          console.log('Error data:', errorData);
+          
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.errors && Array.isArray(errorData.errors)) {
+            // Xử lý validation errors từ Spring Boot
+            errorMessage = errorData.errors.join(', ');
+          } else if (typeof errorData === 'string') {
+            errorMessage = errorData;
+          }
+        } catch (parseError) {
+          console.log('Error parsing response:', parseError);
+          if (responseText) {
+            errorMessage = responseText;
+          }
+        }
+        
+        // Thêm thông tin debug cho các lỗi phổ biến
+        if (response.status === 400) {
+          errorMessage = `Dữ liệu không hợp lệ: ${errorMessage}`;
+        } else if (response.status === 500) {
+          errorMessage = `Lỗi máy chủ: ${errorMessage}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        result = responseText;
+      }
+      
+      console.log('Question created successfully:', result);
+      
+      // Hiển thị thông báo thành công
+      setIsSubmitted(true);
+      
+    } catch (error) {
+      console.error('Error submitting question:', error);
+      setError('Lỗi gửi câu hỏi: ' + error.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
   return (
     <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>
@@ -96,10 +306,41 @@ const AskQuestion = () => {
           >
             ← Quay lại trang dịch vụ
           </Link>
-        </div>
-
-        {!isSubmitted ? (
+        </div>        {!isSubmitted ? (
           <>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "40px", width: "100%" }}>
+                <div style={{ 
+                  fontSize: "18px", 
+                  color: "#0891b2",
+                  marginBottom: "20px"
+                }}>
+                  Đang tải thông tin người dùng...
+                </div>
+              </div>
+            ) : error ? (
+              <div style={{ 
+                textAlign: "center", 
+                padding: "40px", 
+                width: "100%",
+                backgroundColor: "#fee",
+                borderRadius: "10px",
+                border: "1px solid #fcc",
+                marginBottom: "20px"
+              }}>
+                <div style={{ 
+                  fontSize: "18px", 
+                  color: "#c53030",
+                  marginBottom: "10px"
+                }}>
+                  ⚠️ {error}
+                </div>
+                <p style={{ color: "#718096" }}>
+                  Vui lòng thử lại sau hoặc nhập thông tin thủ công.
+                </p>
+              </div>
+            ) : null}
+            
             <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
               Gửi câu hỏi của bạn cho chuyên gia tư vấn
             </h2>
@@ -114,8 +355,9 @@ const AskQuestion = () => {
                     value={formData.fullName}
                     onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
                     placeholder="Nguyễn Văn A"
+                    disabled={loading}
                   />
                 </div>
                 
@@ -127,8 +369,9 @@ const AskQuestion = () => {
                     value={formData.age}
                     onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
                     placeholder="25"
+                    disabled={loading}
                   />
                 </div>
 
@@ -139,7 +382,8 @@ const AskQuestion = () => {
                     value={formData.gender}
                     onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
+                    disabled={loading}
                   >
                     <option value="">-- Chọn giới tính --</option>
                     <option value="female">Nữ</option>
@@ -156,8 +400,9 @@ const AskQuestion = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
                     placeholder="0912345678"
+                    disabled={loading}
                   />
                 </div>
 
@@ -168,12 +413,11 @@ const AskQuestion = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    style={inputStyle}
+                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
                     placeholder="example@gmail.com"
+                    disabled={loading}
                   />
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                </div>                <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={labelStyle}>Chủ đề câu hỏi *</label>
                   <select
                     name="questionCategory"
@@ -189,10 +433,13 @@ const AskQuestion = () => {
                       </option>
                     ))}
                   </select>
+                  {!formData.questionCategory && (
+                    <small style={{ color: "#e53e3e", marginTop: "5px" }}>
+                      Vui lòng chọn chủ đề câu hỏi
+                    </small>
+                  )}
                 </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", marginTop: "25px", width: "100%" }}>
+              </div>              <div style={{ display: "flex", flexDirection: "column", marginTop: "25px", width: "100%" }}>
                 <label style={labelStyle}>Câu hỏi của bạn *</label>
                 <textarea
                   name="question"
@@ -202,42 +449,65 @@ const AskQuestion = () => {
                   style={{ ...inputStyle, height: "180px" }}
                   placeholder="Nhập câu hỏi của bạn ở đây. Hãy cung cấp càng nhiều thông tin càng tốt để chuyên gia có thể tư vấn chính xác nhất."
                 ></textarea>
-              </div>
-
-              <div style={{ marginTop: "20px", display: "flex", alignItems: "center" }}>
-                <input
-                  type="checkbox"
-                  name="privacy"
-                  checked={formData.privacy}
-                  onChange={handleChange}
-                  required
-                  id="privacy-checkbox"
-                  style={{ marginRight: "10px", width: "20px", height: "20px" }}
-                />
-                <label htmlFor="privacy-checkbox" style={{ fontSize: "16px", color: "#2c3e50" }}>
-                  Tôi đồng ý cho phép lưu trữ thông tin và gửi phản hồi qua email/điện thoại *
-                </label>
-              </div>
-
-              <div style={{ marginTop: "35px", textAlign: "center" }}>                <button
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "5px" }}>
+                  <small style={{ color: formData.question.length < 10 ? "#e53e3e" : "#718096" }}>
+                    Tối thiểu 10 ký tự
+                  </small>
+                  <small style={{ color: formData.question.length > 5000 ? "#e53e3e" : "#718096" }}>
+                    {formData.question.length}/5000 ký tự
+                  </small>
+                </div>
+              </div>              <div style={{ marginTop: "35px", textAlign: "center" }}>
+                <button
                   type="submit"
+                  disabled={submitting || !formData.question || formData.question.length < 10 || !formData.questionCategory || !formData.fullName}
                   style={{
-                    background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                    background: (submitting || !formData.question || formData.question.length < 10 || !formData.questionCategory || !formData.fullName) 
+                      ? "#ccc" 
+                      : "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
                     color: "#fff",
                     border: "none",
                     padding: "14px 35px",
                     borderRadius: "30px",
                     fontSize: "16px",
                     fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease"
+                    cursor: (submitting || !formData.question || formData.question.length < 10 || !formData.questionCategory || !formData.fullName) 
+                      ? "not-allowed" 
+                      : "pointer",
+                    transition: "all 0.3s ease",
+                    opacity: (submitting || !formData.question || formData.question.length < 10 || !formData.questionCategory || !formData.fullName) 
+                      ? 0.7 
+                      : 1
                   }}
-                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-                >
-                  Gửi câu hỏi
+                  onMouseOver={(e) => {
+                    if (!submitting && formData.question && formData.question.length >= 10 && formData.questionCategory && formData.fullName) {
+                      e.target.style.transform = "scale(1.05)";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!submitting && formData.question && formData.question.length >= 10 && formData.questionCategory && formData.fullName) {
+                      e.target.style.transform = "scale(1)";
+                    }
+                  }}
+                >                  {submitting ? "Đang gửi..." : "Gửi câu hỏi"}
                 </button>
               </div>
+              
+              {/* Hiển thị lỗi nếu có */}
+              {error && (
+                <div style={{ 
+                  marginTop: "20px", 
+                  padding: "15px", 
+                  backgroundColor: "#fee", 
+                  borderRadius: "8px",
+                  border: "1px solid #fcc",
+                  textAlign: "center"
+                }}>
+                  <div style={{ color: "#c53030", fontWeight: "500" }}>
+                    {error}
+                  </div>
+                </div>
+              )}
             </form>
           </>
         ) : (

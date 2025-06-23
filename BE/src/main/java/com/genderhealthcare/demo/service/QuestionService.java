@@ -48,10 +48,9 @@ public class QuestionService {
         if (!isValidQuestionTitle(question.getTitle())) {
             throw new InvalidQuestionTitleException("Tiêu đề câu hỏi không hợp lệ");
         }
-        
-        // Thiết lập trạng thái mặc định là "mới" nếu chưa được thiết lập
+          // Thiết lập trạng thái mặc định là "pending" nếu chưa được thiết lập
         if (question.getStatus() == null || question.getStatus().isEmpty()) {
-            question.setStatus("mới");
+            question.setStatus("pending");
         }
         
         // Thiết lập thời gian tạo câu hỏi là thời gian hiện tại
@@ -91,12 +90,11 @@ public class QuestionService {
         if (questionDetails.getContent() != null && !questionDetails.getContent().isEmpty()) {
             question.setContent(questionDetails.getContent());
         }
-        
-        if (questionDetails.getStatus() != null && !questionDetails.getStatus().isEmpty()) {
+          if (questionDetails.getStatus() != null && !questionDetails.getStatus().isEmpty()) {
             // Kiểm tra trạng thái hợp lệ
-            List<String> validStatuses = Arrays.asList("mới", "đang xử lý", "đã giải quyết", "đã đóng");
+            List<String> validStatuses = Arrays.asList("pending", "resolved");
             if (!validStatuses.contains(questionDetails.getStatus())) {
-                throw new IllegalArgumentException("Trạng thái không hợp lệ (mới, đang xử lý, đã giải quyết, đã đóng)");
+                throw new IllegalArgumentException("Trạng thái không hợp lệ (pending, resolved)");
             }
             question.setStatus(questionDetails.getStatus());
         }

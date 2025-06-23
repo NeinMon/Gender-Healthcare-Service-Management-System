@@ -34,10 +34,8 @@ public class Question {
     
     @NotBlank(message = "Nội dung không được để trống")
     @Size(min = 10, max = 5000, message = "Nội dung phải từ 10-5000 ký tự")
-    private String content;
-    
-    @Pattern(regexp = "^(mới|đang xử lý|đã giải quyết|đã đóng)$", message = "Trạng thái không hợp lệ (mới, đang xử lý, đã giải quyết, đã đóng)")
-    private String status; // Trạng thái câu hỏi (mới, đang xử lý, đã giải quyết, đã đóng)
+    private String content;    @Pattern(regexp = "^(pending|resolved)$", message = "Trạng thái không hợp lệ (pending, resolved)")
+    private String status; // Trạng thái câu hỏi (pending = chưa giải quyết, resolved = đã giải quyết)
     
     private String createdAt; // Ngày tạo câu hỏi
 }

@@ -54,6 +54,10 @@ public class AnswerController {
             if (answerRepository.existsById(answer.getQuestionID())) {
                 return ResponseEntity.status(400).body("Câu hỏi này đã có câu trả lời");
             }
+              // Cập nhật trạng thái câu hỏi thành "đã giải quyết"
+            Question question = questionRepository.findById(answer.getQuestionID()).get();
+            question.setStatus("resolved");
+            questionRepository.save(question);
 
             return ResponseEntity.ok(answerRepository.save(answer));
         } catch (Exception e) {
@@ -91,10 +95,8 @@ public class AnswerController {
             // Cập nhật thời gian
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String dateString = formatter.format(new Date());
-            answer.setCreatedAt(dateString);
-
-            // Cập nhật trạng thái câu hỏi
-            question.setStatus("đã giải quyết");
+            answer.setCreatedAt(dateString);            // Cập nhật trạng thái câu hỏi
+            question.setStatus("resolved");
             questionRepository.save(question);
 
             // Lưu câu trả lời

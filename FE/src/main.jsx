@@ -11,6 +11,7 @@ import AskQuestion from './AskQuestion.jsx'
 import TestBooking from './TestBooking.jsx'
 import UserAccount from './UserAccount.jsx'
 import ConsultantInterface from './ConsultantInterface.jsx'
+import UserQuestions from './UserQuestions.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/test-booking" element={<TestBooking />} />
         <Route path="/user-account" element={<UserAccount />} />
         <Route path="/consultant-interface" element={<ConsultantInterface />} />
+        <Route path="/user-questions" element={<UserQuestions />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

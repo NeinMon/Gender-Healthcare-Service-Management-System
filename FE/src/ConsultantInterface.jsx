@@ -65,7 +65,7 @@ const ConsultantInterface = () => {
         setConsultantInfo({
           id: userId,
           name: loggedInUser.fullName || loggedInUser.name || 'Bác sĩ Tư Vấn',
-          specialty: 'Sức khỏe phụ nữ', // Thông tin mặc định
+
           patients: Math.floor(Math.random() * 200) + 50, // Tạm thời dùng dữ liệu ngẫu nhiên
           consultations: Math.floor(Math.random() * 500) + 200,
           // // rating: (Math.random() * 1 + 4).toFixed(1)
@@ -125,13 +125,22 @@ const ConsultantInterface = () => {
               }));
             }
           }
+            // Log để debug status
+          // Xem trạng thái từ API và kiểm tra câu trả lời          const hasReply = item.reply && item.reply.trim().length > 0;
+          console.log('Status từ backend:', item.status, 'Có câu trả lời:', hasReply);
+            // Xác định nội dung hiển thị
+          const content = item.content || item.title || "";
+            // Trạng thái từ BE hoặc suy luận từ việc có câu trả lời hay không
+          const statusFromBE = item.status || (item.reply ? 'resolved' : 'pending');
+          const mappedStatus = mapStatus(statusFromBE);
           
           questionsWithUserDetails.push({
             id: item.questionID || item.id,
             patientName: userName,
             date: item.createdAt || item.date || new Date().toISOString(),
-            question: item.content || item.title || "",
-            status: mapStatus(item.status),
+            question: content,
+            status: mappedStatus,
+            originalStatus: statusFromBE, // Lưu status gốc từ backend
             reply: item.reply || "",
             userID: item.userID // Lưu userID để có thể sử dụng sau này
           });
@@ -167,20 +176,44 @@ const ConsultantInterface = () => {
         console.log('Sử dụng dữ liệu mẫu:', mockQuestions);
         setQuestions(mockQuestions);
       }
-    };
-
-    // Hàm để chuyển đổi trạng thái từ backend sang frontend
+    };    // Hàm để chuyển đổi trạng thái từ backend sang frontend
     const mapStatus = (backendStatus) => {
-      switch(backendStatus?.toLowerCase()) {
+      // Nếu không có status, trả về pending
+      if (!backendStatus) return 'pending';
+      
+      // Chuyển đổi sang lowercase và loại bỏ khoảng trắng đầu cuối để xử lý nhất quán
+      const status = backendStatus.toString().toLowerCase().trim();
+      
+      switch(status) {
+        // Theo backend, status chỉ có 2 giá trị: pending và resolved
+        case 'pending':
+          return 'pending'; // Chưa trả lời
+          
+        case 'resolved':
+          return 'answered'; // Đã trả lời
+        
+        // Các trường hợp tương thích với hệ thống cũ (nếu có)
         case 'mới':
+        case 'new':
         case 'chờ':
+        case 'waiting':
         case 'chưa trả lời':
+        case 'chưa xử lý':
+        case '0': 
           return 'pending';
+        
         case 'đã trả lời':
+        case 'answered':
+        case 'replied':
         case 'hoàn thành':
+        case 'completed':
+        case 'done':
+        case '1':
           return 'answered';
+          
         default:
-          return 'pending';
+          console.log('Status không xác định:', backendStatus);
+          return 'pending'; // Mặc định là pending nếu không xác định được
       }
     };
 
@@ -252,13 +285,13 @@ const ConsultantInterface = () => {
       if (!response.ok) {
         throw new Error('Không thể gửi câu trả lời');
       }
-      
-      // Cập nhật UI sau khi gửi thành công
+        // Cập nhật UI sau khi gửi thành công
       const updatedQuestions = questions.map(q => {
         if (q.id === selectedItem.id) {
           return { 
             ...q, 
             status: 'answered', 
+            originalStatus: 'resolved', // Backend đã cập nhật status thành resolved
             reply: replyText,
             answeredAt: createdAt // Lưu thời gian trả lời
           };
@@ -270,6 +303,7 @@ const ConsultantInterface = () => {
       setSelectedItem({ 
         ...selectedItem, 
         status: 'answered', 
+        originalStatus: 'resolved', // Cập nhật status từ API
         reply: replyText,
         answeredAt: createdAt
       });
@@ -417,18 +451,48 @@ const ConsultantInterface = () => {
       case 'answered': return '#43a047';
       default: return '#757575';
     }
-  };
-
-  const getStatusText = (status) => {
+  };  const getStatusText = (status) => {
     switch (status) {
       case 'scheduled': return 'Đã lên lịch';
       case 'ongoing': return 'Đang diễn ra';
       case 'completed': return 'Đã hoàn thành';
-      case 'pending': return 'Chưa trả lời';
-      case 'answered': return 'Đã trả lời';
-      default: return status;
+      case 'pending': return 'Chưa trả lời';  // Từ "pending" của backend
+      case 'answered': return 'Đã trả lời';   // Từ "resolved" của backend
+      default: return status || 'Chưa xác định';
     }
-  };  
+  };
+    // Hiển thị status dưới dạng badge với màu sắc tương ứng
+  const StatusBadge = ({ status, originalStatus }) => {
+    return (
+      <span style={{ 
+        padding: '0.25rem 0.75rem',
+        borderRadius: '20px',
+        fontSize: '0.8rem',
+        fontWeight: '500',
+        backgroundColor: getStatusColor(status) + '20',
+        color: getStatusColor(status),
+        display: 'inline-block',
+        position: 'relative'
+      }}>
+        {getStatusText(status)}
+        {originalStatus && originalStatus !== status && (
+          <span style={{ 
+            fontSize: '0.65rem',
+            position: 'absolute',
+            top: '-8px',
+            right: '-8px',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #ddd',
+            borderRadius: '10px',
+            padding: '0 4px',
+            color: '#666'
+          }}>
+            API: {originalStatus}
+          </span>
+        )}
+      </span>
+    );
+  };
 
   // Thêm function này vào trong component ConsultantInterface
   const fetchUserDetails = async (userId) => {
@@ -621,18 +685,35 @@ const ConsultantInterface = () => {
                         <p style={{ margin: '0', fontSize: '0.9rem', color: '#666' }}>
                           {consultation.symptoms}
                         </p>
-                      </div>
-                    </div><div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span style={{ 
-                        marginRight: '1rem',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '20px',
-                        fontSize: '0.8rem',
+                      </div>                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {/* Hiển thị status trong ô */}
+                      <div style={{
+                        minWidth: '120px',
+                        padding: '8px 12px',
                         backgroundColor: getStatusColor(consultation.status) + '20',
-                        color: getStatusColor(consultation.status)
+                        border: `1px solid ${getStatusColor(consultation.status)}`,
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        marginRight: '1rem'
                       }}>
-                        {getStatusText(consultation.status)}
-                      </span>
+                        <div style={{
+                          fontWeight: '600',
+                          fontSize: '0.85rem',
+                          color: getStatusColor(consultation.status),
+                        }}>
+                          {getStatusText(consultation.status)}
+                        </div>
+                        {consultation.originalStatus && (
+                          <div style={{ 
+                            fontSize: '0.75rem',
+                            color: '#666',
+                            marginTop: '2px'
+                          }}>
+                            ({consultation.originalStatus})
+                          </div>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button 
                           onClick={() => startChat(consultation)}
@@ -679,28 +760,43 @@ const ConsultantInterface = () => {
                       cursor: 'pointer'
                     }}
                     onClick={() => setSelectedItem(question)}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                  >                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
                         <UserAvatar 
                           userName={question.patientName}
                         />
                         <div style={{ marginLeft: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <h3 style={{ margin: '0 0.5rem 0 0' }}>{question.patientName}</h3>
-                            <span style={{ 
-                              padding: '0.25rem 0.75rem',
-                              borderRadius: '20px',
-                              fontSize: '0.8rem',
-                              backgroundColor: getStatusColor(question.status) + '20',
-                              color: getStatusColor(question.status)
-                            }}>
-                              {getStatusText(question.status)}
-                            </span>
-                          </div>
-                          <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
+                          <h3 style={{ margin: '0 0.5rem 0.25rem 0' }}>{question.patientName}</h3>
+                          <p style={{ margin: '0', fontSize: '0.9rem' }}>
                             {new Date(question.date).toLocaleDateString('vi-VN')}
                           </p>
                         </div>
+                      </div>
+                      
+                      {/* Hiển thị status trong ô riêng biệt */}                      <div style={{
+                        minWidth: '120px',
+                        padding: '8px 12px',
+                        backgroundColor: getStatusColor(question.status) + '20',
+                        border: `1px solid ${getStatusColor(question.status)}`,
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        <div style={{
+                          fontWeight: '600',
+                          fontSize: '0.85rem',
+                          color: getStatusColor(question.status),
+                        }}>
+                          {getStatusText(question.status)}
+                        </div>
+                        {question.originalStatus && question.originalStatus !== question.status && (
+                          <div style={{ 
+                            fontSize: '0.75rem',
+                            color: '#666',
+                            marginTop: '2px'
+                          }}>
+                            (API: {question.originalStatus})
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ marginTop: '0.75rem', marginLeft: '3.5rem' }}>
@@ -751,26 +847,43 @@ const ConsultantInterface = () => {
                 marginBottom: '1rem',
                 backgroundColor: '#f9f9f9',
                 borderRadius: '8px'
-              }}>                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <UserAvatar 
-                    userName={selectedItem.patientName}
-                  />
-                  <div style={{ marginLeft: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <h3 style={{ margin: '0 0.5rem 0 0' }}>{selectedItem.patientName}</h3>
-                      <span style={{ 
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '20px',
-                        fontSize: '0.8rem',
-                        backgroundColor: getStatusColor(selectedItem.status) + '20',
-                        color: getStatusColor(selectedItem.status)
-                      }}>
-                        {getStatusText(selectedItem.status)}
-                      </span>
+              }}>                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <UserAvatar 
+                      userName={selectedItem.patientName}
+                    />
+                    <div style={{ marginLeft: '1rem' }}>
+                      <h3 style={{ margin: '0 0 0.25rem 0' }}>{selectedItem.patientName}</h3>
+                      <p style={{ margin: '0', fontSize: '0.9rem' }}>
+                        {new Date(selectedItem.date).toLocaleDateString('vi-VN')}
+                      </p>
                     </div>
-                    <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>
-                      {new Date(selectedItem.date).toLocaleDateString('vi-VN')}
-                    </p>
+                  </div>
+
+                  {/* Hiển thị status trong ô */}
+                  <div style={{
+                    minWidth: '140px',
+                    padding: '10px 15px',
+                    backgroundColor: getStatusColor(selectedItem.status) + '20',
+                    border: `2px solid ${getStatusColor(selectedItem.status)}`,
+                    borderRadius: '8px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      color: getStatusColor(selectedItem.status),
+                    }}>
+                      {getStatusText(selectedItem.status)}
+                    </div>                    {selectedItem.originalStatus && selectedItem.originalStatus !== selectedItem.status && (
+                      <div style={{ 
+                        fontSize: '0.8rem',
+                        color: '#666',
+                        marginTop: '3px'
+                      }}>
+                        (API: {selectedItem.originalStatus})
+                      </div>
+                    )}
                   </div>
                 </div>
                 <p style={{ 

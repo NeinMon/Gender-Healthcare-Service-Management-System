@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import CustomerAvatar from './components/CustomerAvatar';
-import consultationsData from './data/consultations';
-import questionsData from './data/questions';
-import chatMessagesData from './data/chatMessages';
 
 const ConsultantInterface = () => {
   const navigate = useNavigate();
@@ -13,33 +9,79 @@ const ConsultantInterface = () => {
   const [questions, setQuestions] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [replyText, setReplyText] = useState('');
-  const [isChatOpen, setIsChatOpen] = useState(false);  const [chatMessages, setChatMessages] = useState([]);
-  const [messageText, setMessageText] = useState('');  const [isVideoCall, setIsVideoCall] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [messageText, setMessageText] = useState('');
+  const [isVideoCall, setIsVideoCall] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [callTimer, setCallTimer] = useState(0);
-  const [callTimerInterval, setCallTimerInterval] = useState(null);  const [consultantInfo, setConsultantInfo] = useState({
-    name: 'Bác sĩ Tư Vấn',
-    specialty: 'Sức khỏe phụ nữ',
-    patients: 120,
-    consultations: 450,
-    rating: 4.9
-  });
-
-  // Get consultant info from localStorage if available
+  const [callTimerInterval, setCallTimerInterval] = useState(null);
+  const [userDetails, setUserDetails] = useState({});
+  const [consultantInfo, setConsultantInfo] = useState({
+    // name: 'Bác sĩ Tư Vấn',
+    // specialty: 'Sức khỏe phụ nữ',
+    // patients: 120,
+    // consultations: 450,
+    // rating: 4.9
+  });  // Xác thực người dùng và lấy thông tin consultant từ localStorage
   useEffect(() => {
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
-    if (loggedInUser.role === 'consultant') {
-      setConsultantInfo({
-        name: loggedInUser.name || 'Bác sĩ Tư Vấn',
-        specialty: 'Sức khỏe phụ nữ',
-        patients: Math.floor(Math.random() * 200) + 50,
-        consultations: Math.floor(Math.random() * 500) + 200,
-        rating: (Math.random() * 1 + 4).toFixed(1)
-      });
-    }
-  }, []);
+    const verifyConsultantRole = async () => {
+      try {
+        // Lấy thông tin người dùng từ localStorage
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+        
+        // Thêm log để debug
+        console.log('Thông tin người dùng từ localStorage:', loggedInUser);
+        
+        // Lấy userID hoặc id từ dữ liệu người dùng
+        const userId = loggedInUser.userID || loggedInUser.id;
+        
+        if (!userId) {
+          console.warn('Thiếu userID/id, chuyển hướng về trang đăng nhập');
+          navigate('/');
+          return;
+        }
+        
+        // Lấy role và kiểm tra linh hoạt
+        const userRole = loggedInUser.role || '';
+        console.log('Vai trò người dùng:', userRole, typeof userRole);
+        
+        // Kiểm tra phù hợp với enum Role từ backend (CUSTOMER, CONSULTANT, MANAGER, ADMIN)
+        const isConsultant = 
+          userRole === 'CONSULTANT' || 
+          userRole === 'consultant' || 
+          userRole === 'Consultant';
+        
+        if (!isConsultant) {
+          console.warn(`Vai trò "${userRole}" không phải là vai trò tư vấn viên`);
+          alert(`Bạn không có quyền truy cập trang này. Vai trò hiện tại: ${userRole}`);
+          navigate('/');
+          return;
+        }
+        
+        // Cập nhật thông tin consultant từ localStorage
+        setConsultantInfo({
+          id: userId,
+          name: loggedInUser.fullName || loggedInUser.name || 'Bác sĩ Tư Vấn',
+          specialty: 'Sức khỏe phụ nữ', // Thông tin mặc định
+          patients: Math.floor(Math.random() * 200) + 50, // Tạm thời dùng dữ liệu ngẫu nhiên
+          consultations: Math.floor(Math.random() * 500) + 200,
+          // // rating: (Math.random() * 1 + 4).toFixed(1)
+        });
+        
+        console.log('Đã xác thực tư vấn viên thành công:', loggedInUser.fullName || loggedInUser.name);
+        
+      } catch (error) {
+        console.error('Lỗi khi xác thực:', error);
+        alert('Phiên đăng nhập hết hạn hoặc không hợp lệ');
+        navigate('/');
+      }
+    };
+    
+    verifyConsultantRole();
+  }, [navigate]);
 
   // Manage full screen mode for consultant interface
   useEffect(() => {
@@ -52,72 +94,194 @@ const ConsultantInterface = () => {
     };
   }, []);
 
-  // Initialize data from imported files
-  useEffect(() => {
-    setConsultations(consultationsData);
-    setQuestions(questionsData);
-  }, []);  // Load chat messages when a conversation is selected
-  useEffect(() => {
-    if (selectedItem && isChatOpen && selectedItem.id) {
-      try {
-        const consultationMessages = chatMessagesData[selectedItem.id] || [];
-        if (consultationMessages.length > 0) {
-          setChatMessages(consultationMessages.map(msg => ({
-            sender: msg.sender,
-            text: msg.text,
-            time: msg.time
-          })));
-        } else {
-          // If no messages exist for this consultation, initialize with a greeting
-          setChatMessages([
-            {
-              sender: 'patient',
-              text: `Xin chào bác sĩ, tôi là ${selectedItem.patientName}.`,
-              time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error('Error loading chat messages:', error);
-        // Initialize with a greeting if error occurs
-        setChatMessages([
-          {
-            sender: 'patient',
-            text: `Xin chào bác sĩ, tôi là ${selectedItem.patientName}.`,
-            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-          }
-        ]);
-      }
-    }
-  }, [selectedItem, isChatOpen]);
+  
 
+  // Thêm useEffect để nạp câu hỏi
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/questions');
+        if (!response.ok) {
+          throw new Error('Không thể tải câu hỏi');
+        }
+        const rawData = await response.json();
+        console.log('Dữ liệu gốc từ API:', rawData);
+        
+        // Lấy thông tin người dùng cho mỗi câu hỏi
+        const questionsWithUserDetails = [];
+        
+        for (const item of rawData) {
+          let userName = "Người dùng " + (item.userID || "");
+          
+          // Lấy thông tin người dùng
+          if (item.userID) {
+            const userDetail = await fetchUserDetails(item.userID);
+            if (userDetail) {
+              userName = userDetail.fullName || userName;
+              // Lưu vào cache
+              setUserDetails(prev => ({
+                ...prev,
+                [item.userID]: userDetail
+              }));
+            }
+          }
+          
+          questionsWithUserDetails.push({
+            id: item.questionID || item.id,
+            patientName: userName,
+            date: item.createdAt || item.date || new Date().toISOString(),
+            question: item.content || item.title || "",
+            status: mapStatus(item.status),
+            reply: item.reply || "",
+            userID: item.userID // Lưu userID để có thể sử dụng sau này
+          });
+        }
+        
+        console.log('Dữ liệu đã chuyển đổi:', questionsWithUserDetails);
+        setQuestions(questionsWithUserDetails);
+      } catch (error) {
+        console.error('Lỗi khi tải câu hỏi:', error);
+        
+        // Dữ liệu mẫu khi API thất bại
+        const mockQuestions = [
+          {
+            id:
+            
+            1,
+            patientName: 'Nguyễn Thị A',
+            date: new Date().toISOString(),
+            question: 'Tôi bị đau bụng dưới thường xuyên, có nên đi khám không?',
+            status: 'pending',
+            reply: ''
+          },
+          {
+            id: 2,
+            patientName: 'Trần Văn B',
+            date: new Date().toISOString(),
+            question: 'Làm thế nào để giảm lo lắng về vấn đề sức khỏe sinh sản?',
+            status: 'answered',
+            reply: 'Bạn nên tham khảo ý kiến chuyên gia và thực hành thư giãn.'
+          }
+        ];
+        
+        console.log('Sử dụng dữ liệu mẫu:', mockQuestions);
+        setQuestions(mockQuestions);
+      }
+    };
+
+    // Hàm để chuyển đổi trạng thái từ backend sang frontend
+    const mapStatus = (backendStatus) => {
+      switch(backendStatus?.toLowerCase()) {
+        case 'mới':
+        case 'chờ':
+        case 'chưa trả lời':
+          return 'pending';
+        case 'đã trả lời':
+        case 'hoàn thành':
+          return 'answered';
+        default:
+          return 'pending';
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  // Thêm useEffect để nạp dữ liệu cuộc tư vấn
+  // useEffect(() => {
+  //   const fetchConsultations = async () => {
+  //     try {
+  //       const response = await fetch('http://localhost:8080/api/consultations');
+  //       if (!response.ok) {
+  //         throw new Error('Không thể tải dữ liệu tư vấn');
+  //       }
+  //       const data = await response.json();
+  //       setConsultations(data);
+  //     } catch (error) {
+  //       console.error('Lỗi khi tải dữ liệu tư vấn:', error);
+  //     }
+  //   };
+
+  //   fetchConsultations();
+  // }, []);
   const handleLogout = () => {
-    // Add any logout logic here
+    // Xóa thông tin đăng nhập từ localStorage
+    localStorage.removeItem('loggedInUser');
+    // Có thể gọi API để invalidate token ở phía server
+    // fetch('http://localhost:8080/api/auth/logout', { method: 'POST' });
+    // Chuyển hướng về trang chủ
     navigate('/');
-  };
-  const handleSendReply = (e) => {
+  };  const handleSendReply = async (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
 
-    if (activeTab === 'questions' && selectedItem) {
-      // Update the question with the reply
+    try {
+      // Lấy thông tin người dùng từ localStorage
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID; // Sử dụng userID từ localStorage
+      
+      if (!consultantId) {
+        alert('Không tìm thấy thông tin tư vấn viên, vui lòng đăng nhập lại');
+        navigate('/');
+        return;
+      }
+      
+      // Tạo timestamp hiện tại định dạng "YYYY-MM-DD HH:MM:SS"
+      const now = new Date();
+      const createdAt = now.getFullYear() + '-' + 
+                       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(now.getDate()).padStart(2, '0') + ' ' + 
+                       String(now.getHours()).padStart(2, '0') + ':' + 
+                       String(now.getMinutes()).padStart(2, '0') + ':' + 
+                       String(now.getSeconds()).padStart(2, '0');
+      
+      // Gửi API phù hợp với định dạng yêu cầu
+      const response = await fetch(`http://localhost:8080/api/answers/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questionId: selectedItem.id,
+          consultantId: consultantId,
+          content: replyText,
+          createdAt: createdAt // Thêm trường createdAt
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Không thể gửi câu trả lời');
+      }
+      
+      // Cập nhật UI sau khi gửi thành công
       const updatedQuestions = questions.map(q => {
         if (q.id === selectedItem.id) {
-          return { ...q, status: 'answered', reply: replyText };
+          return { 
+            ...q, 
+            status: 'answered', 
+            reply: replyText,
+            answeredAt: createdAt // Lưu thời gian trả lời
+          };
         }
         return q;
       });
       
       setQuestions(updatedQuestions);
-      // Update the selected item
-      setSelectedItem({ ...selectedItem, status: 'answered', reply: replyText });
+      setSelectedItem({ 
+        ...selectedItem, 
+        status: 'answered', 
+        reply: replyText,
+        answeredAt: createdAt
+      });
       setReplyText('');
       
-      // In a real application, you would save this to the database here
       alert("Câu trả lời đã được gửi!");
+    } catch (error) {
+      console.error('Lỗi khi gửi câu trả lời:', error);
+      alert('Đã xảy ra lỗi khi gửi câu trả lời. Vui lòng thử lại.');
     }
-  };
-  const handleSendMessage = (e) => {
+
+  };  const handleSendMessage = (e) => {
     e.preventDefault();
     if (!messageText.trim()) return;
 
@@ -130,20 +294,46 @@ const ConsultantInterface = () => {
     setChatMessages([...chatMessages, newMessage]);
     setMessageText('');
     
-    // In a real application, you would save this message to the database here
-    // For now, we just show a notification
-    if (selectedItem.status === 'scheduled') {
-      // Update consultation status to ongoing when first message is sent
-      const updatedConsultations = consultations.map(c => {
-        if (c.id === selectedItem.id) {
-          return { ...c, status: 'ongoing' };
-        }
-        return c;
-      });
+    // Trong ứng dụng thực tế, bạn sẽ lưu tin nhắn vào cơ sở dữ liệu
+    // Có thể triển khai API gửi tin nhắn trong tương lai
+    try {
+      // Mã ví dụ để gửi tin nhắn lên server (được comment lại)
+      /*
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID;
       
-      setConsultations(updatedConsultations);
-      // Update the selected item
-      setSelectedItem({ ...selectedItem, status: 'ongoing' });
+      const response = await fetch('http://localhost:8080/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          consultationId: selectedItem.id,
+          senderId: consultantId,
+          content: messageText,
+          timestamp: new Date().toISOString()
+        }),
+      });
+      */
+      
+      // Cập nhật trạng thái cuộc tư vấn nếu cần
+      if (selectedItem.status === 'scheduled') {
+        // Cập nhật UI
+        const updatedConsultations = consultations.map(c => {
+          if (c.id === selectedItem.id) {
+            return { ...c, status: 'ongoing' };
+          }
+          return c;
+        });
+        
+        setConsultations(updatedConsultations);
+        setSelectedItem({ ...selectedItem, status: 'ongoing' });
+        
+        // Có thể thêm API cập nhật trạng thái ở đây
+        // fetch(`http://localhost:8080/api/consultations/${selectedItem.id}/status`, {...});
+      }
+    } catch (error) {
+      console.error('Lỗi khi xử lý tin nhắn:', error);
     }
   };
   const startChat = (item) => {
@@ -176,27 +366,44 @@ const ConsultantInterface = () => {
       setCallTimerInterval(null);
     }
   };
-  const completeConsultation = () => {
+  const completeConsultation = async () => {
     if (selectedItem && selectedItem.status !== 'completed') {
       // Confirm before completing the consultation
       if (window.confirm('Bạn có chắc chắn muốn kết thúc cuộc tư vấn này không?')) {
-        // Update consultation status to completed
-        const updatedConsultations = consultations.map(c => {
-          if (c.id === selectedItem.id) {
-            return { ...c, status: 'completed' };
+        try {
+          // Gửi cập nhật lên API
+          const response = await fetch(`http://localhost:8080/api/consultations/${selectedItem.id}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'completed' }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Không thể cập nhật trạng thái tư vấn');
           }
-          return c;
-        });
-        
-        setConsultations(updatedConsultations);
-        // Update the selected item
-        setSelectedItem({ ...selectedItem, status: 'completed' });
-        
-        // In a real application, you would save this to the database here
-        alert("Cuộc tư vấn đã được đánh dấu là hoàn thành!");
-        
-        // Close the chat/call window after completing
-        closeChat();
+
+          // Update consultation status to completed
+          const updatedConsultations = consultations.map(c => {
+            if (c.id === selectedItem.id) {
+              return { ...c, status: 'completed' };
+            }
+            return c;
+          });
+          
+          setConsultations(updatedConsultations);
+          // Update the selected item
+          setSelectedItem({ ...selectedItem, status: 'completed' });
+          
+          alert("Cuộc tư vấn đã được đánh dấu là hoàn thành!");
+          
+          // Close the chat/call window after completing
+          closeChat();
+        } catch (error) {
+          console.error('Lỗi khi cập nhật trạng thái tư vấn:', error);
+          alert('Đã xảy ra lỗi khi cập nhật trạng thái. Vui lòng thử lại.');
+        }
       }
     }
   };
@@ -221,7 +428,24 @@ const ConsultantInterface = () => {
       case 'answered': return 'Đã trả lời';
       default: return status;
     }
-  };  return (
+  };  
+
+  // Thêm function này vào trong component ConsultantInterface
+  const fetchUserDetails = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        return userData;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Lỗi khi lấy thông tin người dùng ${userId}:`, error);
+      return null;
+    }
+  };
+
+  return (
     <div 
       className="consultant-fullscreen"
       style={{ 
@@ -314,10 +538,6 @@ const ConsultantInterface = () => {
               <span>Cuộc tư vấn:</span>
               <span>{consultantInfo.consultations}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Đánh giá:</span>
-              <span>{consultantInfo.rating}/5 ⭐</span>
-            </div>
           </div>
 
           <div>
@@ -349,10 +569,30 @@ const ConsultantInterface = () => {
                 borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '1rem',
-                textAlign: 'left'
+                textAlign: 'left',
+                position: 'relative'
               }}
             >
               ❓ Câu hỏi
+              {questions.filter(q => q.status === 'pending').length > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  backgroundColor: '#f44336',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.8rem'
+                }}>
+                  {questions.filter(q => q.status === 'pending').length}
+                </span>
+              )}
             </button>
           </div>
         </div>        {/* Main Content */}
@@ -372,11 +612,7 @@ const ConsultantInterface = () => {
                       alignItems: 'center'
                     }}
                   >                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <CustomerAvatar 
-                        name={consultation.patientName} 
-                        gender={consultation.patientGender || 'Nữ'}
-                        size={50}
-                      />
+                      <UserAvatar userName={consultation.patientName} />
                       <div style={{ marginLeft: '1rem' }}>
                         <h3 style={{ margin: '0 0 0.25rem 0' }}>{consultation.patientName}</h3>
                         <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>
@@ -445,10 +681,8 @@ const ConsultantInterface = () => {
                     onClick={() => setSelectedItem(question)}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <CustomerAvatar 
-                          name={question.patientName} 
-                          gender={question.patientGender || 'Nữ'}
-                          size={50}
+                        <UserAvatar 
+                          userName={question.patientName}
                         />
                         <div style={{ marginLeft: '1rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -518,10 +752,8 @@ const ConsultantInterface = () => {
                 backgroundColor: '#f9f9f9',
                 borderRadius: '8px'
               }}>                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <CustomerAvatar 
-                    name={selectedItem.patientName} 
-                    gender={selectedItem.patientGender || 'Nữ'}
-                    size={50}
+                  <UserAvatar 
+                    userName={selectedItem.patientName}
                   />
                   <div style={{ marginLeft: '1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -632,10 +864,8 @@ const ConsultantInterface = () => {
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <CustomerAvatar 
-                  name={selectedItem.patientName} 
-                  gender={selectedItem.patientGender || 'Nữ'}
-                  size={40}
+                <UserAvatar 
+                 userName={selectedItem.patientName}
                 />
                 <div style={{ marginLeft: '0.75rem' }}>
                   <h3 style={{ margin: '0' }}>{selectedItem.patientName}</h3>
@@ -733,10 +963,8 @@ const ConsultantInterface = () => {
                         alignItems: 'center',
                         opacity: 0.7
                       }}>
-                        <CustomerAvatar 
-                          name={selectedItem.patientName} 
-                          gender={selectedItem.patientGender || 'Nữ'}
-                          size={200}
+                        <UserAvatar 
+                          userName={selectedItem.patientName}
                         />
                       </div>
                     )}

@@ -35,6 +35,9 @@ const Login = () => {
       
       const data = await response.json();
       
+      // Thêm log để xem dữ liệu từ API
+      console.log('Dữ liệu từ API đăng nhập:', data);
+      
       if (!response.ok) {
         throw new Error(data.message || 'Email hoặc mật khẩu không đúng!');
       }
@@ -42,19 +45,44 @@ const Login = () => {
       setUserInfo(data);
       setSuccess(true);
       
-      // Lưu thông tin người dùng vào localStorage      localStorage.setItem('loggedInUser', JSON.stringify(data));
-      localStorage.setItem('userId', data.userId);
-      localStorage.setItem('email', data.email);
-      localStorage.setItem('fullName', data.fullName);      localStorage.setItem('roleId', data.roleId);
-      localStorage.setItem('roleName', data.roleName);
+      // Chuẩn hóa dữ liệu người dùng trước khi lưu
+      const userToSave = {
+        userID: data.userId || data.userID || data.id,
+        id: data.userId || data.userID || data.id,
+        fullName: data.fullName || data.name,
+        email: data.email,
+        role: data.roleName || data.role
+      };
       
-      // Chuyển hướng dựa trên redirectUrl từ server sau 2 giây
+      console.log('Dữ liệu người dùng đã chuẩn hóa sẽ lưu vào localStorage:', userToSave);
+      
+      // Lưu thông tin người dùng vào localStorage với định dạng thống nhất
+      localStorage.setItem('loggedInUser', JSON.stringify(userToSave));
+      
+      // Vẫn lưu các mục riêng lẻ nếu cần
+      localStorage.setItem('userId', userToSave.userID);
+      localStorage.setItem('email', userToSave.email);
+      localStorage.setItem('fullName', userToSave.fullName);
+      localStorage.setItem('role', userToSave.role);
+      
+      // Chuyển hướng dựa trên vai trò
       setTimeout(() => {
+        // Ưu tiên sử dụng redirectUrl từ API nếu có
         if (data.redirectUrl) {
           navigate(data.redirectUrl);
         } else {
-          // Fallback nếu server không gửi redirectUrl
-          navigate('/services');
+          // Fallback dựa trên vai trò  
+          const role = userToSave.role;
+          if (role === 'CONSULTANT') {
+            // Chắc chắn dùng đường dẫn đúng
+            navigate('/consultant-interface');
+          } else if (role === 'ADMIN') {
+            navigate('/admin');
+          } else if (role === 'MANAGER') {
+            navigate('/manager');
+          } else {
+            navigate('/services');
+          }
         }
       }, 2000);
     } catch (err) {

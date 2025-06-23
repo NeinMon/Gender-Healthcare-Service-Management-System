@@ -24,7 +24,7 @@ import com.genderhealthcare.demo.service.UserService;
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RequestMapping("/api/users")
-public class UserAPI {
+public class    UserAPI {
 
     @Autowired
     UserService userService;

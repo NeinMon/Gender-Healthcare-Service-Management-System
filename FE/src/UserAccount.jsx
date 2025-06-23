@@ -398,6 +398,33 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
               <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
             </Link>
 
+            <Link
+              to="/user-questions"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px",
+                backgroundColor: "#f8fafc",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                color: "#1e293b",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#e2e8f0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#f8fafc";
+              }}
+            >
+              <span style={{ fontSize: "16px", fontWeight: "500" }}>
+                ❓ Câu Hỏi Của Tôi
+              </span>
+              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
+            </Link>
+
             <button
               style={{
                 display: "flex",

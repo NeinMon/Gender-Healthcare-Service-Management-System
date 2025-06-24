@@ -3,6 +3,8 @@ package com.genderhealthcare.demo.repository;
 import com.genderhealthcare.demo.entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
+import java.util.List;
+import com.genderhealthcare.demo.entity.Role;
 
 public interface UserRepository extends JpaRepository<Users, Integer> {
     // Tìm người dùng theo email
@@ -10,4 +12,7 @@ public interface UserRepository extends JpaRepository<Users, Integer> {
     
     // Kiểm tra email đã tồn tại hay chưa
     boolean existsByEmail(String email);
+
+    // Tìm người dùng theo role
+    List<Users> findByRole(Role role);
 }

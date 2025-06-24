@@ -272,7 +272,7 @@ const ConsultationBooking = () => {
             <li style={{ marginBottom: "8px" }}>Vui lòng đến trước giờ hẹn 15 phút để hoàn thành thủ tục.</li>
             <li style={{ marginBottom: "8px" }}>Mang theo CMND/CCCD và các giấy tờ y tế liên quan (nếu có).</li>
             <li style={{ marginBottom: "8px" }}>Chuẩn bị danh sách các triệu chứng và câu hỏi muốn tư vấn.</li>
-            <li style={{ marginBottom: "8px" }}>Chúng tôi sẽ xác nhận lịch hẹn qua điện thoại trong vòng 24 giờ.</li>
+            {/* <li style={{ marginBottom: "8px" }}>Chúng tôi sẽ xác nhận lịch hẹn qua điện thoại trong vòng 24 giờ.</li> */}
           </ul>
         </div>
       </main>

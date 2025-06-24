@@ -1,6 +1,7 @@
 package com.genderhealthcare.demo.service;
 
 import com.genderhealthcare.demo.entity.Users;
+import com.genderhealthcare.demo.entity.Role;
 import com.genderhealthcare.demo.exception.AccountNotFoundException;
 import com.genderhealthcare.demo.repository.UserRepository;
 
@@ -74,6 +75,11 @@ public class UserService {
         // Don't allow changing email or role through this method
         
         return userRepository.save(existingUser);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Users> getUsersByRole(Role role) {
+        return userRepository.findByRole(role);
     }
 
 }

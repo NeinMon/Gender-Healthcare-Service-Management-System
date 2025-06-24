@@ -76,6 +76,14 @@ const Services = () => {
       icon: "💬",
       color: "#f9ca24",
       path: "/ask-question"
+    },
+    {
+      id: 5,
+      title: "Lịch hẹn của tôi",
+      description: "Xem và quản lý các lịch hẹn đã đặt",
+      icon: "📖",
+      color: "#8e44ad",
+      path: "/my-appointments"
     }
   ];
 
@@ -320,7 +328,7 @@ const Services = () => {
           </div>          {/* Removed secondary consultant section as well */}
           
           {/* Thêm phần thông tin khách hàng */}
-          <div style={{
+          {/* <div style={{
             textAlign: "center",
             marginTop: "40px",
             padding: "20px",
@@ -365,7 +373,7 @@ const Services = () => {
             >
               Xem thông tin cá nhân
             </Link>
-          </div>
+          </div> */}
         </div>
       </main>
 

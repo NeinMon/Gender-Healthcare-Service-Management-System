@@ -61,4 +61,10 @@ public class    UserAPI {
         }
     }
 
+    @GetMapping("/consultants")
+    public ResponseEntity<List<Users>> getAllConsultants() {
+        List<Users> consultants = userService.getUsersByRole(com.genderhealthcare.demo.entity.Role.CONSULTANT);
+        return ResponseEntity.ok(consultants);
+    }
+
 }

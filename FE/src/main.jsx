@@ -12,6 +12,7 @@ import TestBooking from './TestBooking.jsx'
 import UserAccount from './UserAccount.jsx'
 import ConsultantInterface from './ConsultantInterface.jsx'
 import UserQuestions from './UserQuestions.jsx'
+import MyAppointments from './MyAppointments.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -28,6 +29,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/user-account" element={<UserAccount />} />
         <Route path="/consultant-interface" element={<ConsultantInterface />} />
         <Route path="/user-questions" element={<UserQuestions />} />
+        <Route path="/my-appointments" element={<MyAppointments />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

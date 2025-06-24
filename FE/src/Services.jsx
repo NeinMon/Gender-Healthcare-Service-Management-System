@@ -76,14 +76,6 @@ const Services = () => {
       icon: "💬",
       color: "#f9ca24",
       path: "/ask-question"
-    },
-    {
-      id: 5,
-      title: "Lịch hẹn của tôi",
-      description: "Xem và quản lý các lịch hẹn đã đặt",
-      icon: "📖",
-      color: "#8e44ad",
-      path: "/my-appointments"
     }
   ];
 
@@ -141,36 +133,51 @@ const Services = () => {
       fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     }}>      <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
-        position: "relative"
+        position: "relative",
+        height: 120,
+        minHeight: 0,
+        overflow: "hidden"
       }}>
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
-        }}>
+        {/* Logo góc trái */}
+        <div style={{ position: "absolute", top: 10, left: 20 }}>
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
+            style={{ height: 60, width: 60, objectFit: "contain" }}
           />
-          <UserAvatar userName="Nguyễn Thị A" />
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Dịch vụ Chăm sóc Sức khỏe Giới Tính
-        </h1>
+        {/* Avatar góc phải */}
+        <div style={{ position: "absolute", top: 10, right: 20 }}>
+          <UserAvatar userName="Nguyễn Thị A" style={{ width: 60, height: 60, fontSize: 28 }} />
+        </div>
+        {/* Tiêu đề căn giữa tuyệt đối */}
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none"
+        }}>
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              padding: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1,
+              fontSize: "40px",
+              lineHeight: 1.2,
+              width: "100%"
+            }}
+          >
+            Dịch vụ Chăm sóc Sức khỏe Giới Tính
+          </h1>
+        </div>
       </header>
 
       <main style={{

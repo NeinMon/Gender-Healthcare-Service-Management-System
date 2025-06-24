@@ -352,11 +352,107 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
           </div>
         </div>
         )}
+        {/* Khung chức năng mới */}
         <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "20px",
           padding: "40px",
-          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)"
+          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
+          marginBottom: "30px"
+        }}>
+          <h2 style={{
+            color: "#0891b2",
+            fontSize: "28px",
+            fontWeight: "700",
+            marginBottom: "30px"
+          }}>
+            Quản Lý Dịch Vụ Của Tôi
+          </h2>
+          <div style={{
+            display: "grid",
+            gap: "20px"
+          }}>
+            <Link
+              to="/user-questions"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px",
+                backgroundColor: "#f8fafc",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                color: "#1e293b",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#e2e8f0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#f8fafc";
+              }}
+            >
+              <span style={{ fontSize: "16px", fontWeight: "500" }}>
+                ❓ Câu Hỏi Của Tôi
+              </span>
+              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
+            </Link>
+            <Link
+              to="/my-appointments"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px",
+                backgroundColor: "#f8fafc",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+                textDecoration: "none",
+                color: "#1e293b",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#e2e8f0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#f8fafc";
+              }}
+            >
+              <span style={{ fontSize: "16px", fontWeight: "500" }}>
+                📖 Lịch Hẹn Của Tôi
+              </span>
+              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
+            </Link>
+            <button
+              disabled
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px",
+                backgroundColor: "#f8fafc",
+                borderRadius: "12px",
+                border: "1px solid #e2e8f0",
+                color: "#64748b",
+                fontSize: "16px",
+                fontWeight: "500",
+                opacity: 0.6,
+                cursor: "not-allowed"
+              }}
+            >
+              <span>🧪 Xem Lịch Xét Nghiệm (sắp có)</span>
+              <span style={{ fontSize: "18px" }}>→</span>
+            </button>
+          </div>
+        </div>
+        {/* Đưa Cài Đặt Tài Khoản xuống dưới cùng */}
+        <div style={{
+          background: "rgba(255, 255, 255, 0.95)",
+          borderRadius: "20px",
+          padding: "40px",
+          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
+          marginBottom: "0"
         }}>
           <h2 style={{
             color: "#0891b2",
@@ -366,7 +462,6 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
           }}>
             Cài Đặt Tài Khoản
           </h2>
-          
           <div style={{
             display: "grid",
             gap: "20px"
@@ -394,33 +489,6 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
             >
               <span style={{ fontSize: "16px", fontWeight: "500" }}>
                 🔒 Đổi Mật Khẩu
-              </span>
-              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
-            </Link>
-
-            <Link
-              to="/user-questions"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                textDecoration: "none",
-                color: "#1e293b",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#e2e8f0";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#f8fafc";
-              }}
-            >
-              <span style={{ fontSize: "16px", fontWeight: "500" }}>
-                ❓ Câu Hỏi Của Tôi
               </span>
               <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
             </Link>

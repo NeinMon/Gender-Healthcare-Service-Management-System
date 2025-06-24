@@ -467,7 +467,7 @@ const ConsultantInterface = () => {
                     <option value="all">Tất cả câu hỏi</option>
                     <option value="pending">Chờ trả lời</option>
                     <option value="answered">Đã trả lời</option>
-                    <option value="closed">Đã đóng</option>
+
                   </select>
                 </div>
               </div>

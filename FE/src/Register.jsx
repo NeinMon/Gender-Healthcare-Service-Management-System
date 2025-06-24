@@ -363,9 +363,9 @@ const Register = () => {  const [registerData, setRegisterData] = useState({
                       onBlur={(e) => e.target.style.border = "2px solid rgba(8, 145, 178, 0.1)"}
                     >
                       <option value="">-- Chọn giới tính --</option>
-                      <option value="Male">Nam</option>
-                      <option value="Female">Nữ</option>
-                      <option value="Other">Khác</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                      <option value="Khác">Khác</option>
                     </select>
                   </div>
                   <div>

@@ -30,6 +30,11 @@ public class BookingAPI {
         return bookingService.getAllBookings();
     }
 
+    @GetMapping("/user/{userId}")
+    public List<Booking> getBookingsByUserId(@PathVariable("userId") Integer userId) {
+        return bookingService.getBookingsByUserId(userId);
+    }
+
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateBookingStatus(@PathVariable("id") Integer id) {
         Booking booking = bookingService.getBookingById(id);

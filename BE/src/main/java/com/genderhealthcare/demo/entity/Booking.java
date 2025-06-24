@@ -31,7 +31,7 @@ public class Booking {
     private Integer userId;
 
     @NotNull(message = "Consultant ID is required")
-    private Integer consutantId;
+    private Integer consultantId;
 
     @NotBlank(message = "Content is required")
     @Size(max = 500, message = "Content must be less than 500 characters")

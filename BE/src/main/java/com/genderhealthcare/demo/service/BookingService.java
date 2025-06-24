@@ -27,4 +27,10 @@ public class BookingService {
     public Booking getBookingById(Integer id) {
         return bookingRepository.findById(id).orElse(null);
     }
+
+    public List<Booking> getBookingsByUserId(Integer userId) {
+        return bookingRepository.findAll().stream()
+                .filter(b -> b.getUserId().equals(userId))
+                .toList();
+    }
 }

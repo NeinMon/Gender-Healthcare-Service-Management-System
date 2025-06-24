@@ -398,8 +398,8 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
               </span>
               <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
             </Link>
-            <button
-              disabled
+            <Link
+              to="/my-appointments"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -408,16 +408,22 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
                 backgroundColor: "#f8fafc",
                 borderRadius: "12px",
                 border: "1px solid #e2e8f0",
-                color: "#64748b",
-                fontSize: "16px",
-                fontWeight: "500",
-                opacity: 0.6,
-                cursor: "not-allowed"
+                textDecoration: "none",
+                color: "#1e293b",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#e2e8f0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "#f8fafc";
               }}
             >
-              <span>📅 Xem Lịch Tư Vấn (sắp có)</span>
-              <span style={{ fontSize: "18px" }}>→</span>
-            </button>
+              <span style={{ fontSize: "16px", fontWeight: "500" }}>
+                📖 Lịch Hẹn Của Tôi
+              </span>
+              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
+            </Link>
             <button
               disabled
               style={{

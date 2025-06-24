@@ -16,6 +16,11 @@ const ConsultantInterface = () => {
   const [loadingAnswer, setLoadingAnswer] = useState(false);
   const [activeSection, setActiveSection] = useState('questions'); // Add state for active section
   const [consultant, setConsultant] = useState({ fullName: 'Tư vấn viên' }); // Thêm state cho thông tin tư vấn viên
+  // Booking states for online consult
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingUserDetails, setBookingUserDetails] = useState({});
+
   useEffect(() => {
     // Fetch thông tin tư vấn viên
     const fetchConsultantInfo = async () => {
@@ -340,6 +345,64 @@ const ConsultantInterface = () => {
       alert('Lỗi khi gửi câu trả lời: ' + errorMsg);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Fetch bookings for consultant when switching to 'online' tab
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setLoadingBookings(true);
+      const consultantId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (!consultantId) {
+        setBookings([]);
+        setLoadingBookings(false);
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:8080/api/bookings/consultant/${consultantId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setBookings(data);
+          // Fetch user info for each booking
+          const uniqueUserIds = [...new Set(data.map(b => b.userId))];
+          const userMap = {};
+          await Promise.all(uniqueUserIds.map(async (userId) => {
+            try {
+              const userRes = await fetch(`http://localhost:8080/api/users/${userId}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                userMap[userId] = userData;
+              } else {
+                userMap[userId] = { fullName: 'Không rõ' };
+              }
+            } catch {
+              userMap[userId] = { fullName: 'Không rõ' };
+            }
+          }));
+          setBookingUserDetails(userMap);
+        } else {
+          setBookings([]);
+        }
+      } catch {
+        setBookings([]);
+      }
+      setLoadingBookings(false);
+    };
+    if (activeSection === 'online') fetchBookings();
+  }, [activeSection]);
+
+  // Confirm booking status
+  const confirmBooking = async (bookingId) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/bookings/${bookingId}/status`, { method: 'PUT' });
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.bookingId === bookingId ? { ...b, status: 'Đã xác nhận' } : b));
+        alert('Đã xác nhận lịch hẹn!');
+      } else {
+        alert('Lỗi xác nhận lịch hẹn.');
+      }
+    } catch {
+      alert('Lỗi kết nối máy chủ.');
     }
   };
 
@@ -727,35 +790,41 @@ const ConsultantInterface = () => {
           ) : (
             // Phần giao diện "Tư vấn online"
             <div>
-              <h2 style={{ color: "#2c3e50", margin: "0 0 20px 0" }}>Tư vấn trực tuyến</h2>
-              <div style={{
-                backgroundColor: "#f8fafc", 
-                borderRadius: "12px", 
-                padding: "30px", 
-                textAlign: "center",
-                border: "1px dashed #cbd5e1"
-              }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <h3 style={{ color: "#334155", marginTop: "15px", fontWeight: "600" }}>Tính năng tư vấn trực tuyến sẽ ra mắt sớm</h3>
-                <p style={{ color: "#64748b", marginTop: "10px", lineHeight: "1.6" }}>
-                  Chức năng tư vấn trực tuyến đang trong quá trình phát triển và sẽ sớm được triển khai. 
-                  Tính năng này sẽ cho phép bạn tương tác trực tiếp với người dùng thông qua tin nhắn real-time.
-                </p>
-                <button style={{
-                  marginTop: "20px",
-                  padding: "12px 25px",
-                  backgroundColor: "#0891b2",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  cursor: "pointer"
-                }}>
-                  Nhận thông báo khi ra mắt
-                </button>
-              </div>
+              <h2 style={{ color: "#2c3e50", margin: "0 0 20px 0" }}>Lịch hẹn tư vấn online</h2>
+              {loadingBookings ? (
+                <div style={{ textAlign: 'center', color: '#0891b2', padding: 30 }}>Đang tải lịch hẹn...</div>
+              ) : bookings.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#64748b', padding: 30 }}>Không có lịch hẹn nào.</div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', marginTop: 20 }}>
+                    <thead style={{ background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)' }}>
+                      <tr>
+                        <th style={{ padding: 12, color: '#fff', fontWeight: 700 }}>Khách hàng</th>
+                        <th style={{ color: '#fff', fontWeight: 700 }}>Nội dung</th>
+                        <th style={{ color: '#fff', fontWeight: 700 }}>Ngày hẹn</th>
+                        <th style={{ color: '#fff', fontWeight: 700 }}>Trạng thái</th>
+                        <th style={{ color: '#fff', fontWeight: 700 }}>Hành động</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bookings.map((booking) => (
+                        <tr key={booking.bookingId} style={{ borderBottom: '1px solid #e0f2fe' }}>
+                          <td style={{ padding: 12, fontWeight: 600, color: '#0891b2' }}>{bookingUserDetails[booking.userId]?.fullName || '...'}</td>
+                          <td style={{ fontWeight: 500 }}>{booking.content}</td>
+                          <td style={{ fontWeight: 500 }}>{booking.appointmentDate}</td>
+                          <td style={{ fontWeight: 700, color: booking.status === 'Chờ xác nhận' ? '#ff9800' : booking.status === 'Đã xác nhận' ? '#4caf50' : booking.status === 'Đã xong' ? '#2196f3' : '#757575' }}>{booking.status}</td>
+                          <td>
+                            {booking.status === 'Chờ xác nhận' && (
+                              <button onClick={() => confirmBooking(booking.bookingId)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#0891b2', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Xác nhận</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </main>

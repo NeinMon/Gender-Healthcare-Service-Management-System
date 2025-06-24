@@ -328,7 +328,7 @@ const Services = () => {
           </div>          {/* Removed secondary consultant section as well */}
           
           {/* Thêm phần thông tin khách hàng */}
-          <div style={{
+          {/* <div style={{
             textAlign: "center",
             marginTop: "40px",
             padding: "20px",
@@ -373,7 +373,7 @@ const Services = () => {
             >
               Xem thông tin cá nhân
             </Link>
-          </div>
+          </div> */}
         </div>
       </main>
 

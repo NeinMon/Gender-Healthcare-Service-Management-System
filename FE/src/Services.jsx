@@ -1,8 +1,49 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
 const Services = () => {
+  const [isConsultant, setIsConsultant] = React.useState(false);
+  const [isCustomer, setIsCustomer] = React.useState(true); // Mặc định giả định là customer
+  const [loading, setLoading] = React.useState(true);
+  const [redirectTo, setRedirectTo] = React.useState(null);
+
+  // Check if user is a consultant - for demo purposes
+  React.useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        setLoading(true);
+        // Get userId from local storage (this may vary based on your app's auth implementation)
+        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || '2';
+        
+        const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+        
+        if (response.ok) {
+          const userData = await response.json();
+          // Check user role
+          if (userData.role) {
+            if (userData.role === 'CONSULTANT' || userData.role === 'ADMIN') {
+              setIsConsultant(true);
+              setIsCustomer(false); // Không phải là customer
+              setRedirectTo('/consultant-interface'); // Chuyển hướng đến trang consultant
+            } else if (userData.role === 'CUSTOMER') {
+              setIsCustomer(true); 
+            } else {
+              setIsCustomer(false);
+              setRedirectTo('/'); // Chuyển hướng đến trang chính nếu không có role phù hợp
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user role:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkUserRole();
+  }, []);
+
   const features = [
     {
       id: 1,
@@ -40,6 +81,48 @@ const Services = () => {
 
   // Check if screen is mobile
   const isMobile = window.innerWidth <= 768;
+
+  // Chuyển hướng nếu không phải customer và không đang loading
+  if (!loading && !isCustomer && redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  // Hiển thị trạng thái loading khi đang kiểm tra quyền
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        height: "100vh",
+        backgroundColor: "#f0f9ff"
+      }}>
+        <img
+          src="/Logo.png"
+          alt="Logo"
+          style={{ height: 120, width: 120, objectFit: "contain", marginBottom: 20 }}
+        />
+        <h2 style={{ color: "#0891b2", marginBottom: 20 }}>Đang tải thông tin...</h2>
+        <div style={{ 
+          width: 50, 
+          height: 50, 
+          borderRadius: "50%",
+          border: "5px solid #e0f2fe",
+          borderTopColor: "#0891b2",
+          animation: "spin 1s linear infinite"
+        }}></div>
+        <style>
+          {`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       backgroundColor: "#f0f9ff !important", 
@@ -188,6 +271,7 @@ const Services = () => {
               </Link>
             ))}
           </div>
+            {/* Removed consultant section as we now restrict access to customer role only */}
 
           <div style={{
             textAlign: "center",
@@ -233,6 +317,54 @@ const Services = () => {
                 </p>
               </div>
             </div>
+          </div>          {/* Removed secondary consultant section as well */}
+          
+          {/* Thêm phần thông tin khách hàng */}
+          <div style={{
+            textAlign: "center",
+            marginTop: "40px",
+            padding: "20px",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "20px",
+            boxShadow: "0 10px 30px rgba(8, 145, 178, 0.1)",
+            border: "1px solid rgba(8, 145, 178, 0.1)"
+          }}>
+            <h3 style={{
+              fontSize: "24px",
+              fontWeight: "600",
+              color: "#0891b2",
+              marginBottom: "16px"
+            }}>
+              � Thông tin cá nhân
+            </h3>
+            <p style={{
+              color: "#666",
+              fontSize: "16px",
+              marginBottom: "20px"
+            }}>
+              Xem và cập nhật thông tin cá nhân của bạn, lịch sử khám và hỏi đáp
+            </p>
+            <Link
+              to="/user-account"
+              style={{
+                backgroundColor: "#0891b2",
+                color: "#fff",
+                padding: "10px 20px",
+                borderRadius: "10px",
+                textDecoration: "none",
+                fontWeight: "500",
+                transition: "background 0.3s ease",
+                display: "inline-block"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#067a9e";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#0891b2";
+              }}
+            >
+              Xem thông tin cá nhân
+            </Link>
           </div>
         </div>
       </main>

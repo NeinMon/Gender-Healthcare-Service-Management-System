@@ -1,1360 +1,783 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
 const ConsultantInterface = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('consultations');
-  const [consultations, setConsultations] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [replyText, setReplyText] = useState('');
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [messageText, setMessageText] = useState('');
-  const [isVideoCall, setIsVideoCall] = useState(false);
-  const [isMicMuted, setIsMicMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [callTimer, setCallTimer] = useState(0);
-  const [callTimerInterval, setCallTimerInterval] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [userDetails, setUserDetails] = useState({});
-  const [consultantInfo, setConsultantInfo] = useState({
-    // name: 'Bác sĩ Tư Vấn',
-    // specialty: 'Sức khỏe phụ nữ',
-    // patients: 120,
-    // consultations: 450,
-    // rating: 4.9
-  });  // Xác thực người dùng và lấy thông tin consultant từ localStorage
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [answerText, setAnswerText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [existingAnswer, setExistingAnswer] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [loadingAnswer, setLoadingAnswer] = useState(false);
+  const [activeSection, setActiveSection] = useState('questions'); // Add state for active section
+  const [consultant, setConsultant] = useState({ fullName: 'Tư vấn viên' }); // Thêm state cho thông tin tư vấn viên
   useEffect(() => {
-    const verifyConsultantRole = async () => {
+    // Fetch thông tin tư vấn viên
+    const fetchConsultantInfo = async () => {
       try {
-        // Lấy thông tin người dùng từ localStorage
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
-        
-        // Thêm log để debug
-        console.log('Thông tin người dùng từ localStorage:', loggedInUser);
-        
-        // Lấy userID hoặc id từ dữ liệu người dùng
-        const userId = loggedInUser.userID || loggedInUser.id;
+        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
         
         if (!userId) {
-          console.warn('Thiếu userID/id, chuyển hướng về trang đăng nhập');
-          navigate('/');
+          console.error('Không tìm thấy userId trong storage');
           return;
         }
         
-        // Lấy role và kiểm tra linh hoạt
-        const userRole = loggedInUser.role || '';
-        console.log('Vai trò người dùng:', userRole, typeof userRole);
-        
-        // Kiểm tra phù hợp với enum Role từ backend (CUSTOMER, CONSULTANT, MANAGER, ADMIN)
-        const isConsultant = 
-          userRole === 'CONSULTANT' || 
-          userRole === 'consultant' || 
-          userRole === 'Consultant';
-        
-        if (!isConsultant) {
-          console.warn(`Vai trò "${userRole}" không phải là vai trò tư vấn viên`);
-          alert(`Bạn không có quyền truy cập trang này. Vai trò hiện tại: ${userRole}`);
-          navigate('/');
-          return;
+        const response = await fetch(`http://localhost:8080/api/users/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setConsultant(data);
+        } else {
+          console.error('Không thể lấy thông tin tư vấn viên');
         }
-        
-        // Cập nhật thông tin consultant từ localStorage
-        setConsultantInfo({
-          id: userId,
-          name: loggedInUser.fullName || loggedInUser.name || 'Bác sĩ Tư Vấn',
-
-          patients: Math.floor(Math.random() * 200) + 50, // Tạm thời dùng dữ liệu ngẫu nhiên
-          consultations: Math.floor(Math.random() * 500) + 200,
-          // // rating: (Math.random() * 1 + 4).toFixed(1)
-        });
-        
-        console.log('Đã xác thực tư vấn viên thành công:', loggedInUser.fullName || loggedInUser.name);
-        
-      } catch (error) {
-        console.error('Lỗi khi xác thực:', error);
-        alert('Phiên đăng nhập hết hạn hoặc không hợp lệ');
-        navigate('/');
+      } catch (err) {
+        console.error('Lỗi khi lấy thông tin tư vấn viên:', err);
       }
     };
-    
-    verifyConsultantRole();
-  }, [navigate]);
 
-  // Manage full screen mode for consultant interface
-  useEffect(() => {
-    // Add CSS class to body when component mounts
-    document.body.classList.add('consultant-fullscreen-active');
-    
-    // Remove CSS class when component unmounts
-    return () => {
-      document.body.classList.remove('consultant-fullscreen-active');
-    };
+    fetchConsultantInfo();
   }, []);
 
-  
-
-  // Thêm useEffect để nạp câu hỏi
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
+        setLoading(true);
         const response = await fetch('http://localhost:8080/api/questions');
+
         if (!response.ok) {
-          throw new Error('Không thể tải câu hỏi');
+          throw new Error('Failed to fetch questions');
         }
-        const rawData = await response.json();
-        console.log('Dữ liệu gốc từ API:', rawData);
+
+        const data = await response.json();
+        setQuestions(data);
         
-        // Lấy thông tin người dùng cho mỗi câu hỏi
-        const questionsWithUserDetails = [];
+        // Fetch user details for each question
+        const uniqueUserIds = [...new Set(data.map(question => question.userID))];
+        const userDetailsMap = {};
         
-        for (const item of rawData) {
-          let userName = "Người dùng " + (item.userID || "");
-          
-          // Lấy thông tin người dùng
-          if (item.userID) {
-            const userDetail = await fetchUserDetails(item.userID);
-            if (userDetail) {
-              userName = userDetail.fullName || userName;
-              // Lưu vào cache
-              setUserDetails(prev => ({
-                ...prev,
-                [item.userID]: userDetail
-              }));
+        await Promise.all(uniqueUserIds.map(async (userId) => {
+          try {
+            const userResponse = await fetch(`http://localhost:8080/api/users/${userId}`);
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              userDetailsMap[userId] = userData;
+            } else {
+              userDetailsMap[userId] = { fullName: 'Unknown User' };
             }
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            userDetailsMap[userId] = { fullName: 'Unknown User' };
           }
-            // Log để debug status
-          // Xem trạng thái từ API và kiểm tra câu trả lời          const hasReply = item.reply && item.reply.trim().length > 0;
-          console.log('Status từ backend:', item.status, 'Có câu trả lời:', hasReply);
-            // Xác định nội dung hiển thị
-          const content = item.content || item.title || "";
-            // Trạng thái từ BE hoặc suy luận từ việc có câu trả lời hay không
-          const statusFromBE = item.status || (item.reply ? 'resolved' : 'pending');
-          const mappedStatus = mapStatus(statusFromBE);
-          
-          questionsWithUserDetails.push({
-            id: item.questionID || item.id,
-            patientName: userName,
-            date: item.createdAt || item.date || new Date().toISOString(),
-            question: content,
-            status: mappedStatus,
-            originalStatus: statusFromBE, // Lưu status gốc từ backend
-            reply: item.reply || "",
-            userID: item.userID // Lưu userID để có thể sử dụng sau này
-          });
-        }
+        }));
         
-        console.log('Dữ liệu đã chuyển đổi:', questionsWithUserDetails);
-        setQuestions(questionsWithUserDetails);
-      } catch (error) {
-        console.error('Lỗi khi tải câu hỏi:', error);
-        
-        // Dữ liệu mẫu khi API thất bại
-        const mockQuestions = [
-          {
-            id:
-            
-            1,
-            patientName: 'Nguyễn Thị A',
-            date: new Date().toISOString(),
-            question: 'Tôi bị đau bụng dưới thường xuyên, có nên đi khám không?',
-            status: 'pending',
-            reply: ''
-          },
-          {
-            id: 2,
-            patientName: 'Trần Văn B',
-            date: new Date().toISOString(),
-            question: 'Làm thế nào để giảm lo lắng về vấn đề sức khỏe sinh sản?',
-            status: 'answered',
-            reply: 'Bạn nên tham khảo ý kiến chuyên gia và thực hành thư giãn.'
-          }
-        ];
-        
-        console.log('Sử dụng dữ liệu mẫu:', mockQuestions);
-        setQuestions(mockQuestions);
-      }
-    };    // Hàm để chuyển đổi trạng thái từ backend sang frontend
-    const mapStatus = (backendStatus) => {
-      // Nếu không có status, trả về pending
-      if (!backendStatus) return 'pending';
-      
-      // Chuyển đổi sang lowercase và loại bỏ khoảng trắng đầu cuối để xử lý nhất quán
-      const status = backendStatus.toString().toLowerCase().trim();
-      
-      switch(status) {
-        // Theo backend, status chỉ có 2 giá trị: pending và resolved
-        case 'pending':
-          return 'pending'; // Chưa trả lời
-          
-        case 'resolved':
-          return 'answered'; // Đã trả lời
-        
-        // Các trường hợp tương thích với hệ thống cũ (nếu có)
-        case 'mới':
-        case 'new':
-        case 'chờ':
-        case 'waiting':
-        case 'chưa trả lời':
-        case 'chưa xử lý':
-        case '0': 
-          return 'pending';
-        
-        case 'đã trả lời':
-        case 'answered':
-        case 'replied':
-        case 'hoàn thành':
-        case 'completed':
-        case 'done':
-        case '1':
-          return 'answered';
-          
-        default:
-          console.log('Status không xác định:', backendStatus);
-          return 'pending'; // Mặc định là pending nếu không xác định được
+        setUserDetails(userDetailsMap);
+      } catch (err) {
+        setError('Error fetching questions: ' + err.message);
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchQuestions();
   }, []);
-
-  // Thêm useEffect để nạp dữ liệu cuộc tư vấn
-  // useEffect(() => {
-  //   const fetchConsultations = async () => {
-  //     try {
-  //       const response = await fetch('http://localhost:8080/api/consultations');
-  //       if (!response.ok) {
-  //         throw new Error('Không thể tải dữ liệu tư vấn');
-  //       }
-  //       const data = await response.json();
-  //       setConsultations(data);
-  //     } catch (error) {
-  //       console.error('Lỗi khi tải dữ liệu tư vấn:', error);
-  //     }
-  //   };
-
-  //   fetchConsultations();
-  // }, []);
-  const handleLogout = () => {
-    // Xóa thông tin đăng nhập từ localStorage
-    localStorage.removeItem('loggedInUser');
-    // Có thể gọi API để invalidate token ở phía server
-    // fetch('http://localhost:8080/api/auth/logout', { method: 'POST' });
-    // Chuyển hướng về trang chủ
-    navigate('/');
-  };  const handleSendReply = async (e) => {
-    e.preventDefault();
-    if (!replyText.trim()) return;
-
-    try {
-      // Lấy thông tin người dùng từ localStorage
-      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
-      const consultantId = loggedInUser.userID; // Sử dụng userID từ localStorage
-      
-      if (!consultantId) {
-        alert('Không tìm thấy thông tin tư vấn viên, vui lòng đăng nhập lại');
-        navigate('/');
-        return;
-      }
-      
-      // Tạo timestamp hiện tại định dạng "YYYY-MM-DD HH:MM:SS"
-      const now = new Date();
-      const createdAt = now.getFullYear() + '-' + 
-                       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                       String(now.getDate()).padStart(2, '0') + ' ' + 
-                       String(now.getHours()).padStart(2, '0') + ':' + 
-                       String(now.getMinutes()).padStart(2, '0') + ':' + 
-                       String(now.getSeconds()).padStart(2, '0');
-      
-      // Gửi API phù hợp với định dạng yêu cầu
-      const response = await fetch(`http://localhost:8080/api/answers/reply`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          questionId: selectedItem.id,
-          consultantId: consultantId,
-          content: replyText,
-          createdAt: createdAt // Thêm trường createdAt
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Không thể gửi câu trả lời');
-      }
-        // Cập nhật UI sau khi gửi thành công
-      const updatedQuestions = questions.map(q => {
-        if (q.id === selectedItem.id) {
-          return { 
-            ...q, 
-            status: 'answered', 
-            originalStatus: 'resolved', // Backend đã cập nhật status thành resolved
-            reply: replyText,
-            answeredAt: createdAt // Lưu thời gian trả lời
-          };
-        }
-        return q;
-      });
-      
-      setQuestions(updatedQuestions);
-      setSelectedItem({ 
-        ...selectedItem, 
-        status: 'answered', 
-        originalStatus: 'resolved', // Cập nhật status từ API
-        reply: replyText,
-        answeredAt: createdAt
-      });
-      setReplyText('');
-      
-      alert("Câu trả lời đã được gửi!");
-    } catch (error) {
-      console.error('Lỗi khi gửi câu trả lời:', error);
-      alert('Đã xảy ra lỗi khi gửi câu trả lời. Vui lòng thử lại.');
-    }
-
-  };  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!messageText.trim()) return;
-
-    const newMessage = {
-      sender: 'consultant',
-      text: messageText,
-      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Không có ngày';
+    
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+  };  const getStatusBadge = (status, id) => {
+    let badgeStyle = {
+      padding: '6px 12px',
+      borderRadius: '20px',
+      fontSize: '14px',
+      fontWeight: '500',
+      display: 'inline-block'
     };
 
-    setChatMessages([...chatMessages, newMessage]);
-    setMessageText('');
-    
-    // Trong ứng dụng thực tế, bạn sẽ lưu tin nhắn vào cơ sở dữ liệu
-    // Có thể triển khai API gửi tin nhắn trong tương lai
+    // Map status values to match the backend values
+    switch(status?.toLowerCase()) {
+      case 'resolved':
+        return <span key={`status-${id || 'resolved'}`} style={{...badgeStyle, backgroundColor: '#d0f7ea', color: '#0f766e'}}>Đã trả lời</span>;
+      case 'pending':
+        return <span key={`status-${id || 'pending'}`} style={{...badgeStyle, backgroundColor: '#fef9c3', color: '#ca8a04'}}>Chờ trả lời</span>;
+      case 'closed':
+        return <span key={`status-${id || 'closed'}`} style={{...badgeStyle, backgroundColor: '#fee2e2', color: '#b91c1c'}}>Đã đóng</span>;
+      default:
+        return <span key={`status-${id || 'unknown'}`} style={{...badgeStyle, backgroundColor: '#e0f2fe', color: '#0369a1'}}>Khác</span>;
+    }
+  };
+
+  // Fetch the existing answer when selecting a question
+  const fetchExistingAnswer = async (questionId) => {
     try {
-      // Mã ví dụ để gửi tin nhắn lên server (được comment lại)
-      /*
-      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
-      const consultantId = loggedInUser.userID;
+      setLoadingAnswer(true);
+      const response = await fetch(`http://localhost:8080/api/answers/${questionId}`);
       
-      const response = await fetch('http://localhost:8080/api/messages', {
+      if (response.ok) {
+        const data = await response.json();
+        setExistingAnswer(data);
+        
+        // Store the answer in the answers cache
+        setAnswers(prev => ({
+          ...prev,
+          [questionId]: data
+        }));
+        
+        // Pre-fill the answer text if we're in edit mode
+        if (data && data.content) {
+          setAnswerText(data.content);
+        }
+      } else {
+        // No answer exists or other error
+        setExistingAnswer(null);
+        setAnswerText('');
+      }
+    } catch (error) {
+      console.error('Error fetching answer:', error);
+      setExistingAnswer(null);
+    } finally {
+      setLoadingAnswer(false);
+    }
+  };
+  const handleQuestionClick = (question) => {
+    // Xác định ID câu hỏi (hỗ trợ cả questionID và id)
+    const questionId = question.questionID || question.id;
+    const selectedId = selectedQuestion ? (selectedQuestion.questionID || selectedQuestion.id) : null;
+    
+    const isSameQuestion = selectedQuestion && selectedId === questionId;
+    
+    if (!isSameQuestion) {
+      setSelectedQuestion(question);
+      setAnswerText('');
+      
+      // If question is already resolved, fetch the existing answer
+      if (question.status?.toLowerCase() === 'resolved') {
+        // Sử dụng ID chính xác để truy vấn câu trả lời
+        fetchExistingAnswer(questionId);
+      } else {
+        setExistingAnswer(null);
+      }
+    } else {
+      // Clicking the same question again closes it
+      setSelectedQuestion(null);
+      setAnswerText('');
+      setExistingAnswer(null);
+    }
+  };
+
+  const handleAnswerChange = (e) => {
+    setAnswerText(e.target.value);
+  };
+
+  const handleFilterChange = (e) => {
+    setFilterStatus(e.target.value);
+  };
+  const filteredQuestions = questions.filter(question => {
+    if (filterStatus === 'all') return true;
+    
+    // Map frontend filter values to backend status values
+    if (filterStatus === 'pending' && (!question.status || question.status.toLowerCase() === 'pending')) {
+      return true;
+    }
+    if (filterStatus === 'answered' && question.status?.toLowerCase() === 'resolved') {
+      return true;
+    }
+    if (filterStatus === 'closed' && question.status?.toLowerCase() === 'closed') {
+      return true;
+    }
+    
+    return false;
+  });  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
+  const submitAnswer = async () => {
+    if (!answerText.trim()) {
+      alert('Vui lòng nhập câu trả lời');
+      return;
+    }    if (!selectedQuestion) {
+      alert('Không tìm thấy câu hỏi. Vui lòng chọn câu hỏi khác.');
+      console.error('selectedQuestion không tồn tại', selectedQuestion);
+      return;
+    }
+    
+    // Kiểm tra xem ID câu hỏi nằm ở field nào (id hoặc questionID)
+    const questionId = selectedQuestion.questionID || selectedQuestion.id;
+    if (!questionId) {
+      alert('Không tìm thấy ID câu hỏi. Vui lòng chọn câu hỏi khác.');
+      console.error('Không tìm thấy ID trong câu hỏi', selectedQuestion);
+      return;
+    }try {
+      setSubmitting(true);
+      // Lấy ID của consultant từ localStorage hoặc sessionStorage
+      const consultantIdStr = localStorage.getItem('userId') || 
+                          sessionStorage.getItem('userId') || 
+                          '1073741824'; // Sử dụng ID đã được chỉ định từ yêu cầu API
+      
+      // Đảm bảo ID được chuyển sang số nguyên
+      const consultantId = parseInt(consultantIdStr, 10);
+        // Đối với questionId, sử dụng questionID (viết hoa) hoặc id (viết thường) tùy thuộc vào API
+      const rawQuestionId = selectedQuestion.questionID || selectedQuestion.id;
+      const questionId = parseInt(rawQuestionId, 10);
+      
+      // Kiểm tra và ghi log để debug
+      console.log('Selected question:', selectedQuestion);
+      console.log('Question ID field availability:', { 
+        'id': selectedQuestion.id !== undefined ? 'exists' : 'missing',
+        'questionID': selectedQuestion.questionID !== undefined ? 'exists' : 'missing'
+      });
+      console.log('Question ID (raw):', rawQuestionId);
+      console.log('Question ID (used):', questionId);
+      console.log('Consultant ID (used):', consultantId);
+      
+      // Chuẩn bị dữ liệu theo đúng định dạng API yêu cầu
+      const answerData = {
+        questionId: questionId, // Đã chuyển sang số nguyên
+        consultantId: consultantId, // Đã chuyển sang số nguyên
+        content: answerText.trim() // Nội dung câu trả lời (đã loại bỏ khoảng trắng thừa)
+      };      console.log('Gửi câu trả lời với dữ liệu:', answerData);
+      
+      // Kiểm tra một lần nữa trước khi gọi API
+      console.log('Request body (stringified):', JSON.stringify(answerData));
+      
+      // Gọi API để gửi câu trả lời
+      const response = await fetch('http://localhost:8080/api/answers/reply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          consultationId: selectedItem.id,
-          senderId: consultantId,
-          content: messageText,
-          timestamp: new Date().toISOString()
-        }),
+        body: JSON.stringify(answerData)
       });
-      */
+
+      console.log('Response status:', response.status);
+      console.log('Response statusText:', response.statusText);
       
-      // Cập nhật trạng thái cuộc tư vấn nếu cần
-      if (selectedItem.status === 'scheduled') {
-        // Cập nhật UI
-        const updatedConsultations = consultations.map(c => {
-          if (c.id === selectedItem.id) {
-            return { ...c, status: 'ongoing' };
-          }
-          return c;
-        });
+      // Log headers
+      const headers = {};
+      response.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+      console.log('Response headers:', headers);
+      
+      let responseData;
+      try {
+        const text = await response.text();
+        console.log('Raw response text:', text);
         
-        setConsultations(updatedConsultations);
-        setSelectedItem({ ...selectedItem, status: 'ongoing' });
-        
-        // Có thể thêm API cập nhật trạng thái ở đây
-        // fetch(`http://localhost:8080/api/consultations/${selectedItem.id}/status`, {...});
-      }
-    } catch (error) {
-      console.error('Lỗi khi xử lý tin nhắn:', error);
-    }
-  };
-  const startChat = (item) => {
-    setSelectedItem(item);
-    setIsChatOpen(true);
-    setIsVideoCall(false); // Start with text chat by default
-  };
-  const startVideoCall = (item) => {
-    setSelectedItem(item);
-    setIsChatOpen(true);
-    setIsVideoCall(true); // Start as video call
-    
-    // Start the call timer
-    setCallTimer(0);
-    const interval = setInterval(() => {
-      setCallTimer(prev => prev + 1);
-    }, 1000);
-    setCallTimerInterval(interval);
-  };
-  const closeChat = () => {
-    setIsChatOpen(false);
-    setIsVideoCall(false);
-    setIsMicMuted(false);
-    setIsVideoOff(false);
-    setIsScreenSharing(false);
-    
-    // Clear the call timer
-    if (callTimerInterval) {
-      clearInterval(callTimerInterval);
-      setCallTimerInterval(null);
-    }
-  };
-  const completeConsultation = async () => {
-    if (selectedItem && selectedItem.status !== 'completed') {
-      // Confirm before completing the consultation
-      if (window.confirm('Bạn có chắc chắn muốn kết thúc cuộc tư vấn này không?')) {
-        try {
-          // Gửi cập nhật lên API
-          const response = await fetch(`http://localhost:8080/api/consultations/${selectedItem.id}/status`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'completed' }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Không thể cập nhật trạng thái tư vấn');
+        // Nếu text không rỗng, thử parse thành JSON
+        if (text && text.trim()) {
+          try {
+            responseData = JSON.parse(text);
+            console.log('Parsed response data:', responseData);
+          } catch (jsonError) {
+            console.error('Error parsing JSON:', jsonError);
+            responseData = { message: 'Invalid JSON response' };
           }
-
-          // Update consultation status to completed
-          const updatedConsultations = consultations.map(c => {
-            if (c.id === selectedItem.id) {
-              return { ...c, status: 'completed' };
-            }
-            return c;
-          });
-          
-          setConsultations(updatedConsultations);
-          // Update the selected item
-          setSelectedItem({ ...selectedItem, status: 'completed' });
-          
-          alert("Cuộc tư vấn đã được đánh dấu là hoàn thành!");
-          
-          // Close the chat/call window after completing
-          closeChat();
-        } catch (error) {
-          console.error('Lỗi khi cập nhật trạng thái tư vấn:', error);
-          alert('Đã xảy ra lỗi khi cập nhật trạng thái. Vui lòng thử lại.');
+        } else {
+          responseData = { message: 'Empty response from server' };
         }
+      } catch (e) {
+        console.error('Failed to read response text:', e);
+        responseData = { message: 'Không thể đọc phản hồi từ server' };
+      }      // Kiểm tra phản hồi dựa trên status code
+      if (!response.ok) {
+        let errorMessage = 'Unknown error occurred';
+        
+        // Xử lý các mã lỗi phổ biến
+        if (response.status === 400) {
+          errorMessage = `Bad Request: ${responseData.message || 'Invalid question or consultant ID format'}`;
+        } else if (response.status === 404) {
+          errorMessage = 'Not Found: Question or consultant not found';
+        } else if (response.status === 500) {
+          errorMessage = 'Server Error: Please try again later';
+        } else if (responseData && responseData.message) {
+          errorMessage = responseData.message;
+        }
+        
+        throw new Error(`Failed to submit answer: ${errorMessage}`);
       }
-    }
-  };
+      
+      console.log('Câu trả lời đã được gửi thành công:', responseData);
+        // Cập nhật trạng thái câu hỏi trong UI - sử dụng ID phù hợp (questionID hoặc id)
+      const updateId = selectedQuestion.questionID || selectedQuestion.id;
+      setQuestions(questions.map(q => {
+        // Kiểm tra cả hai trường id có thể có
+        const qId = q.questionID || q.id;
+        return qId === parseInt(updateId, 10) ? { ...q, status: 'resolved' } : q;
+      }));
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'scheduled': return '#0891b2';
-      case 'ongoing': return '#43a047';
-      case 'completed': return '#757575';
-      case 'pending': return '#fbc02d';
-      case 'answered': return '#43a047';
-      default: return '#757575';
-    }
-  };  const getStatusText = (status) => {
-    switch (status) {
-      case 'scheduled': return 'Đã lên lịch';
-      case 'ongoing': return 'Đang diễn ra';
-      case 'completed': return 'Đã hoàn thành';
-      case 'pending': return 'Chưa trả lời';  // Từ "pending" của backend
-      case 'answered': return 'Đã trả lời';   // Từ "resolved" của backend
-      default: return status || 'Chưa xác định';
-    }
-  };
-    // Hiển thị status dưới dạng badge với màu sắc tương ứng
-  const StatusBadge = ({ status, originalStatus }) => {
-    return (
-      <span style={{ 
-        padding: '0.25rem 0.75rem',
-        borderRadius: '20px',
-        fontSize: '0.8rem',
-        fontWeight: '500',
-        backgroundColor: getStatusColor(status) + '20',
-        color: getStatusColor(status),
-        display: 'inline-block',
-        position: 'relative'
-      }}>
-        {getStatusText(status)}
-        {originalStatus && originalStatus !== status && (
-          <span style={{ 
-            fontSize: '0.65rem',
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            backgroundColor: '#f5f5f5',
-            border: '1px solid #ddd',
-            borderRadius: '10px',
-            padding: '0 4px',
-            color: '#666'
-          }}>
-            API: {originalStatus}
-          </span>
-        )}
-      </span>
-    );
-  };
-
-  // Thêm function này vào trong component ConsultantInterface
-  const fetchUserDetails = async (userId) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/users/${userId}`);
-      if (response.ok) {
-        const userData = await response.json();
-        return userData;
+      // Đóng phần trả lời
+      setSelectedQuestion(null);
+      setAnswerText('');
+      
+      alert('Câu trả lời đã được gửi thành công!');    } catch (err) {
+      console.error('Error submitting answer:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        selectedQuestionId: selectedQuestion?.id,
+        answerTextLength: answerText.length,
+        consultantId: consultantId
+      });
+      
+      // Hiện thông báo lỗi chi tiết hơn
+      let errorMsg = err.message;
+      if (errorMsg.includes('400')) {
+        errorMsg = 'Lỗi dữ liệu: ID câu hỏi hoặc ID tư vấn viên không hợp lệ. Vui lòng kiểm tra lại.';
+      } else if (errorMsg.includes('server')) {
+        errorMsg = 'Lỗi kết nối với máy chủ. Vui lòng thử lại sau.';
       }
-      return null;
-    } catch (error) {
-      console.error(`Lỗi khi lấy thông tin người dùng ${userId}:`, error);
-      return null;
+      
+      alert('Lỗi khi gửi câu trả lời: ' + errorMsg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div 
-      className="consultant-fullscreen"
-      style={{ 
-        backgroundColor: '#f5f5f5', 
-        fontFamily: 'Arial, sans-serif',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
+    <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>
       {/* Header */}
-      <header style={{ 
-        backgroundColor: '#0891b2', 
-        color: 'white', 
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+      <header style={{
+        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+        paddingBottom: 0,
+        position: "relative",
+        width: "100%"
       }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Link to="/" style={{ textDecoration: 'none', color: 'white', marginRight: '2rem' }}>
-            <h1 style={{ margin: 0 }}>
-              <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>🏥</span> 
-              Tư Vấn Sức Khỏe Giới Tính
-            </h1>
-          </Link>
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          paddingTop: 18,
+          paddingLeft: 20,
+          paddingRight: 20
+        }}>          <img
+            src="/Logo.png"
+            alt="Logo"
+            style={{ height: 100, width: 100, objectFit: "contain" }}
+          />
+          <UserAvatar userName={consultant?.fullName || 'Tư vấn viên'} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ 
-            marginRight: '1rem', 
-            display: 'flex', 
-            alignItems: 'center' 
-          }}>
-            <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>👩‍⚕️</span>
-            <span>{consultantInfo.name}</span>
-          </div>
+        <h1
+          style={{
+            color: "#fff",
+            margin: 0,
+            padding: "24px 0 16px 0",
+            textAlign: "center",
+            fontWeight: 700,
+            letterSpacing: 1
+          }}
+        >
+          Quản lý câu hỏi từ người dùng
+        </h1>
+      </header>
+
+      {/* Main Content with Sidebar */}
+      <div style={{ 
+        display: "flex", 
+        flex: 1, 
+        width: "100%", 
+        backgroundColor: "#fff", 
+        boxShadow: "0 5px 20px rgba(0,0,0,0.05)", 
+        marginTop: "-20px" 
+      }}>
+        {/* Sidebar */}
+        <div style={{
+          width: "220px",
+          backgroundColor: "#f8fafc",
+          borderRight: "1px solid #e2e8f0",
+          padding: "30px 15px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px"
+        }}>
           <button 
-            onClick={handleLogout}
+            onClick={() => setActiveSection('questions')}
             style={{
-              backgroundColor: 'transparent',
-              border: '1px solid white',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              cursor: 'pointer'
+              padding: "15px",
+              borderRadius: "8px",
+              border: "none",
+              backgroundColor: activeSection === 'questions' ? "#0891b2" : "#e0f2fe",
+              color: activeSection === 'questions' ? "#fff" : "#0891b2",
+              fontWeight: "600",
+              cursor: "pointer",
+              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              transition: "all 0.2s ease"
             }}
           >
-            Đăng Xuất
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            Câu hỏi
+          </button>
+          <button 
+            onClick={() => setActiveSection('online')}
+            style={{
+              padding: "15px",
+              borderRadius: "8px",
+              border: "none",
+              backgroundColor: activeSection === 'online' ? "#0891b2" : "#e0f2fe",
+              color: activeSection === 'online' ? "#fff" : "#0891b2",
+              fontWeight: "600",
+              cursor: "pointer",
+              textAlign: "left",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              transition: "all 0.2s ease"
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Tư vấn online
           </button>
         </div>
-      </header>      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <div style={{ 
-          width: '320px', 
-          backgroundColor: 'white', 
-          padding: '1.5rem',
-          boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
-          minHeight: '100%',
-          borderRight: '1px solid #e0e0e0'
+
+        {/* Main Content Area */}
+        <main style={{
+          padding: "40px",
+          flex: 1,
+          backgroundColor: "#fff",
+          boxSizing: "border-box",
+          overflow: "auto"
         }}>
-          <div style={{ 
-            textAlign: 'center', 
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            borderBottom: '1px solid #e0e0e0'
-          }}>
-            <div style={{ 
-              fontSize: '3rem', 
-              marginBottom: '0.5rem',
-              background: '#e1f5fe',
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              margin: '0 auto'
-            }}>
-              👩‍⚕️
-            </div>
-            <h2 style={{ margin: '0.5rem 0', fontSize: '1.5rem' }}>{consultantInfo.name}</h2>
-            <p style={{ margin: '0.25rem 0', color: '#0891b2' }}>{consultantInfo.specialty}</p>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span>Bệnh nhân:</span>
-              <span>{consultantInfo.patients}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span>Cuộc tư vấn:</span>
-              <span>{consultantInfo.consultations}</span>
-            </div>
-          </div>
-
-          <div>
-            <button 
-              onClick={() => setActiveTab('consultations')}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                marginBottom: '0.75rem',
-                backgroundColor: activeTab === 'consultations' ? '#0891b2' : 'white',
-                color: activeTab === 'consultations' ? 'white' : '#333',
-                border: activeTab === 'consultations' ? 'none' : '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                textAlign: 'left'
-              }}
-            >
-              🗓️ Cuộc tư vấn
-            </button>
-            <button 
-              onClick={() => setActiveTab('questions')}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: activeTab === 'questions' ? '#0891b2' : 'white',
-                color: activeTab === 'questions' ? 'white' : '#333',
-                border: activeTab === 'questions' ? 'none' : '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                textAlign: 'left',
-                position: 'relative'
-              }}
-            >
-              ❓ Câu hỏi
-              {questions.filter(q => q.status === 'pending').length > 0 && (
-                <span style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.8rem'
-                }}>
-                  {questions.filter(q => q.status === 'pending').length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>        {/* Main Content */}
-        <div style={{ flex: 1, padding: '0', backgroundColor: 'white', overflow: 'auto' }}>
-          {activeTab === 'consultations' && (
-            <div style={{ backgroundColor: 'white', padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Cuộc tư vấn</h2>
-              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-                {consultations.map(consultation => (
-                  <div 
-                    key={consultation.id}
+          {activeSection === 'questions' ? (
+            <>
+              <div style={{ marginBottom: "30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h2 style={{ color: "#2c3e50", margin: 0 }}>Danh sách câu hỏi</h2>
+                <div>
+                  <select 
+                    onChange={handleFilterChange}
+                    value={filterStatus}
                     style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #e0e0e0',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <UserAvatar userName={consultation.patientName} />
-                      <div style={{ marginLeft: '1rem' }}>
-                        <h3 style={{ margin: '0 0 0.25rem 0' }}>{consultation.patientName}</h3>
-                        <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem' }}>
-                          {new Date(consultation.date).toLocaleDateString('vi-VN')} - {consultation.time}
-                        </p>
-                        <p style={{ margin: '0', fontSize: '0.9rem', color: '#666' }}>
-                          {consultation.symptoms}
-                        </p>
-                      </div>                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      {/* Hiển thị status trong ô */}
-                      <div style={{
-                        minWidth: '120px',
-                        padding: '8px 12px',
-                        backgroundColor: getStatusColor(consultation.status) + '20',
-                        border: `1px solid ${getStatusColor(consultation.status)}`,
-                        borderRadius: '8px',
-                        textAlign: 'center',
-                        marginRight: '1rem'
-                      }}>
-                        <div style={{
-                          fontWeight: '600',
-                          fontSize: '0.85rem',
-                          color: getStatusColor(consultation.status),
-                        }}>
-                          {getStatusText(consultation.status)}
-                        </div>
-                        {consultation.originalStatus && (
-                          <div style={{ 
-                            fontSize: '0.75rem',
-                            color: '#666',
-                            marginTop: '2px'
-                          }}>
-                            ({consultation.originalStatus})
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          onClick={() => startChat(consultation)}
-                          style={{
-                            backgroundColor: '#0891b2',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Trò chuyện
-                        </button>
-                        <button 
-                          onClick={() => startVideoCall(consultation)}
-                          style={{
-                            backgroundColor: '#43a047',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Cuộc gọi
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}          {activeTab === 'questions' && (
-            <div style={{ backgroundColor: 'white', padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Câu hỏi từ bệnh nhân</h2>
-              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-                {questions.map(question => (
-                  <div 
-                    key={question.id}
-                    style={{
-                      padding: '1rem',
-                      borderBottom: '1px solid #e0e0e0',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setSelectedItem(question)}
-                  >                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <UserAvatar 
-                          userName={question.patientName}
-                        />
-                        <div style={{ marginLeft: '1rem' }}>
-                          <h3 style={{ margin: '0 0.5rem 0.25rem 0' }}>{question.patientName}</h3>
-                          <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                            {new Date(question.date).toLocaleDateString('vi-VN')}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {/* Hiển thị status trong ô riêng biệt */}                      <div style={{
-                        minWidth: '120px',
-                        padding: '8px 12px',
-                        backgroundColor: getStatusColor(question.status) + '20',
-                        border: `1px solid ${getStatusColor(question.status)}`,
-                        borderRadius: '8px',
-                        textAlign: 'center'
-                      }}>
-                        <div style={{
-                          fontWeight: '600',
-                          fontSize: '0.85rem',
-                          color: getStatusColor(question.status),
-                        }}>
-                          {getStatusText(question.status)}
-                        </div>
-                        {question.originalStatus && question.originalStatus !== question.status && (
-                          <div style={{ 
-                            fontSize: '0.75rem',
-                            color: '#666',
-                            marginTop: '2px'
-                          }}>
-                            (API: {question.originalStatus})
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '0.75rem', marginLeft: '3.5rem' }}>
-                      <p style={{ margin: '0', fontWeight: 'bold' }}>{question.question}</p>
-                      {question.reply && (
-                        <div style={{ 
-                          marginTop: '0.5rem', 
-                          padding: '0.75rem', 
-                          backgroundColor: '#f5f5f5',
-                          borderRadius: '4px' 
-                        }}>
-                          <p style={{ margin: '0', color: '#0891b2' }}>
-                            <span style={{ fontWeight: 'bold' }}>Trả lời:</span> {question.reply}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Question Detail & Reply */}
-          {activeTab === 'questions' && selectedItem && (
-            <div style={{ 
-              backgroundColor: 'white', 
-              padding: '1.5rem', 
-              borderTop: '1px solid #e0e0e0'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ margin: 0 }}>Chi tiết câu hỏi</h2>
-                <button 
-                  onClick={() => setSelectedItem(null)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    color: '#757575',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >
-                  ✖
-                </button>
-              </div>
-              <div style={{ 
-                padding: '1rem', 
-                marginBottom: '1rem',
-                backgroundColor: '#f9f9f9',
-                borderRadius: '8px'
-              }}>                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <UserAvatar 
-                      userName={selectedItem.patientName}
-                    />
-                    <div style={{ marginLeft: '1rem' }}>
-                      <h3 style={{ margin: '0 0 0.25rem 0' }}>{selectedItem.patientName}</h3>
-                      <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                        {new Date(selectedItem.date).toLocaleDateString('vi-VN')}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Hiển thị status trong ô */}
-                  <div style={{
-                    minWidth: '140px',
-                    padding: '10px 15px',
-                    backgroundColor: getStatusColor(selectedItem.status) + '20',
-                    border: `2px solid ${getStatusColor(selectedItem.status)}`,
-                    borderRadius: '8px',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{
-                      fontWeight: '600',
-                      fontSize: '0.9rem',
-                      color: getStatusColor(selectedItem.status),
-                    }}>
-                      {getStatusText(selectedItem.status)}
-                    </div>                    {selectedItem.originalStatus && selectedItem.originalStatus !== selectedItem.status && (
-                      <div style={{ 
-                        fontSize: '0.8rem',
-                        color: '#666',
-                        marginTop: '3px'
-                      }}>
-                        (API: {selectedItem.originalStatus})
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <p style={{ 
-                  margin: '0.5rem 0', 
-                  padding: '1rem', 
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0'
-                }}>
-                  {selectedItem.question}
-                </p>
-              </div>
-
-              {selectedItem.reply ? (
-                <div style={{ 
-                  padding: '1rem', 
-                  backgroundColor: '#e1f5fe',
-                  borderRadius: '8px'
-                }}>
-                  <h3 style={{ margin: '0 0 0.5rem 0', color: '#0891b2' }}>Trả lời của bạn:</h3>
-                  <p style={{ margin: '0' }}>{selectedItem.reply}</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSendReply}>
-                  <textarea 
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Nhập câu trả lời của bạn..."
-                    style={{
-                      width: '100%',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      border: '1px solid #ddd',
-                      marginBottom: '1rem',
-                      minHeight: '120px',
-                      boxSizing: 'border-box',
-                      fontFamily: 'inherit',
-                      fontSize: '1rem'
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    style={{
-                      backgroundColor: '#0891b2',
-                      color: 'white',
-                      border: 'none',
-                      padding: '0.75rem 1.5rem',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1rem'
+                      padding: "10px 15px",
+                      borderRadius: "8px",
+                      border: "1px solid #e1e1e1",
+                      backgroundColor: "#f9f9f9",
+                      fontSize: "16px"
                     }}
                   >
-                    Gửi câu trả lời
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Chat Modal */}
-      {isChatOpen && selectedItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>          <div style={{
-            width: '95%',
-            height: '95%',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            maxWidth: 'none',
-            maxHeight: 'none'
-          }}>{/* Chat Header */}
-            <div style={{
-              padding: '1rem',
-              backgroundColor: '#0891b2',
-              color: 'white',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <UserAvatar 
-                 userName={selectedItem.patientName}
-                />
-                <div style={{ marginLeft: '0.75rem' }}>
-                  <h3 style={{ margin: '0' }}>{selectedItem.patientName}</h3>
-                  <p style={{ margin: '0', fontSize: '0.8rem' }}>
-                    {selectedItem.date && new Date(selectedItem.date).toLocaleDateString('vi-VN')} - {selectedItem.time}
+                    <option value="all">Tất cả câu hỏi</option>
+                    <option value="pending">Chờ trả lời</option>
+                    <option value="answered">Đã trả lời</option>
+                    <option value="closed">Đã đóng</option>
+                  </select>
+                </div>
+              </div>
+              
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "40px", width: "100%" }}>
+                  <div style={{ 
+                    fontSize: "18px", 
+                    color: "#0891b2",
+                    marginBottom: "20px"
+                  }}>
+                    Đang tải danh sách câu hỏi...
+                  </div>
+                </div>
+              ) : error ? (
+                <div style={{ 
+                  textAlign: "center", 
+                  padding: "40px", 
+                  width: "100%",
+                  backgroundColor: "#fee",
+                  borderRadius: "10px",
+                  border: "1px solid #fcc",
+                  marginBottom: "20px"
+                }}>
+                  <div style={{ 
+                    fontSize: "18px", 
+                    color: "#c53030",
+                    marginBottom: "10px"
+                  }}>
+                    ⚠️ {error}
+                  </div>
+                  <p style={{ color: "#718096" }}>
+                    Vui lòng thử lại sau hoặc liên hệ với quản trị viên.
                   </p>
                 </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {selectedItem.status !== 'completed' && (
-                  <button 
-                    onClick={completeConsultation}
-                    style={{
-                      backgroundColor: '#43a047',
-                      border: 'none',
-                      color: 'white',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '4px',
-                      marginRight: '1rem',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    Hoàn thành
-                  </button>
-                )}
-                <button 
-                  onClick={closeChat}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >
-                  ✖
+              ) : (                <div style={{ width: "100%" }}>
+                  {filteredQuestions.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "40px", color: "#718096" }}>
+                      Không có câu hỏi nào được tìm thấy
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                        {filteredQuestions.map((question) => (                          <div 
+                            key={question.questionID || question.id}
+                            onClick={() => handleQuestionClick(question)}
+                            style={{
+                              backgroundColor: selectedQuestion && 
+                                              (selectedQuestion.questionID || selectedQuestion.id) === 
+                                              (question.questionID || question.id) ? "#f0f9ff" : "white",
+                              borderRadius: "12px",
+                              border: "1px solid #e1e1e1",
+                              padding: "20px",
+                              boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease"
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{
+                                  width: "40px",
+                                  height: "40px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#0891b2",
+                                  color: "#fff",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  fontWeight: "bold"
+                                }}>
+                                  {userDetails[question.userID]?.fullName?.charAt(0) || '?'}
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: "600", color: "#2c3e50" }}>
+                                    {userDetails[question.userID]?.fullName || 'Đang tải...'}
+                                  </div>
+                                  <div style={{ fontSize: "14px", color: "#64748b" }}>
+                                    {formatDate(question.createdAt)}
+                                  </div>
+                                </div>
+                              </div>
+                              {getStatusBadge(question.status, question.id)}
+                            </div>
+                              <div>
+                              <h3 style={{ color: "#1e293b", fontSize: "18px", marginBottom: "10px" }}>
+                                {question.title}
+                              </h3>
+                              <p style={{ 
+                                color: "#475569", 
+                                marginTop: "10px", 
+                                lineHeight: "1.6",
+                                maxHeight: selectedQuestion && 
+                                           (selectedQuestion.questionID || selectedQuestion.id) === 
+                                           (question.questionID || question.id) ? "none" : "80px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                display: selectedQuestion && 
+                                        (selectedQuestion.questionID || selectedQuestion.id) === 
+                                        (question.questionID || question.id) ? "block" : "-webkit-box",
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: "vertical"
+                              }}>
+                                {question.content}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Hiển thị phần trả lời ở cuối trang */}
+                      {selectedQuestion && (
+                        <div 
+                          style={{
+                            marginTop: "40px",
+                            padding: "30px",
+                            backgroundColor: "#f8fafc",
+                            borderRadius: "12px",
+                            border: "1px solid #e2e8f0",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.05)"
+                          }}
+                        >                          <div style={{ marginBottom: "20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "15px" }}>
+                              <div>
+                                <h4 style={{ color: "#0891b2", margin: "0 0 5px 0", fontSize: "20px" }}>
+                                  {existingAnswer ? "Câu trả lời đã gửi" : "Trả lời câu hỏi"}
+                                </h4>
+                                <p style={{ margin: "0", color: "#64748b" }}>
+                                  Câu hỏi: <strong>{selectedQuestion.title}</strong>
+                                </p>
+                              </div>
+                              <div>
+                                {getStatusBadge(selectedQuestion.status, selectedQuestion.id)}
+                              </div>
+                            </div>
+                            
+                            {/* Hiển thị nội dung câu hỏi */}
+                            <div style={{ 
+                              backgroundColor: "#f0f7ff", 
+                              padding: "15px", 
+                              borderRadius: "8px", 
+                              marginTop: "10px",
+                              border: "1px solid #dbeafe"
+                            }}>
+                              <div style={{ 
+                                display: "flex", 
+                                justifyContent: "space-between", 
+                                marginBottom: "5px",
+                                fontSize: "14px",
+                                color: "#1e40af"
+                              }}>
+                                <span>Người hỏi: {userDetails[selectedQuestion.userID]?.fullName || 'Không rõ'}</span>
+                                <span>{formatDate(selectedQuestion.createdAt)}</span>
+                              </div>
+                              <h5 style={{ 
+                                margin: "0 0 8px 0", 
+                                fontSize: "16px", 
+                                fontWeight: "600",
+                                color: "#1e40af"
+                              }}>
+                                Nội dung câu hỏi:
+                              </h5>
+                              <p style={{ 
+                                margin: "0", 
+                                lineHeight: "1.6",
+                                color: "#334155",
+                                whiteSpace: "pre-wrap"
+                              }}>
+                                {selectedQuestion.content}
+                              </p>
+                            </div>
+                          </div>
+
+                          {loadingAnswer ? (
+                            <div style={{
+                              padding: "15px", 
+                              textAlign: "center",
+                              color: "#0891b2"
+                            }}>
+                              Đang tải câu trả lời...
+                            </div>
+                          ) : existingAnswer && (
+                            <div style={{
+                              backgroundColor: "#f0f9ff", 
+                              padding: "15px", 
+                              borderRadius: "8px",
+                              marginBottom: "15px",
+                              border: "1px solid #bae6fd"
+                            }}>                              <div style={{ 
+                                display: "flex", 
+                                justifyContent: "space-between", 
+                                marginBottom: "10px",
+                                color: "#0c4a6e",
+                                fontSize: "14px"
+                              }}>
+                                <span>Người trả lời: {consultant?.fullName || 'Tư vấn viên'}</span>
+                                <span>{formatDate(existingAnswer.createdAt)}</span>
+                              </div>
+                              <p style={{ margin: 0, lineHeight: 1.6 }}>{existingAnswer.content}</p>
+                            </div>
+                          )}
+                            
+                          <textarea
+                            value={answerText}
+                            onChange={handleAnswerChange}
+                            placeholder="Nhập câu trả lời của bạn..."
+                            disabled={submitting || selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed'}
+                            style={{
+                              width: "100%",
+                              padding: "15px",
+                              borderRadius: "8px",
+                              border: "1px solid #e1e1e1",
+                              minHeight: "120px",
+                              fontSize: "16px",
+                              outline: "none",
+                              resize: "vertical",
+                              backgroundColor: (selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed') ? "#f5f5f5" : "#fff"
+                            }}
+                          />
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "15px", gap: "10px" }}>
+                            <button 
+                              onClick={() => setSelectedQuestion(null)}
+                              style={{
+                                padding: "10px 20px",
+                                borderRadius: "8px",
+                                border: "1px solid #e1e1e1",
+                                backgroundColor: "#fff",
+                                cursor: "pointer",
+                                color: "#64748b",
+                                fontWeight: "500"
+                              }}
+                            >
+                              Hủy
+                            </button>                            <button 
+                              onClick={() => submitAnswer()}
+                              disabled={submitting || !answerText.trim() || selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed'}
+                              style={{
+                                padding: "10px 20px",
+                                borderRadius: "8px",
+                                border: "none",
+                                backgroundColor: (submitting || !answerText.trim() || selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed') ? "#cbd5e1" : "#0891b2",
+                                cursor: (submitting || !answerText.trim() || selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed') ? "not-allowed" : "pointer",
+                                color: "#fff",
+                                fontWeight: "500"
+                              }}
+                            >
+                              {submitting ? "Đang gửi..." : (selectedQuestion.status?.toLowerCase() === 'resolved' || selectedQuestion.status?.toLowerCase() === 'closed') ? "Đã trả lời" : "Gửi câu trả lời"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            // Phần giao diện "Tư vấn online"
+            <div>
+              <h2 style={{ color: "#2c3e50", margin: "0 0 20px 0" }}>Tư vấn trực tuyến</h2>
+              <div style={{
+                backgroundColor: "#f8fafc", 
+                borderRadius: "12px", 
+                padding: "30px", 
+                textAlign: "center",
+                border: "1px dashed #cbd5e1"
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h3 style={{ color: "#334155", marginTop: "15px", fontWeight: "600" }}>Tính năng tư vấn trực tuyến sẽ ra mắt sớm</h3>
+                <p style={{ color: "#64748b", marginTop: "10px", lineHeight: "1.6" }}>
+                  Chức năng tư vấn trực tuyến đang trong quá trình phát triển và sẽ sớm được triển khai. 
+                  Tính năng này sẽ cho phép bạn tương tác trực tiếp với người dùng thông qua tin nhắn real-time.
+                </p>
+                <button style={{
+                  marginTop: "20px",
+                  padding: "12px 25px",
+                  backgroundColor: "#0891b2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer"
+                }}>
+                  Nhận thông báo khi ra mắt
                 </button>
               </div>
             </div>
+          )}
+        </main>
+      </div>
 
-            {/* Video Call or Chat Messages */}
-            {isVideoCall ? (
-              <div style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                backgroundColor: '#0e0e0e',
-                position: 'relative'
-              }}>
-                {/* Main video area */}
-                <div style={{
-                  flex: 1,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '1rem'
-                }}>
-                  {/* Patient video (main view) */}
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#2d2d2d',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    position: 'relative'                  }}>
-                    {isScreenSharing ? (
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <div style={{
-                          fontSize: '4rem',
-                          marginBottom: '1rem'
-                        }}>
-                          🖥️
-                        </div>
-                        <div style={{
-                          color: 'white',
-                          backgroundColor: 'rgba(0,0,0,0.5)',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '4px',
-                          fontSize: '0.9rem'
-                        }}>
-                          Đang chia sẻ màn hình
-                        </div>
-                      </div>                    ) : (
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        opacity: 0.7
-                      }}>
-                        <UserAvatar 
-                          userName={selectedItem.patientName}
-                        />
-                      </div>
-                    )}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '20px',
-                      left: '20px',
-                      backgroundColor: 'rgba(0,0,0,0.5)',
-                      color: 'white',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '4px',
-                      fontSize: '0.9rem'
-                    }}>
-                      {selectedItem.patientName}
-                    </div>
-                  </div>
-                  
-                  {/* Consultant video (PiP) */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '180px',
-                    height: '120px',
-                    bottom: '20px',
-                    right: '20px',
-                    backgroundColor: '#0891b2',
-                    borderRadius: '8px',
-                    border: '2px solid white',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}>
-                    {isVideoOff ? (
-                      <div style={{ fontSize: '2rem', color: 'white' }}>👩‍⚕️</div>
-                    ) : (
-                      <div style={{ 
-                        fontSize: '2rem', 
-                        color: 'white',
-                        backgroundColor: '#075d73',
-                        width: '80px',
-                        height: '80px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: '50%'
-                      }}>
-                        👩‍⚕️
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Call timer */}
-                <div style={{
-                  position: 'absolute',
-                  top: '10px',
-                  left: 0,
-                  right: 0,
-                  textAlign: 'center'                }}>
-                  <div style={{
-                    display: 'inline-block',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    color: 'white',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem'                  }}>
-                    {`${Math.floor(callTimer / 3600).toString().padStart(2, '0')}:${Math.floor((callTimer % 3600) / 60).toString().padStart(2, '0')}:${(callTimer % 60).toString().padStart(2, '0')}`}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{
-                flex: 1,
-                padding: '1rem',
-                overflowY: 'auto',
-                backgroundColor: '#f5f5f5'
-              }}>
-                {chatMessages.map((msg, index) => (
-                  <div 
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      justifyContent: msg.sender === 'consultant' ? 'flex-end' : 'flex-start',
-                      marginBottom: '1rem'
-                    }}
-                  >
-                    <div style={{
-                      maxWidth: '70%',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '8px',
-                      backgroundColor: msg.sender === 'consultant' ? '#0891b2' : 'white',
-                      color: msg.sender === 'consultant' ? 'white' : '#333',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                    }}>
-                      <p style={{ margin: '0 0 0.25rem 0' }}>{msg.text}</p>
-                      <span style={{ fontSize: '0.7rem', opacity: 0.8, textAlign: 'right', display: 'block' }}>
-                        {msg.time}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}            {/* Chat Input or Call Controls */}
-            {isVideoCall ? (
-              <div style={{
-                padding: '1rem',
-                backgroundColor: '#0e0e0e',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '1rem'
-              }}>
-                {/* Mute/Unmute Button */}
-                <button
-                  onClick={() => setIsMicMuted(!isMicMuted)}
-                  style={{
-                    backgroundColor: isMicMuted ? '#f44336' : '#424242',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >
-                  {isMicMuted ? '🔇' : '🎙️'}
-                </button>
-                
-                {/* End Call Button */}
-                <button
-                  onClick={closeChat}
-                  style={{
-                    backgroundColor: '#f44336',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '60px',
-                    height: '60px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.5rem'
-                  }}
-                >
-                  📞
-                </button>
-                
-                {/* Video On/Off Button */}
-                <button
-                  onClick={() => setIsVideoOff(!isVideoOff)}
-                  style={{
-                    backgroundColor: isVideoOff ? '#f44336' : '#424242',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >                  {isVideoOff ? '🚫' : '📹'}
-                </button>
-                
-                {/* Screen Share Button */}
-                <button
-                  onClick={() => setIsScreenSharing(!isScreenSharing)}
-                  style={{
-                    backgroundColor: isScreenSharing ? '#ff9800' : '#424242',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >
-                  {isScreenSharing ? '🖥️' : '🔄'}
-                </button>
-                
-                {/* Chat Toggle Button */}
-                <button
-                  onClick={() => setIsVideoCall(false)}
-                  style={{
-                    backgroundColor: '#424242',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem'
-                  }}
-                >
-                  💬
-                </button>
-              </div>
-            ) : (
-              <form 
-                onSubmit={handleSendMessage}
-                style={{
-                  padding: '1rem',
-                  borderTop: '1px solid #ddd',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                <input 
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Nhập tin nhắn..."
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    borderRadius: '30px',
-                    border: '1px solid #ddd',
-                    marginRight: '0.75rem',
-                    fontSize: '1rem'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsVideoCall(true)}
-                  style={{
-                    backgroundColor: '#43a047',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '30px',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1.25rem',
-                    marginRight: '0.5rem'
-                  }}
-                >
-                  📹
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: '#0891b2',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '30px',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    fontSize: '1rem'
-                  }}
-                >
-                  →
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Footer */}
+      <footer style={{
+        padding: "25px",
+        backgroundColor: "#e0f2fe",
+        textAlign: "center",
+        color: "#0891b2",
+        width: "100%",
+        boxSizing: "border-box"
+      }}>
+        <p style={{ fontSize: "16px" }}>© 2025 Hệ thống Chăm sóc Sức khỏe Phụ nữ. Mọi quyền được bảo lưu.</p>
+        <p style={{ marginTop: "10px", fontSize: "16px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
+      </footer>
     </div>
   );
 };

@@ -32,7 +32,9 @@ const MyAppointments = () => {
     
     // Tải danh sách lịch hẹn
     fetchAppointments();
-  }, [navigate]);  const fetchAppointments = async () => {
+  }, [navigate]);
+  
+  const fetchAppointments = async () => {
     try {
       setLoading(true);
       const userJson = localStorage.getItem('loggedInUser');
@@ -74,61 +76,46 @@ const MyAppointments = () => {
           }
         })
       );
-      
-      setConsultantNames(namesObj);
+        setConsultantNames(namesObj);
       setLoading(false);
     } catch (err) {
       setError('Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau: ' + err.message);
-      setLoading(false);
-    }
-  };  const filteredAppointments = appointments.filter(app => {
+      setLoading(false);    }
+  };
+
+  const filteredAppointments = appointments.filter(app => {
     if (filterStatus === 'all') return true;
     
-    // Xử lý trạng thái theo entity Booking
-    const status = app.status?.toLowerCase();
-    
-    if (filterStatus === 'đã xác nhận') 
-      return status === 'đã xác nhận';
-    if (filterStatus === 'chờ xác nhận') 
-      return status === 'chờ xác nhận';
-    if (filterStatus === 'đã xong') 
-      return status === 'đã xong';
-    // Trạng thái cancelled không tồn tại trong backend, nhưng giữ lại để xử lý trường hợp
-    // nếu có dữ liệu cũ hoặc tính năng hủy lịch được thêm vào sau
-    if (filterStatus === 'cancelled') 
-      return status === 'cancelled' || status === 'đã hủy';
-      
+    // Xử lý trạng thái theo đúng entity Booking trong backend
+    // So sánh trực tiếp với giá trị status từ backend: "Chờ xác nhận", "Đã xác nhận", "Đã xong"
     return app.status === filterStatus;
   });
   // Chức năng hủy lịch hẹn đã được gỡ bỏ
   // Chức năng kiểm tra điều kiện hủy lịch hẹn đã được gỡ bỏ
-  // Đã xóa hàm kiểm tra điều kiện tham gia  const formatStatus = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'đã xác nhận':
+  // Đã xóa hàm kiểm tra điều kiện tham gia
+  
+  const formatStatus = (status) => {
+    switch (status) {
+      case 'Đã xác nhận':
         return 'Đã xác nhận';
-      case 'chờ xác nhận':
+      case 'Chờ xác nhận':
         return 'Chờ xác nhận';
-      case 'đã xong':
+      case 'Đã xong':
         return 'Đã hoàn thành';
-      case 'cancelled': // Giữ lại để tương thích ngược
-      case 'đã hủy':
-        return 'Đã hủy';
       default:
         return status || 'Không xác định';
     }
   };
   // Đã xóa hàm formatMethod vì không cần thiết
+  
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'đã xác nhận':
+    switch (status) {
+      case 'Đã xác nhận':
         return '#4caf50';
-      case 'chờ xác nhận':
+      case 'Chờ xác nhận':
         return '#ff9800';
-      case 'đã xong':
+      case 'Đã xong':
         return '#2196f3';
-      case 'cancelled': // Giữ lại để tương thích ngược
-      case 'đã hủy':
-        return '#f44336';
       default:
         return '#757575';
     }
@@ -195,12 +182,12 @@ const MyAppointments = () => {
         }}>
           <div style={{ margin: '32px 0 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px' }}>
             <div>
-              <label style={{ fontWeight: 600, color: '#0891b2' }}>Lọc theo trạng thái: </label>              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid #22d3ee', outline: 'none', fontWeight: 600, color: '#0891b2', background: '#fff' }}>
+              <label style={{ fontWeight: 600, color: '#0891b2' }}>Lọc theo trạng thái: </label>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid #22d3ee', outline: 'none', fontWeight: 600, color: '#0891b2', background: '#fff' }}>
                 <option value="all">Tất cả</option>
                 <option value="Đã xác nhận">Đã xác nhận</option>
                 <option value="Chờ xác nhận">Chờ xác nhận</option>
                 <option value="Đã xong">Đã hoàn thành</option>
-                <option value="cancelled">Đã hủy</option>
               </select>
             </div>
             <Link to="/services" style={{ textDecoration: 'none', color: '#22d3ee', fontWeight: 600, fontSize: 16, border: '1px solid #22d3ee', borderRadius: 8, padding: '8px 20px', background: '#fff', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(34,211,238,0.08)' }}>← Quay lại trang dịch vụ</Link>
@@ -210,19 +197,21 @@ const MyAppointments = () => {
               <span style={{ color: '#0891b2', fontWeight: 600, fontSize: 18 }}>Đang tải dữ liệu...</span>
             </div>
           ) : error ? (
-            <div style={{ color: '#f44336', textAlign: 'center', marginTop: 60, fontWeight: 600 }}>{error}</div>
-          ) : filteredAppointments.length === 0 ? (
+            <div style={{ color: '#f44336', textAlign: 'center', marginTop: 60, fontWeight: 600 }}>{error}</div>          ) : filteredAppointments.length === 0 ? (
             <div style={{ textAlign: 'center', marginTop: 60, color: '#0891b2', fontWeight: 600 }}>Không có lịch hẹn nào.</div>
           ) : (
             <div style={{ width: '100%', overflowX: 'auto', padding: '0 32px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>                <thead style={{ background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+                <thead style={{ background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)' }}>
                   <tr>
                     <th style={{ padding: 14, color: '#fff', fontWeight: 700 }}>Tư vấn viên</th>
                     <th style={{ color: '#fff', fontWeight: 700 }}>Nội dung</th>
                     <th style={{ color: '#fff', fontWeight: 700 }}>Ngày đặt lịch</th>
                     <th style={{ color: '#fff', fontWeight: 700 }}>Trạng thái</th>
                   </tr>
-                </thead>                <tbody>                  {filteredAppointments.map((app, idx) => {
+                </thead>
+                <tbody>
+                  {filteredAppointments.map((app, idx) => {
                     const consultantId = app.consultantId;
                     return (
                       <tr key={app.bookingId || idx} style={{ borderBottom: '1px solid #e0f2fe', transition: 'background 0.2s' }}>
@@ -230,15 +219,16 @@ const MyAppointments = () => {
                           <span style={{ fontWeight: 600, color: '#0891b2' }}>{consultantNames[consultantId] || '...'}</span>
                         </td>
                         <td style={{ fontWeight: 500 }}>{app.content || 'Không có nội dung'}</td>
-                        <td style={{ fontWeight: 500 }}>{app.appointmentDate || app.createdAt?.split('T')[0] || 'N/A'}</td>
+                        <td style={{ fontWeight: 500 }}>{app.appointmentDate || 'N/A'}</td>
                         <td style={{ color: getStatusColor(app.status), fontWeight: 700 }}>{formatStatus(app.status)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
-              </table>
-            </div>
-          )}          {/* Modal chi tiết đã được ẩn */}          {/* Modal hủy lịch hẹn đã được ẩn */}
+              </table>            </div>
+          )}
+          {/* Modal chi tiết đã được ẩn */}
+          {/* Modal hủy lịch hẹn đã được ẩn */}
         </div>
       </main>
       <footer style={{ 

@@ -1,9 +1,12 @@
-package com.genderhealthcare.demo    .entity;
+package com.genderhealthcare.demo.entity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +16,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "booking")
@@ -45,8 +51,14 @@ public class Booking {
     )
     private String status; // "Chờ xác nhận", "Đã xác nhận", "Đã xong"
 
-    @NotBlank(message = "Created at is required")
     private String createdAt; // Timestamp of when the booking was created
 
+    // Tự động thiết lập thời gian tạo trước khi lưu vào database
+    @PrePersist
+    protected void onCreate() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        this.createdAt = LocalDateTime.now().format(formatter);
+    }
+    
     // Additional fields can be added as needed
 }

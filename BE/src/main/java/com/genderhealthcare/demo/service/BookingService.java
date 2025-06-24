@@ -17,6 +17,7 @@ public class BookingService {
         if (booking.getStatus() == null || booking.getStatus().isBlank()) {
             booking.setStatus("Chờ xác nhận");
         }
+        // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
         return bookingRepository.save(booking);
     }
 

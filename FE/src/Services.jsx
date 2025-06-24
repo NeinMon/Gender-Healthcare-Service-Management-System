@@ -76,6 +76,14 @@ const Services = () => {
       icon: "💬",
       color: "#f9ca24",
       path: "/ask-question"
+    },
+    {
+      id: 5,
+      title: "Lịch hẹn của tôi",
+      description: "Xem và quản lý các lịch hẹn đã đặt",
+      icon: "📖",
+      color: "#8e44ad",
+      path: "/my-appointments"
     }
   ];
 

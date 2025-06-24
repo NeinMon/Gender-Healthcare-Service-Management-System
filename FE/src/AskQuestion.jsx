@@ -509,22 +509,6 @@ const AskQuestion = () => {
               Cảm ơn bạn đã gửi câu hỏi. Chuyên gia tư vấn của chúng tôi sẽ xem xét và phản hồi trong thời gian sớm nhất.
               Phản hồi sẽ được gửi qua email hoặc số điện thoại bạn đã cung cấp.
             </p>
-            <div style={{ marginTop: "40px" }}>              <Link
-                to="/services"
-                style={{
-                  display: "inline-block",
-                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  padding: "14px 35px",
-                  borderRadius: "30px",
-                  fontWeight: "600",
-                  fontSize: "16px"
-                }}
-              >
-                Quay lại trang chủ
-              </Link>
-            </div>
           </div>
         )}
 

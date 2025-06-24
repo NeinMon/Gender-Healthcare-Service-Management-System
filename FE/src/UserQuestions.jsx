@@ -51,30 +51,28 @@ const UserQuestions = () => {
             date: question.date || question.createdAt,
             status: question.status || 'pending',
             createdAt: question.createdAt || question.date,
+            title: question.title || '',
           };
-          
-          // Nếu câu hỏi có trạng thái đã giải quyết hoặc đã trả lời, thì lấy câu trả lời
-          if (question.status === 'đã giải quyết' || question.status === 'answered') {
+
+          // Map status từ backend sang frontend
+          let isResolved = formattedQuestion.status === 'resolved';
+          // Nếu câu hỏi đã được giải quyết thì lấy câu trả lời
+          if (isResolved) {
             try {
               const answerResponse = await fetch(`http://localhost:8080/api/answers/${question.id || question.questionID}`);
-              
               if (answerResponse.ok) {
                 const answerData = await answerResponse.json();
-                console.log(`Câu trả lời cho câu hỏi ${question.id}:`, answerData);
-                
-                // Thêm thông tin câu trả lời vào câu hỏi
                 formattedQuestion.reply = answerData.content;
                 formattedQuestion.answeredAt = answerData.createdAt;
-                formattedQuestion.status = 'answered';
+                formattedQuestion.status = 'resolved';
                 formattedQuestion.consultantID = answerData.consultantID;
               } else {
-                console.log(`Không tìm thấy câu trả lời cho câu hỏi ${question.id}`);
+                // Không tìm thấy câu trả lời
               }
             } catch (error) {
-              console.error(`Lỗi khi lấy câu trả lời cho câu hỏi ${question.id}:`, error);
+              // Lỗi khi lấy câu trả lời
             }
           }
-          
           return formattedQuestion;
         })
       );
@@ -214,74 +212,48 @@ const UserQuestions = () => {
         </div>
       )}
       
-      {questions.map((question) => (
-        <div 
-          key={question.id || question.questionID}
-          style={{
-            padding: '1.5rem',
-            marginBottom: '1.5rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}
-        >
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '0.75rem' 
-          }}>            <h3 style={{ margin: '0', fontSize: '1.2rem', color: '#333' }}>
-              {question.title || 'Câu hỏi của bạn'}
-            </h3>
-            <div style={{
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              backgroundColor: question.reply || question.status === 'answered' || question.status === 'đã giải quyết' ? '#e8f5e9' : '#fff8e1',
-              color: question.reply || question.status === 'answered' || question.status === 'đã giải quyết' ? '#43a047' : '#ff8f00'
-            }}>
-              {question.reply || question.status === 'answered' || question.status === 'đã giải quyết' ? 'Đã trả lời' : 'Đang chờ'}
-            </div>
-          </div>
-          
-          <div style={{ 
-            padding: '1rem', 
-            backgroundColor: '#f5f5f5', 
-            borderRadius: '8px',
-            marginBottom: (question.reply || question.status === 'answered' || question.status === 'đã giải quyết') ? '1rem' : '0'
-          }}>
+      {questions.map((question) => {
+        // Map status cho hiển thị
+        const isAnswered = question.status === 'resolved';
+        const statusLabel = isAnswered ? 'Đã trả lời' : 'Đang chờ';
+        const statusBg = isAnswered ? '#e8f5e9' : '#fff8e1';
+        const statusColor = isAnswered ? '#43a047' : '#ff8f00';
+        return (
+          <div 
+            key={question.id || question.questionID}
+            style={{
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          >
             <div style={{ 
               display: 'flex', 
-              alignItems: 'center', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
               marginBottom: '0.75rem' 
             }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '50%', 
-                backgroundColor: '#e1f5fe', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '0.75rem'
+              <h3 style={{ margin: '0', fontSize: '1.2rem', color: '#333' }}>
+                {question.title || 'Câu hỏi của bạn'}
+              </h3>
+              <div style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                backgroundColor: statusBg,
+                color: statusColor
               }}>
-                👤
-              </div>
-              <div>
-                <p style={{ margin: '0', fontWeight: 'bold' }}>Bạn</p>
-                <span style={{ fontSize: '0.75rem', color: '#757575' }}>
-                  {formatDate(question.date || question.createdAt)}
-                </span>
+                {statusLabel}
               </div>
             </div>
-            <p style={{ margin: '0' }}>{question.content || question.question}</p>
-          </div>
-            {(question.reply || question.status === 'answered' || question.status === 'đã giải quyết') && (
+            
             <div style={{ 
               padding: '1rem', 
-              backgroundColor: '#e1f5fe', 
+              backgroundColor: '#f5f5f5', 
               borderRadius: '8px',
-              marginTop: '1rem' 
+              marginBottom: isAnswered ? '1rem' : '0'
             }}>
               <div style={{ 
                 display: 'flex', 
@@ -292,52 +264,86 @@ const UserQuestions = () => {
                   width: '40px', 
                   height: '40px', 
                   borderRadius: '50%', 
-                  backgroundColor: '#e8f5e9', 
+                  backgroundColor: '#e1f5fe', 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
                   marginRight: '0.75rem'
                 }}>
-                  👩‍⚕️
+                  👤
                 </div>
                 <div>
-                  <p style={{ margin: '0', fontWeight: 'bold', color: '#0891b2' }}>
-                    Tư vấn viên
-                  </p>
+                  <p style={{ margin: '0', fontWeight: 'bold' }}>Bạn</p>
                   <span style={{ fontSize: '0.75rem', color: '#757575' }}>
-                    {question.answeredAt || question.replyDate ? 
-                      formatDate(question.answeredAt || question.replyDate) : 
-                      "Đã trả lời"}
+                    {formatDate(question.date || question.createdAt)}
                   </span>
                 </div>
               </div>
-              {question.reply || question.answer ? (
-                <p style={{ margin: '0' }}>{question.reply || question.answer}</p>
-              ) : (
-                <p style={{ margin: '0', fontStyle: 'italic', color: '#666' }}>
-                  Câu hỏi đã được trả lời nhưng không thể hiển thị nội dung. Vui lòng làm mới trang.
-                </p>
-              )}
-              
-              <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                <button style={{
-                  backgroundColor: 'transparent',
-                  border: '1px solid #0891b2',
-                  color: '#0891b2',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-                onClick={() => window.location.href = "/ask-question"}
-                >
-                  Gửi câu hỏi bổ sung
-                </button>
-              </div>
+              <p style={{ margin: '0' }}>{question.content || question.question}</p>
             </div>
-          )}
-        </div>
-      ))}
+            {isAnswered && (
+              <div style={{ 
+                padding: '1rem', 
+                backgroundColor: '#e1f5fe', 
+                borderRadius: '8px',
+                marginTop: '1rem' 
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  marginBottom: '0.75rem' 
+                }}>
+                  <div style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    borderRadius: '50%', 
+                    backgroundColor: '#e8f5e9', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    marginRight: '0.75rem'
+                  }}>
+                    👩‍⚕️
+                  </div>
+                  <div>
+                    <p style={{ margin: '0', fontWeight: 'bold', color: '#0891b2' }}>
+                      Tư vấn viên
+                    </p>
+                    <span style={{ fontSize: '0.75rem', color: '#757575' }}>
+                      {question.answeredAt || question.replyDate ? 
+                        formatDate(question.answeredAt || question.replyDate) : 
+                        "Đã trả lời"}
+                    </span>
+                  </div>
+                </div>
+                {question.reply || question.answer ? (
+                  <p style={{ margin: '0' }}>{question.reply || question.answer}</p>
+                ) : (
+                  <p style={{ margin: '0', fontStyle: 'italic', color: '#666' }}>
+                    Câu hỏi đã được trả lời nhưng không thể hiển thị nội dung. Vui lòng làm mới trang.
+                  </p>
+                )}
+                
+                <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                  <button style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #0891b2',
+                    color: '#0891b2',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                  onClick={() => window.location.href = "/ask-question"}
+                  >
+                    Gửi câu hỏi bổ sung
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

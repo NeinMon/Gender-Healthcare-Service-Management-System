@@ -26,11 +26,21 @@ public class BookingService {
 
     public Booking getBookingById(Integer id) {
         return bookingRepository.findById(id).orElse(null);
+    }    public List<Booking> getBookingsByUserId(Integer userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()))
+                .toList();
     }
 
-    public List<Booking> getBookingsByUserId(Integer userId) {
+    public List<Booking> getBookingsByConsultantId(Integer consultantId) {
+        if (consultantId == null) {
+            return List.of();
+        }
         return bookingRepository.findAll().stream()
-                .filter(b -> b.getUserId().equals(userId))
+                .filter(b -> consultantId.equals(b.getConsultantId()))
                 .toList();
     }
 }

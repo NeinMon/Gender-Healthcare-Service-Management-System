@@ -344,40 +344,35 @@ const ConsultantInterface = () => {
   };
 
   return (
-    <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>
-      {/* Header */}
+    <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>      {/* Header */}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
+        paddingBottom: 20,
+        paddingTop: 10,
         position: "relative",
-        width: "100%"
-      }}>
-        <div style={{ 
+        width: "100%",
+        minHeight: 160
+      }}>        <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
+          paddingTop: 25,
           paddingLeft: 20,
           paddingRight: 20
-        }}>          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
-          />
-          <UserAvatar userName={consultant?.fullName || 'Tư vấn viên'} />
+        }}>
+          <div style={{ flex: 1 }}></div> {/* Spacer on the left */}
+          <div style={{ display: "flex", justifyContent: "center", flex: 1 }}>
+            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ height: 120, width: 120, objectFit: "contain" }}
+            />
+          </div>
+          <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+            <UserAvatar userName={consultant?.fullName || 'Tư vấn viên'} />
+          </div>
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Quản lý câu hỏi từ người dùng
-        </h1>
+        
       </header>
 
       {/* Main Content with Sidebar */}

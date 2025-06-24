@@ -770,7 +770,7 @@ const ConsultantInterface = () => {
         width: "100%",
         boxSizing: "border-box"
       }}>
-        <p style={{ fontSize: "16px" }}>© 2025 Hệ thống Chăm sóc Sức khỏe Phụ nữ. Mọi quyền được bảo lưu.</p>
+        <p style={{ fontSize: "16px" }}>© 2025 Hệ thống Chăm sóc Sức khỏe Giới Tính</p>
         <p style={{ marginTop: "10px", fontSize: "16px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
       </footer>
     </div>

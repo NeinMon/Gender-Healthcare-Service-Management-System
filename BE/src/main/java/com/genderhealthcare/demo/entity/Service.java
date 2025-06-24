@@ -23,10 +23,10 @@ public class Service {
     @Column(name = "serviceid")
     private int serviceId;
 
-    @Column(name = "servicename")
+    @Column(name = "servicename", columnDefinition = "NVARCHAR(255)")
     private String serviceName;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "NVARCHAR(1000)")
     private String description;
 
     @Column(name = "managerid")

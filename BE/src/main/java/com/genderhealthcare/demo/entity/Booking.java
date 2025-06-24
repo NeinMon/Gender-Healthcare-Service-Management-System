@@ -40,6 +40,7 @@ public class Booking {
 
     @NotBlank(message = "Content is required")
     @Size(max = 500, message = "Content must be less than 500 characters")
+    @Column(name = "content", columnDefinition = "NVARCHAR(500)")
     private String content;
 
     @NotBlank(message = "Appointment date is required")
@@ -49,6 +50,7 @@ public class Booking {
         regexp = "Chờ xác nhận|Đã xác nhận|Đã xong",
         message = "Status must be one of: Chờ xác nhận, Đã xác nhận, Đã xong"
     )
+    @Column(name = "status", columnDefinition = "NVARCHAR(50)")
     private String status; // "Chờ xác nhận", "Đã xác nhận", "Đã xong"
 
     private String createdAt; // Timestamp of when the booking was created

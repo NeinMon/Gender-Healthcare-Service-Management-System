@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Past;
 import java.time.LocalDateTime;
 import java.util.Date;
 import jakarta.persistence.PrePersist;
+
 import com.genderhealthcare.demo.entity.Role;
 
 /**
@@ -38,6 +39,7 @@ public class Users {
     private Integer userID;
 
     @NotBlank(message = "Name must not be blank")
+    @Column(name = "full_name", columnDefinition = "NVARCHAR(255)")
     private String fullName;
 
     @NotBlank(message = "Email không được để trống")

@@ -28,6 +28,7 @@ public class Answer {
 
     @NotBlank(message = "Nội dung không được để trống")
     @Size(min = 10, max = 5000, message = "Nội dung phải từ 10-5000 ký tự")
+    @Column(name = "content", columnDefinition = "NVARCHAR(4000)")
     private String content;
 
     private String createdAt;

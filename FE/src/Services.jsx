@@ -161,7 +161,7 @@ const Services = () => {
             letterSpacing: 1
           }}
         >
-          Dịch vụ Chăm sóc Sức khỏe Phụ nữ
+          Dịch vụ Chăm sóc Sức khỏe Giới Tính
         </h1>
       </header>
 
@@ -199,7 +199,7 @@ const Services = () => {
               maxWidth: "600px",
               margin: "0 auto"
             }}>
-              Chúng tôi cung cấp các dịch vụ chăm sóc sức khỏe toàn diện cho phụ nữ
+              Chúng tôi cung cấp các dịch vụ chăm sóc sức khỏe toàn diện
             </p>
           </div>          <div style={{
             display: "grid",

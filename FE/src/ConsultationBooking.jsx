@@ -32,8 +32,21 @@ const ConsultationBooking = () => {
     };
     fetchConsultants();
 
-    // Lấy thông tin user
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+    // Lấy thông tin user từ localStorage dựa vào loggedInUser
+    let userId = 1; // Giá trị mặc định
+    const userJson = localStorage.getItem('loggedInUser');
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user && user.userID) {
+          userId = user.userID;
+        }
+      } catch (error) {
+        console.error("Lỗi khi đọc thông tin người dùng:", error);
+      }
+    }
+    
     const fetchUserInfo = async () => {
       try {
         const res = await fetch(`http://localhost:8080/api/users/${userId}`);
@@ -66,8 +79,20 @@ const ConsultationBooking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Lấy userId từ localStorage/sessionStorage (giả sử đã đăng nhập)
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+    // Lấy userId từ localStorage (đảm bảo phù hợp với cách lưu trong MyAppointments.jsx)
+    const userJson = localStorage.getItem('loggedInUser');
+    let userId = 1; // Giá trị mặc định nếu không tìm thấy
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user && user.userID) {
+          userId = user.userID;
+        }
+      } catch (error) {
+        console.error("Lỗi khi đọc thông tin người dùng:", error);
+      }
+    }
 
     // Gộp ngày và giờ thành appointmentDate với định dạng yyyy-MM-dd HH:mm:ss
     let appointmentDate = '';
@@ -92,7 +117,8 @@ const ConsultationBooking = () => {
       userId: Number(userId),
       consultantId: Number(formData.consultantId),
       content: formData.symptoms,
-      appointmentDate: appointmentDate
+      appointmentDate: appointmentDate,
+      status: "Chờ xác nhận" // Mặc định status cho booking mới là "Chờ xác nhận"
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
@@ -261,7 +287,7 @@ const ConsultationBooking = () => {
                         key={consultant.userID ?? idx}
                         value={consultant.userID ?? ''}
                       >
-                        {consultant.fullName || consultant.name} {consultant.specialty ? `- ${consultant.specialty}` : ""}
+                        {consultant.fullName || consultant.name} {consultant.specification ? `- ${consultant.specification}` : ""}
                       </option>
                     ))}
                   </select>

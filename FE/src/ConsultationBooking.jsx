@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
@@ -13,13 +13,42 @@ const ConsultationBooking = () => {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
 
-  const consultants = [
-    { id: 1, name: "BS. Nguyễn Thị Minh", specialty: "Sức khỏe phụ nữ" },
-    { id: 2, name: "BS. Trần Văn Hải", specialty: "Sản phụ khoa" },
-    { id: 3, name: "BS. Lê Thị Hương", specialty: "Nội tiết" },
-    { id: 4, name: "BS. Phạm Minh Tuấn", specialty: "Dinh dưỡng" }
-  ];
+  useEffect(() => {
+    // Gọi API lấy danh sách tư vấn viên
+    const fetchConsultants = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/users/consultants');
+        if (res.ok) {
+          const data = await res.json();
+          setConsultants(data);
+        } else {
+          setConsultants([]);
+        }
+      } catch (error) {
+        setConsultants([]);
+      }
+    };
+    fetchConsultants();
+
+    // Lấy thông tin user
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+    const fetchUserInfo = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/api/users/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFormData(prev => ({
+            ...prev,
+            fullName: data.fullName || data.name || '',
+            phone: data.phone || ''
+          }));
+        }
+      } catch (error) {}
+    };
+    fetchUserInfo();
+  }, []);
 
   const availableTimes = [
     "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
@@ -34,10 +63,57 @@ const ConsultationBooking = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form data submitted:', formData);
-    setIsSubmitted(true);
+
+    // Lấy userId từ localStorage/sessionStorage (giả sử đã đăng nhập)
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+
+    // Gộp ngày và giờ thành appointmentDate với định dạng yyyy-MM-dd HH:mm:ss
+    let appointmentDate = '';
+    if (formData.date && formData.time) {
+      const timePart = formData.time.split(' - ')[0];
+      appointmentDate = `${formData.date} ${timePart}:00`;
+    }
+
+    // Validate dữ liệu trước khi gửi
+    if (
+      !userId ||
+      !formData.consultantId ||
+      !formData.symptoms.trim() ||
+      !appointmentDate
+    ) {
+      alert("Vui lòng điền đầy đủ thông tin hợp lệ!");
+      return;
+    }
+
+    // Chuẩn bị payload đúng với backend
+    const payload = {
+      userId: Number(userId),
+      consultantId: Number(formData.consultantId),
+      content: formData.symptoms,
+      appointmentDate: appointmentDate
+    };
+
+    // Log payload để kiểm tra giá trị thực tế gửi lên
+    console.log("Payload gửi booking:", payload);
+
+    try {
+      const response = await fetch("http://localhost:8080/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        setIsSubmitted(true);
+      } else {
+        const errorText = await response.text();
+        alert("Đặt lịch thất bại. Lý do: " + errorText);
+        console.error("Lỗi booking:", errorText);
+      }
+    } catch (error) {
+      alert("Có lỗi xảy ra. Vui lòng thử lại!");
+    }
   };
 
   return (
@@ -123,6 +199,7 @@ const ConsultationBooking = () => {
                     required
                     style={inputStyle}
                     placeholder="Nguyễn Văn A"
+                    readOnly
                   />
                 </div>
                 
@@ -136,6 +213,7 @@ const ConsultationBooking = () => {
                     required
                     style={inputStyle}
                     placeholder="0912345678"
+                    readOnly
                   />
                 </div>
 
@@ -178,9 +256,12 @@ const ConsultationBooking = () => {
                     style={inputStyle}
                   >
                     <option value="">-- Chọn tư vấn viên --</option>
-                    {consultants.map(consultant => (
-                      <option key={consultant.id} value={consultant.id}>
-                        {consultant.name} - {consultant.specialty}
+                    {consultants.map((consultant, idx) => (
+                      <option
+                        key={consultant.userID ?? idx}
+                        value={consultant.userID ?? ''}
+                      >
+                        {consultant.fullName || consultant.name} {consultant.specialty ? `- ${consultant.specialty}` : ""}
                       </option>
                     ))}
                   </select>

@@ -52,6 +52,7 @@ public class Users {
     private String password;
 
     @NotBlank(message = "Gender không được để trống")
+    @Column(name = "gender", columnDefinition = "NVARCHAR(50)")
     private String gender;
 
     @Past(message = "Ngày sinh phải là ngày trong quá khứ")

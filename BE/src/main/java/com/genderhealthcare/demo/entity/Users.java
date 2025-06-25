@@ -69,6 +69,10 @@ public class Users {
     @Column(name = "role")
     private Role role;
     
+    // Thuộc tính chỉ áp dụng cho người dùng có vai trò consultant
+    @Column(name = "specification", columnDefinition = "NVARCHAR(255)")
+    private String specification; // Lưu chuyên môn của consultant
+    
     @PrePersist
     protected void onCreate() {
         createdAt = new Date();

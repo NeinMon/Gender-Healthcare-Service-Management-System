@@ -30,6 +30,9 @@ public class AuthResponse {
             redirectUrl = "/manager"; // URL cho manager
         } else if (role == Role.ADMIN) {
             redirectUrl = "/admin"; // URL cho admin
+        } else if (role == Role.STAFF) {
+            redirectUrl = "/staff"; // URL cho staff
+
         } else {
             redirectUrl = "/"; // URL mặc định - trang chủ
         }

@@ -632,27 +632,6 @@ const ConsultantInterface = () => {
                 Tư vấn online
               </button>
             </div>
-            <Link 
-              to="/" 
-              style={{ 
-                textDecoration: 'none', 
-                color: '#0891b2', 
-                fontWeight: 600, 
-                fontSize: "15px", 
-                border: '1px solid #22d3ee', 
-                borderRadius: "8px", 
-                padding: '10px 20px', 
-                background: '#fff', 
-                transition: 'all 0.2s', 
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
-            >
-              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang chủ
-            </Link>
           </div>
 
           {activeSection === 'questions' ? (

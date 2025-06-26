@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const App = () => {
+  const navigate = useNavigate();
   const [showRegister, setShowRegister] = useState(false);
   const [registerData, setRegisterData] = useState({
     name: "",
@@ -453,7 +454,7 @@ const App = () => {
                 boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                 transition: "all 0.3s ease"
               }}
-              onClick={() => window.location.href = "/user-account"}
+              onClick={() => navigate("/user-account")}
               onMouseEnter={(e) => {
                 e.target.style.transform = "scale(1.1)";
                 e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
@@ -481,7 +482,7 @@ const App = () => {
                   fontWeight: 600,
                   cursor: "pointer"
                 }}
-                onClick={() => window.location.href = "/register"}
+                onClick={() => navigate("/register")}
               >
                 Đăng ký
               </button>
@@ -495,7 +496,7 @@ const App = () => {
                   fontWeight: 600,
                   cursor: "pointer"
                 }}
-                onClick={() => window.location.href = "/login"}
+                onClick={() => navigate("/login")}
               >
                 Đăng nhập
               </button>
@@ -554,7 +555,7 @@ const App = () => {
           <a
             href={isLoggedIn ? "/period-tracking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/period-tracking' : '/login'; }}
+            onClick={e => { e.preventDefault(); navigate(isLoggedIn ? '/period-tracking' : '/login'); }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
@@ -587,7 +588,7 @@ const App = () => {
               onClick={(e) => { 
                 e.preventDefault(); 
                 if (!isLoggedIn) {
-                  window.location.href = '/login';
+                  navigate('/login');
                 } else {
                   setShowConsultationDropdown(!showConsultationDropdown);
                 }
@@ -635,7 +636,7 @@ const App = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setShowConsultationDropdown(false);
-                    window.location.href = "/consultation-booking";
+                    navigate("/consultation-booking");
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = "#f0f9ff";
@@ -660,7 +661,7 @@ const App = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setShowConsultationDropdown(false);
-                    window.location.href = "/my-appointments";
+                    navigate("/my-appointments");
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = "#f0f9ff";
@@ -677,7 +678,7 @@ const App = () => {
           <a
             href={isLoggedIn ? "/test-booking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/test-booking' : '/login'; }}
+            onClick={e => { e.preventDefault(); navigate(isLoggedIn ? '/test-booking' : '/login'); }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
@@ -710,7 +711,7 @@ const App = () => {
               onClick={(e) => { 
                 e.preventDefault(); 
                 if (!isLoggedIn) {
-                  window.location.href = '/login';
+                  navigate('/login');
                 } else {
                   setShowQuestionDropdown(!showQuestionDropdown);
                 }
@@ -758,7 +759,7 @@ const App = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setShowQuestionDropdown(false);
-                    window.location.href = "/ask-question";
+                    navigate("/ask-question");
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = "#f0f9ff";
@@ -783,7 +784,7 @@ const App = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setShowQuestionDropdown(false);
-                    window.location.href = "/user-questions";
+                    navigate("/user-questions");
                   }}
                   onMouseEnter={(e) => {
                     e.target.style.background = "#f0f9ff";

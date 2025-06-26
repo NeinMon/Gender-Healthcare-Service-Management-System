@@ -35,6 +35,11 @@ const App = () => {
   const [showConsultationDropdown, setShowConsultationDropdown] = useState(false);
   const [showQuestionDropdown, setShowQuestionDropdown] = useState(false);
 
+  // Tự động cuộn lên đầu trang khi component mount
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Kiểm tra trạng thái đăng nhập khi component mount
   React.useEffect(() => {
     const loggedInUser = localStorage.getItem('loggedInUser');

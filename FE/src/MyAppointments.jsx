@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
+import VideoCall from './components/VideoCall';
 
 const MyAppointments = () => {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ const MyAppointments = () => {
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [consultantNames, setConsultantNames] = useState({});
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [videoChannel, setVideoChannel] = useState(null);
   
   useEffect(() => {
     // Kiểm tra login
@@ -131,6 +134,13 @@ const MyAppointments = () => {
       width: "100vw",
       fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     }}>
+      {showVideoCall && (
+        <VideoCall 
+          channelName={videoChannel} 
+          onLeave={() => { setShowVideoCall(false); setVideoChannel(null); }} 
+          userRole="audience"
+        />
+      )}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
@@ -208,6 +218,7 @@ const MyAppointments = () => {
                     <th style={{ color: '#fff', fontWeight: 700 }}>Nội dung</th>
                     <th style={{ color: '#fff', fontWeight: 700 }}>Ngày đặt lịch</th>
                     <th style={{ color: '#fff', fontWeight: 700 }}>Trạng thái</th>
+                    <th style={{ color: '#fff', fontWeight: 700 }}>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -221,11 +232,39 @@ const MyAppointments = () => {
                         <td style={{ fontWeight: 500 }}>{app.content || 'Không có nội dung'}</td>
                         <td style={{ fontWeight: 500 }}>{app.appointmentDate || 'N/A'}</td>
                         <td style={{ color: getStatusColor(app.status), fontWeight: 700 }}>{formatStatus(app.status)}</td>
+                        <td>
+                          {app.status === 'Đã xác nhận' && (
+                            <button
+                              style={{
+                                background: '#22d3ee', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontSize: 14
+                              }}
+                              onClick={() => { 
+                                // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
+                                // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với ConsultantInterface.jsx
+                                const bookingId = app.bookingId;
+                                // Luôn sử dụng "booking_" + bookingId làm tên kênh
+                                const channelName = bookingId ? `booking_${bookingId}` : null;
+                                
+                                if (!channelName) {
+                                  alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
+                                  return;
+                                }
+                                
+                                console.log(`[CLIENT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
+                                setVideoChannel(channelName);
+                                setShowVideoCall(true);
+                              }}
+                            >
+                              Tham gia tư vấn
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
-              </table>            </div>
+              </table>
+            </div>
           )}
           {/* Modal chi tiết đã được ẩn */}
           {/* Modal hủy lịch hẹn đã được ẩn */}

@@ -407,7 +407,7 @@ const App = () => {
             letterSpacing: 1
           }}
         >
-          Chăm Sóc Sức Khỏe Giới Tính
+          Dịch Vụ Chăm Sóc Sức Khỏe Giới Tính
         </h1>        <nav
           style={{
             display: "flex",
@@ -417,7 +417,8 @@ const App = () => {
             margin: "0 0 8px 0",
             padding: "0 40px"
           }}
-        >          <a 
+        >
+          <a 
             href="#gioi-thieu" 
             style={{ 
               color: "#fff", 
@@ -433,130 +434,46 @@ const App = () => {
               minWidth: "140px",
               textAlign: "center"
             }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.5)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.4)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
+            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
             Giới thiệu
-          </a>          <a 
-            href="#dich-vu" 
-            style={{ 
-              color: "#fff", 
-              fontWeight: 600, 
-              fontSize: 16,
-              textDecoration: "none",
-              background: "rgba(255,255,255,0.4)",
-              padding: "12px 32px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.6)",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              minWidth: "140px",
-              textAlign: "center"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.5)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.4)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
+          </a>
+          <a
+            href="/login"
+            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
+            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
-            Dịch vụ
-          </a>          <a 
-            href="#nhan-vien" 
-            style={{ 
-              color: "#fff", 
-              fontWeight: 600, 
-              fontSize: 16,
-              textDecoration: "none",
-              background: "rgba(255,255,255,0.4)",
-              padding: "12px 32px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.6)",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              minWidth: "140px",
-              textAlign: "center"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.5)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.4)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
+            Theo dõi chu kỳ kinh nguyệt
+          </a>
+          <a
+            href="/login"
+            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
+            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
-            Nhân viên
-          </a>          <a 
-            href="#tu-van-vien" 
-            style={{ 
-              color: "#fff", 
-              fontWeight: 600, 
-              fontSize: 16,
-              textDecoration: "none",
-              background: "rgba(255,255,255,0.4)",
-              padding: "12px 32px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.6)",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              minWidth: "140px",
-              textAlign: "center"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.5)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.4)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
+            Đặt lịch tư vấn
+          </a>
+          <a
+            href="/login"
+            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
+            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
-            Tư vấn viên
-          </a>          <a 
-            href="#blog" 
-            style={{ 
-              color: "#fff", 
-              fontWeight: 600, 
-              fontSize: 16,
-              textDecoration: "none",
-              background: "rgba(255,255,255,0.4)",
-              padding: "12px 32px",
-              borderRadius: 8,
-              border: "1px solid rgba(255,255,255,0.6)",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              minWidth: "140px",
-              textAlign: "center"
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.5)";
-              e.target.style.transform = "translateY(-2px)";
-              e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "rgba(255,255,255,0.4)";
-              e.target.style.transform = "translateY(0)";
-              e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-            }}
+            Đặt lịch xét nghiệm
+          </a>
+          <a
+            href="/login"
+            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
+            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
+            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
-            Blog
+            Đặt câu hỏi cho tư vấn viên
           </a>
         </nav>
       </header>
@@ -1154,41 +1071,8 @@ const App = () => {
               </ul>
             </div>
           </div>
-          
-          {/* Use Services Button */}
-          <div style={{ 
-            textAlign: "center", 
-            marginTop: "30px" 
-          }}>
-            <Link 
-              to="/login"
-              style={{
-                display: "inline-block",
-                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-                color: "#fff",
-                textDecoration: "none",
-                padding: "16px 40px",
-                borderRadius: "12px",
-                fontWeight: "600",
-                fontSize: "18px",
-                boxShadow: "0 6px 20px rgba(8, 145, 178, 0.3)",
-                transition: "all 0.3s ease",
-                border: "none",
-                cursor: "pointer"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = "translateY(-2px)";
-                e.target.style.boxShadow = "0 8px 25px rgba(8, 145, 178, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = "translateY(0)";
-                e.target.style.boxShadow = "0 6px 20px rgba(8, 145, 178, 0.3)";
-              }}
-            >
-              🚀 Sử dụng dịch vụ ngay
-            </Link>
-          </div>
-        </section>{/* Testimonials Section */}
+        </section>
+        {/* Testimonials Section */}
         <section id="testimonials" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('testimonials') ? 'visible' : ''}`} style={{
           background: "#f8fffe",
           borderRadius: 12,
@@ -1725,7 +1609,7 @@ const App = () => {
       {/* Scroll to Top Button */}
       <div style={{
         position: "fixed",
-        bottom: 30,
+        bottom:  30,
         right: 30,
         zIndex: 1000
       }}>

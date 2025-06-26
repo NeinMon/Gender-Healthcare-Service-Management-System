@@ -48,7 +48,7 @@ const Services = () => {
     {
       id: 1,
       title: "Theo dõi chu kỳ kinh nguyệt",
-      description: "Ghi nhận và theo dõi chu kỳ kinh nguyệt hàng tháng",
+      // description: "Ghi nhận và theo dõi chu kỳ kinh nguyệt hàng tháng",
       icon: "📅",
       color: "#ff6b6b",
       path: "/period-tracking"
@@ -56,7 +56,7 @@ const Services = () => {
     {
       id: 2,
       title: "Đặt lịch tư vấn",
-      description: "Đặt lịch hẹn tư vấn với các chuyên gia y tế",
+      // description: "Đặt lịch hẹn tư vấn với các chuyên gia y tế",
       icon: "👩‍⚕️",
       color: "#4ecdc4",
       path: "/consultation-booking"
@@ -64,7 +64,7 @@ const Services = () => {
     {
       id: 3,
       title: "Đặt lịch xét nghiệm",
-      description: "Đặt lịch thực hiện các xét nghiệm y tế cần thiết",
+      // description: "Đặt lịch thực hiện các xét nghiệm y tế cần thiết",
       icon: "🩺",
       color: "#45b7d1",
       path: "/test-booking"
@@ -72,7 +72,7 @@ const Services = () => {
     {
       id: 4,
       title: "Đặt câu hỏi cho tư vấn viên",
-      description: "Gửi câu hỏi và nhận lời tư vấn từ chuyên gia",
+      // description: "Gửi câu hỏi và nhận lời tư vấn từ chuyên gia",
       icon: "💬",
       color: "#f9ca24",
       path: "/ask-question"
@@ -81,6 +81,78 @@ const Services = () => {
 
   // Check if screen is mobile
   const isMobile = window.innerWidth <= 768;
+
+  // --- Service Card Menu as horizontal menu ---
+  const serviceCardMenu = (
+    <div style={{
+      display: "flex",
+      flexDirection: "row",
+      gap: "12px",
+      margin: "20px auto 12px auto",
+      maxWidth: "700px",
+      padding: isMobile ? "0 4px" : "0",
+      overflowX: isMobile ? "auto" : "visible",
+      justifyContent: isMobile ? "flex-start" : "center",
+      alignItems: "stretch",
+      width: "100%"
+    }}>
+      {features.map((feature) => (
+        <Link
+          key={feature.id}
+          to={feature.path}
+          style={{
+            textDecoration: "none",
+            color: "inherit",
+            minWidth: isMobile ? 140 : 0,
+            flex: isMobile ? "0 0 140px" : "1 1 0%"
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "16px",
+              padding: "14px 6px",
+              textAlign: "center",
+              boxShadow: "0 6px 18px rgba(8, 145, 178, 0.08)",
+              border: "1px solid rgba(8, 145, 178, 0.08)",
+              transition: "all 0.3s ease",
+              cursor: "pointer",
+              height: "120px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              minWidth: 0
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-6px)";
+              e.currentTarget.style.boxShadow = "0 12px 24px rgba(8, 145, 178, 0.13)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 6px 18px rgba(8, 145, 178, 0.08)";
+            }}
+          >
+            <div style={{
+              fontSize: "28px",
+              marginBottom: "6px"
+            }}>
+              {feature.icon}
+            </div>
+            <h3 style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "#0891b2",
+              marginBottom: "4px",
+              margin: 0
+            }}>
+              {feature.title}
+            </h3>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
 
   // Chuyển hướng nếu không phải customer và không đang loading
   if (!loading && !isCustomer && redirectTo) {
@@ -131,12 +203,14 @@ const Services = () => {
       minHeight: "100vh",
       width: "100vw",
       fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    }}>      <header style={{
+    }}>
+      <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         position: "relative",
-        height: 120,
+        height: "auto",
         minHeight: 0,
-        overflow: "hidden"
+        overflow: "hidden",
+        paddingBottom: 24
       }}>
         {/* Logo góc trái */}
         <div style={{ position: "absolute", top: 10, left: 20 }}>
@@ -156,7 +230,7 @@ const Services = () => {
           top: 0,
           left: 0,
           width: "100%",
-          height: "100%",
+          height: 80,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -178,8 +252,9 @@ const Services = () => {
             Dịch Vụ Chăm Sóc Sức Khỏe Giới Tính
           </h1>
         </div>
+        {/* Service Card Menu directly below the title, inside header */}
+        <div style={{ marginTop: 90 }}>{serviceCardMenu}</div>
       </header>
-
       <main style={{
         padding: "40px 20px",
         minHeight: "calc(100vh - 200px)",
@@ -196,7 +271,7 @@ const Services = () => {
           width: "100%",
           margin: "0 auto"
         }}>
-          <div style={{
+          {/* <div style={{
             textAlign: "center",
             marginBottom: "40px"
           }}>
@@ -216,77 +291,71 @@ const Services = () => {
             }}>
               Chúng tôi cung cấp các dịch vụ chăm sóc sức khỏe toàn diện
             </p>
-          </div>          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-            gap: "30px",
-            marginBottom: "40px",
-            maxWidth: "900px",
-            margin: "0 auto 40px auto",
-            padding: isMobile ? "0 10px" : "0"
-          }}>
-            {features.map((feature) => (
-              <Link
-                key={feature.id}
-                to={feature.path}
-                style={{
-                  textDecoration: "none",
-                  color: "inherit"
-                }}
-              >                <div
-                  style={{
-                    background: "rgba(255, 255, 255, 0.95)",
-                    borderRadius: "20px",
-                    padding: "30px",
-                    textAlign: "center",
-                    boxShadow: "0 10px 30px rgba(8, 145, 178, 0.1)",
-                    border: "1px solid rgba(8, 145, 178, 0.1)",
-                    transition: "all 0.3s ease",
-                    cursor: "pointer",
-                    height: "220px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minWidth: "0"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-10px)";
-                    e.currentTarget.style.boxShadow = "0 20px 40px rgba(8, 145, 178, 0.15)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 10px 30px rgba(8, 145, 178, 0.1)";
-                  }}
-                >
-                  <div style={{
-                    fontSize: "48px",
-                    marginBottom: "15px"
-                  }}>
-                    {feature.icon}
-                  </div>
-                  <h3 style={{
-                    fontSize: "20px",
-                    fontWeight: "600",
-                    color: "#0891b2",
-                    marginBottom: "10px",
-                    margin: 0
-                  }}>
-                    {feature.title}
-                  </h3>
-                  <p style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    lineHeight: "1.5",
-                    margin: "10px 0 0 0"
-                  }}>
-                    {feature.description}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-            {/* Removed consultant section as we now restrict access to customer role only */}
+          </div>          Removed consultant section as we now restrict access to customer role only */}
+
+          <section id="dich-vu-cung-cap"
+  style={{
+    width: "100vw",
+    position: "relative",
+    left: "50%",
+    right: "50%",
+    marginLeft: "-50vw",
+    marginRight: "-50vw",
+    background: "#e0f2fe",
+    borderRadius: 0,
+    boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
+    padding: "40px 0 32px 0",
+    marginTop: "-32px",
+    marginBottom: "32px",
+    zIndex: 1
+  }}
+>
+  <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+    <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+      <span role="img" aria-label="stethoscope">🩺</span> Dịch Vụ Cung Cấp
+    </h2>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 20 }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px rgba(17,153,142,0.1)", border: "1px solid rgba(17,153,142,0.1)" }}>
+        <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>📅</div>
+        <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Theo dõi chu kỳ sinh sản</h3>
+        <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+          <li>Khai báo chu kỳ kinh nguyệt dễ dàng</li>
+          <li>Nhắc nhở thời điểm rụng trứng, khả năng mang thai cao/thấp</li>
+          <li>Nhắc uống thuốc tránh thai đúng giờ</li>
+          <li>Phân tích biểu đồ sức khỏe sinh sản</li>
+        </ul>
+      </div>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px rgba(17,153,142,0.1)", border: "1px solid rgba(17,153,142,0.1)" }}>
+        <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💬</div>
+        <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Tư vấn giới tính & sức khỏe sinh sản</h3>
+        <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+          <li>Đặt lịch tư vấn trực tuyến với chuyên gia</li>
+          <li>Được tư vấn riêng tư, bảo mật</li>
+          <li>Gửi câu hỏi, thắc mắc về giới tính, tâm sinh lý, mối quan hệ,...</li>
+        </ul>
+      </div>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px rgba(17,153,142,0.1)", border: "1px solid rgba(17,153,142,0.1)" }}>
+        <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>🧪</div>
+        <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Xét nghiệm các bệnh STIs</h3>
+        <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+          <li>Danh sách dịch vụ xét nghiệm đa dạng: HIV, HPV, Lậu, Giang mai, Chlamydia,...</li>
+          <li>Đặt lịch và theo dõi quá trình xét nghiệm</li>
+          <li>Trả kết quả online an toàn và nhanh chóng</li>
+          <li>Hỗ trợ sau xét nghiệm và hướng điều trị</li>
+        </ul>
+      </div>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px rgba(17,153,142,0.1)", border: "1px solid rgba(17,153,142,0.1)" }}>
+        <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💰</div>
+        <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>
+        <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+          <li>Bảng giá xét nghiệm minh bạch, cập nhật liên tục</li>
+          <li>Gói dịch vụ phù hợp cho từng đối tượng (nam, nữ, cặp đôi,...)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 
           <div style={{
             textAlign: "center",
@@ -381,6 +450,9 @@ const Services = () => {
               Xem thông tin cá nhân
             </Link>
           </div> */}
+
+          {/* Dịch Vụ Cung Cấp - moved from App.jsx */}
+          
         </div>
       </main>
 

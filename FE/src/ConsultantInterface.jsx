@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
+import VideoCall from './components/VideoCall';
 
 const ConsultantInterface = () => {
   const [questions, setQuestions] = useState([]);
@@ -20,6 +21,8 @@ const ConsultantInterface = () => {
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [bookingUserDetails, setBookingUserDetails] = useState({});
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [videoChannel, setVideoChannel] = useState('');
 
   useEffect(() => {
     // Fetch thông tin tư vấn viên
@@ -816,7 +819,30 @@ const ConsultantInterface = () => {
                           <td style={{ fontWeight: 700, color: booking.status === 'Chờ xác nhận' ? '#ff9800' : booking.status === 'Đã xác nhận' ? '#4caf50' : booking.status === 'Đã xong' ? '#2196f3' : '#757575' }}>{booking.status}</td>
                           <td>
                             {booking.status === 'Chờ xác nhận' && (
-                              <button onClick={() => confirmBooking(booking.bookingId)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#0891b2', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Xác nhận</button>
+                              <button onClick={() => confirmBooking(booking.bookingId)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#0891b2', color: '#fff', fontWeight: 600, cursor: 'pointer', marginRight: 8 }}>Xác nhận</button>
+                            )}
+                            {booking.status === 'Đã xác nhận' && (
+                              <button
+                                style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#22d3ee', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
+                                onClick={() => {
+                                  // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
+                                  // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với MyAppointments.jsx
+                                  const bookingId = booking.bookingId;
+                                  // Luôn sử dụng "booking_" + bookingId làm tên kênh
+                                  const channelName = bookingId ? `booking_${bookingId}` : null;
+                                  
+                                  if (!channelName) {
+                                    alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
+                                    return;
+                                  }
+                                  
+                                  console.log(`[CONSULTANT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
+                                  setVideoChannel(channelName);
+                                  setShowVideoCall(true);
+                                }}
+                              >
+                                Tham gia tư vấn
+                              </button>
                             )}
                           </td>
                         </tr>
@@ -842,6 +868,15 @@ const ConsultantInterface = () => {
         <p style={{ fontSize: "16px" }}>© 2025 Hệ thống Chăm sóc Sức khỏe Giới Tính</p>
         <p style={{ marginTop: "10px", fontSize: "16px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
       </footer>
+
+      {/* Video Call Component - Always render but control visibility with state */}
+      {showVideoCall && (
+        <VideoCall
+          channelName={videoChannel}
+          onLeave={() => { setShowVideoCall(false); setVideoChannel(''); }}
+          userRole="host"
+        />
+      )}
     </div>
   );
 };

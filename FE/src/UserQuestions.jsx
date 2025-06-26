@@ -7,13 +7,6 @@ const UserQuestions = () => {
   const [error, setError] = useState(null);
   const [consultantNames, setConsultantNames] = useState({});
   
-  // Hàm refresh để người dùng có thể làm mới dữ liệu
-  const refreshQuestions = () => {
-    setLoading(true);
-    setError(null);
-    fetchUserQuestions();
-  };
-
   // Hàm lấy thông tin tư vấn viên
   const fetchConsultantInfo = async (consultantId) => {
     try {
@@ -228,25 +221,7 @@ const UserQuestions = () => {
             <div>
               <h2 style={{ fontWeight: 600, color: '#0891b2', margin: 0 }}>Danh sách câu hỏi của bạn</h2>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <button 
-                onClick={refreshQuestions}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#0891b2',
-                  border: '1px solid #0891b2',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-              >
-                <span>🔄</span> Làm mới
-              </button>
+            <div>
               <button
                 style={{
                   backgroundColor: '#0891b2',
@@ -294,22 +269,7 @@ const UserQuestions = () => {
             <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>❌</span>
             <strong>Có lỗi xảy ra</strong>
           </div>
-          <p style={{ margin: '0 0 1rem 0' }}>Lỗi: {error}</p>
-          <button 
-            onClick={refreshQuestions}
-            style={{
-              backgroundColor: '#c62828',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600
-            }}
-          >
-            🔄 Thử lại
-          </button>
+          <p style={{ margin: 0 }}>Lỗi: {error}</p>
         </div>
       )}
       
@@ -501,32 +461,6 @@ const UserQuestions = () => {
                       Câu hỏi đã được trả lời nhưng không thể hiển thị nội dung. Vui lòng làm mới trang.
                     </p>
                   )}
-                </div>
-                
-                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                  <button style={{
-                    backgroundColor: 'transparent',
-                    border: '2px solid #0891b2',
-                    color: '#0891b2',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '25px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    transition: 'all 0.3s ease'
-                  }}
-                  onClick={() => window.location.href = "/ask-question"}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#0891b2';
-                    e.target.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = '#0891b2';
-                  }}
-                  >
-                    💬 Gửi câu hỏi bổ sung
-                  </button>
                 </div>
               </div>
             )}

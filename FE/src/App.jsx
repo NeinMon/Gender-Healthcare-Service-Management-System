@@ -414,32 +414,35 @@ const App = () => {
           zIndex: 2
         }}>
           {isLoggedIn ? (
-            // Hiển thị khi đã đăng nhập
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "rgba(255,255,255,0.9)",
-              borderRadius: 8,
-              padding: "8px 16px"
-            }}>
-              <span style={{ color: "#0891b2", fontWeight: 600 }}>
-                Xin chào, {currentUser?.fullName}
+            // Hiển thị avatar khi đã đăng nhập
+            <div
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #0891b2, #22d3ee)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                border: "3px solid #fff",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                transition: "all 0.3s ease"
+              }}
+              onClick={() => window.location.href = "/user-account"}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "scale(1.1)";
+                e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "scale(1)";
+                e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+              }}
+              title={`Tài khoản của ${currentUser?.fullName}`}
+            >
+              <span style={{ color: "#fff", fontSize: 20, fontWeight: 600 }}>
+                {currentUser?.fullName?.charAt(0)?.toUpperCase() || "U"}
               </span>
-              <button
-                style={{
-                  background: "#0891b2",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "8px 16px",
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-                onClick={handleLogout}
-              >
-                Đăng xuất
-              </button>
             </div>
           ) : (
             // Hiển thị khi chưa đăng nhập

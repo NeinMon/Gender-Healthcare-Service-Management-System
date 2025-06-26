@@ -808,7 +808,7 @@ const App = () => {
       {/* Hero Banner Section */}
       <section style={{
         background: "linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%)",
-        padding: "60px 20px",
+        padding: "15px 20px",
         textAlign: "center",
         position: "relative",
         overflow: "hidden"
@@ -850,9 +850,9 @@ const App = () => {
           <div style={{
             position: "relative",
             width: "100%",
-            maxWidth: 600,
-            height: 300,
-            margin: "0 auto 30px auto",
+            maxWidth: 500,
+            height: 200,
+            margin: "0 auto 15px auto",
             borderRadius: 16,
             overflow: "hidden",
             boxShadow: "0 12px 32px rgba(17,153,142,0.2)"
@@ -866,7 +866,7 @@ const App = () => {
                   key={index}
                   style={{
                     minWidth: "100%",
-                    height: 300,
+                    height: 200,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -937,20 +937,20 @@ const App = () => {
           </div>
           
           <h1 className="text-glow" style={{
-            fontSize: 42,
+            fontSize: 32,
             color: "#0891b2",
-            marginBottom: 20,
+            marginBottom: 10,
             fontWeight: 700,
             textShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
             🌟 Chăm Sóc Sức Khỏe Giới Tính Toàn Diện
           </h1>
           <p style={{
-            fontSize: 20,
+            fontSize: 16,
             color: "#555",
             marginBottom: 40,
             maxWidth: 800,
-            margin: "0 auto 40px auto",
+            margin: "0 auto 15px auto",
             lineHeight: 1.6
           }}>
             Dịch vụ y tế chuyên nghiệp • Bảo mật tuyệt đối • Tư vấn 24/7 • Đội ngũ chuyên gia hàng đầu
@@ -1013,27 +1013,27 @@ const App = () => {
         
       </section>
 
-      <main style={{ padding: "40px 20px" }}>
+      <main style={{ padding: "10px 20px" }}>
         <section id="dich-vu"data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
           background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
-          padding: 24,
-          margin: "32px 0"
+          padding: 15,
+          margin: "10px 0"
         }}>
-          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
+          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 16 }}>
             <span role="img" aria-label="stethoscope">🩺</span> Dịch Vụ Cung Cấp
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 15, marginBottom: 15 }}>
             <div style={{
               background: "#fff",
               borderRadius: 12,
-              padding: 20,
+              padding: 15,
               boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
-              <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>📅</div>
-              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Theo dõi chu kỳ sinh sản</h3>
+              <div style={{ fontSize: 40, textAlign: "center", marginBottom: 10 }}>📅</div>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 10 }}>Theo dõi chu kỳ sinh sản</h3>
               <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Khai báo chu kỳ kinh nguyệt dễ dàng</li>
                 <li>Nhắc nhở thời điểm rụng trứng, khả năng mang thai cao/thấp</li>
@@ -1048,8 +1048,8 @@ const App = () => {
               boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
-              <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💬</div>
-              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Tư vấn giới tính &amp; sức khỏe sinh sản</h3>
+              <div style={{ fontSize: 40, textAlign: "center", marginBottom: 10 }}>💬</div>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 10 }}>Tư vấn giới tính &amp; sức khỏe sinh sản</h3>
               <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Đặt lịch tư vấn trực tuyến với chuyên gia</li>
                 <li>Được tư vấn riêng tư, bảo mật</li>
@@ -1063,8 +1063,8 @@ const App = () => {
               boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
-              <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>🧪</div>
-              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Xét nghiệm các bệnh STIs</h3>
+              <div style={{ fontSize: 40, textAlign: "center", marginBottom: 10 }}>🧪</div>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 10 }}>Xét nghiệm các bệnh STIs</h3>
               <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Danh sách dịch vụ xét nghiệm đa dạng: HIV, HPV, Lậu, Giang mai, Chlamydia,...</li>
                 <li>Đặt lịch và theo dõi quá trình xét nghiệm</li>
@@ -1079,8 +1079,8 @@ const App = () => {
               boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
               border: "1px solid rgba(17,153,142,0.1)"
             }}>
-              <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>💰</div>
-              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 12 }}>Thông tin dịch vụ rõ ràng</h3>              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
+              <div style={{ fontSize: 40, textAlign: "center", marginBottom: 10 }}>💰</div>
+              <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 10 }}>Thông tin dịch vụ rõ ràng</h3>              <ul style={{ fontSize: 14, color: "#0891b2", margin: 0, paddingLeft: 20 }}>
                 <li>Bảng giá xét nghiệm minh bạch, cập nhật liên tục</li>
                 <li>Gói dịch vụ phù hợp cho từng đối tượng (nam, nữ, cặp đôi,...)</li>
               </ul>
@@ -1093,8 +1093,8 @@ const App = () => {
           background: "#fff",
           borderRadius: 12,
           boxShadow: "0 4px 16px rgba(17,153,142,0.1)",
-          padding: 40,
-          margin: "40px 0",
+          padding: 20,
+          margin: "10px 0",
           position: "relative",
           overflow: "hidden"
         }}>
@@ -1118,8 +1118,8 @@ const App = () => {
               alignItems: "center", 
               gap: 12, 
               justifyContent: "center", 
-              marginBottom: 30,
-              fontSize: 28,
+              marginBottom: 15,
+              fontSize: 24,
               fontWeight: 700
             }}>
               <span role="img" aria-label="medical">🏥</span> Giới Thiệu Dịch Vụ
@@ -1128,17 +1128,17 @@ const App = () => {
             <div style={{ 
               display: "grid", 
               gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", 
-              gap: 30, 
-              marginBottom: 30 
+              gap: 15, 
+              marginBottom: 15 
             }}>
               <div className="slide-in-left" style={{
                 background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
-                borderRadius: 16,
-                padding: 24,
+                borderRadius: 12,
+                padding: 18,
                 border: "2px solid rgba(17,153,142,0.1)",
                 transition: "all 0.3s ease"
               }}>
-                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>🔬</div>
+                <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>🔬</div>
                 <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
                   Xét Nghiệm Chuyên Sâu
                 </h3>
@@ -1162,12 +1162,12 @@ const App = () => {
 
               <div className="slide-in-right" style={{
                 background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-                borderRadius: 16,
-                padding: 24,
+                borderRadius: 12,
+                padding: 18,
                 border: "2px solid rgba(17,153,142,0.1)",
                 transition: "all 0.3s ease"
               }}>
-                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>👩‍⚕️</div>
+                <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>👩‍⚕️</div>
                 <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
                   Tư Vấn Chuyên Nghiệp
                 </h3>
@@ -1191,13 +1191,13 @@ const App = () => {
 
               <div className="scale-in" style={{
                 background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)",
-                borderRadius: 16,
-                padding: 24,
+                borderRadius: 12,
+                padding: 18,
                 border: "2px solid rgba(17,153,142,0.1)",
                 transition: "all 0.3s ease",
                 gridColumn: "span 2"
               }}>
-                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>🛡️</div>
+                <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>🛡️</div>
                 <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
                   Cam Kết Chất Lượng & Bảo Mật
                 </h3>
@@ -1232,334 +1232,11 @@ const App = () => {
             </div>
           </div>
         </section>
-
-        {/* Chuyên mục Blog Section */}
-        <section data-animate="fade-in" className={`fade-in-section ${visibleSections.has('blog') ? 'visible' : ''}`} style={{
-          background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-          borderRadius: 12,
-          boxShadow: "0 4px 16px rgba(17,153,142,0.1)",
-          padding: 40,
-          margin: "40px 0",
-          position: "relative"
-        }}>
-          <h2 style={{ 
-            color: "#0891b2", 
-            marginTop: 0, 
-            display: "flex", 
-            alignItems: "center", 
-            gap: 12, 
-            justifyContent: "center", 
-            marginBottom: 30,
-            fontSize: 28,
-            fontWeight: 700
-          }}>
-            <span role="img" aria-label="blog">📚</span> Chuyên mục Blog: Kiến Thức Sức Khỏe Giới Tính
-          </h2>
-          
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", 
-            gap: 24,
-            marginBottom: 30
-          }}>
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                🔍
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Hiểu Biết Về Các Bệnh Lây Truyền Qua Đường Tình Dục
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                Tìm hiểu về các loại STI phổ biến, triệu chứng, cách phòng ngừa và điều trị. 
-                Kiến thức cần thiết để bảo vệ bản thân và người thân.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👩‍⚕️ Bác sĩ Nguyễn Thị Mai</span>
-                <span>📅 25/06/2025</span>
-              </div>
-            </article>
-
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                📅
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Chu Kỳ Kinh Nguyệt: Những Điều Cần Biết
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                Hướng dẫn chi tiết về chu kỳ kinh nguyệt, cách theo dõi và nhận biết các dấu hiệu bất thường. 
-                Kiến thức quan trọng cho phụ nữ ở mọi lứa tuổi.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👩‍⚕️ Bác sĩ Lê Văn Hùng</span>
-                <span>📅 22/06/2025</span>
-              </div>
-            </article>
-
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                💊
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Các Phương Pháp Tránh Thai An Toàn
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                So sánh các phương pháp tránh thai hiện đại, hiệu quả và tác dụng phụ. 
-                Lời khuyên từ chuyên gia để lựa chọn phù hợp nhất.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👩‍⚕️ Bác sĩ Trần Thị Lan</span>
-                <span>📅 20/06/2025</span>
-              </div>
-            </article>
-
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                🧘‍♀️
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Sức Khỏe Tâm Lý Trong Mối Quan Hệ
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                Khám phá tầm quan trọng của sức khỏe tinh thần trong các mối quan hệ tình cảm. 
-                Cách xây dựng mối quan hệ lành mạnh và hạnh phúc.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👨‍⚕️ Thạc sĩ Phạm Minh Đức</span>
-                <span>📅 18/06/2025</span>
-              </div>
-            </article>
-
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #fff1f2 0%, #fecaca 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                🤱
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Chăm Sóc Sức Khỏe Sinh Sản Tuổi Teen
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                Hướng dẫn cha mẹ và thanh thiếu niên về giáo dục giới tính, sức khỏe sinh sản và các vấn đề tâm lý ở tuổi dậy thì.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👩‍⚕️ Bác sĩ Hoàng Thị Nga</span>
-                <span>📅 15/06/2025</span>
-              </div>
-            </article>
-
-            <article className="fade-in" style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              transition: "all 0.3s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
-            }}>
-              <div style={{ 
-                width: "100%", 
-                height: 180, 
-                background: "linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%)",
-                borderRadius: 8,
-                marginBottom: 16,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 48
-              }}>
-                ⚖️
-              </div>
-              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
-                Quyền Lợi và Trách Nhiệm Trong Sức Khỏe Giới Tính
-              </h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                Tìm hiểu về quyền lợi cá nhân trong chăm sóc sức khỏe sinh sản và trách nhiệm đối với bản thân cũng như đối tác.
-              </p>
-              <div style={{ 
-                display: "flex", 
-                justifyContent: "space-between", 
-                alignItems: "center",
-                fontSize: 12,
-                color: "#64748b"
-              }}>
-                <span>👨‍⚕️ Luật sư Y khoa Ngô Văn Thành</span>
-                <span>📅 12/06/2025</span>
-              </div>
-            </article>
-          </div>
-        </section>
       </main>
 
       {/* Call to Action Section */}      <section style={{
         background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-        padding: "50px 20px",
+        padding: "20px 20px",
         textAlign: "center",
         color: "#fff",
         position: "relative",
@@ -1585,7 +1262,7 @@ const App = () => {
           </h2>
           <p style={{ 
             fontSize: 18, 
-            marginBottom: 30, 
+            marginBottom: 20, 
             opacity: 0.9,
             lineHeight: 1.6
           }}>

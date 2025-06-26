@@ -260,7 +260,7 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
           }}>            {Object.entries(isEditing ? editData : userInfo).map(([key, value]) => {
               // Skip certain fields
               if (typeof value === 'object' && value !== null) return null;
-              if (['userID', 'password', 'createdAt', 'updateAt', 'role'].includes(key)) return null; // Added 'role' to excluded fields
+              if (['userID', 'password', 'createdAt', 'updateAt', 'role', 'specification'].includes(key)) return null; // Added 'specification' to excluded fields
               if (key === 'dob' && userInfo.formattedDob) return null; // Skip dob if formattedDob exists
               return (
                 <div key={key} style={{
@@ -466,33 +466,6 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
             display: "grid",
             gap: "20px"
           }}>
-            <Link
-              to="/change-password"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                textDecoration: "none",
-                color: "#1e293b",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#e2e8f0";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#f8fafc";
-              }}
-            >
-              <span style={{ fontSize: "16px", fontWeight: "500" }}>
-                🔒 Đổi Mật Khẩu
-              </span>
-              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
-            </Link>
-
             <button
               style={{
                 display: "flex",
@@ -510,6 +483,17 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
               }}
               onClick={() => {
                 if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                  // Xóa tất cả dữ liệu session/localStorage
+                  localStorage.removeItem('loggedInUser');
+                  localStorage.removeItem('userId');
+                  localStorage.removeItem('email');
+                  localStorage.removeItem('fullName');
+                  localStorage.removeItem('role');
+                  
+                  // Xóa sessionStorage nếu có
+                  sessionStorage.clear();
+                  
+                  // Chuyển hướng về trang chủ
                   window.location.href = "/";
                 }
               }}

@@ -32,6 +32,8 @@ const App = () => {
   // Thêm state để theo dõi trạng thái đăng nhập
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showConsultationDropdown, setShowConsultationDropdown] = useState(false);
+  const [showQuestionDropdown, setShowQuestionDropdown] = useState(false);
 
   // Kiểm tra trạng thái đăng nhập khi component mount
   React.useEffect(() => {
@@ -86,6 +88,23 @@ const App = () => {
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showConsultationDropdown && !event.target.closest('.consultation-dropdown')) {
+        setShowConsultationDropdown(false);
+      }
+      if (showQuestionDropdown && !event.target.closest('.question-dropdown')) {
+        setShowQuestionDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showConsultationDropdown, showQuestionDropdown]);
   // Intersection Observer for fade-in animations
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -536,15 +555,120 @@ const App = () => {
           >
             Theo dõi chu kỳ kinh nguyệt
           </a>
-          <a
-            href={isLoggedIn ? "/consultation-booking" : "/login"}
-            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/consultation-booking' : '/login'; }}
-            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
-            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
+          <div 
+            className="consultation-dropdown"
+            style={{ 
+              position: "relative",
+              display: "inline-block"
+            }}
           >
-            Đặt lịch tư vấn
-          </a>
+            <a
+              href="#"
+              style={{ 
+                color: "#fff", 
+                fontWeight: 600, 
+                fontSize: 16, 
+                textDecoration: "none", 
+                background: "rgba(255,255,255,0.4)", 
+                padding: "12px 32px", 
+                borderRadius: 8, 
+                border: "1px solid rgba(255,255,255,0.6)", 
+                transition: "all 0.3s ease", 
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)", 
+                minWidth: "140px", 
+                textAlign: "center",
+                display: "block"
+              }}
+              onClick={(e) => { 
+                e.preventDefault(); 
+                if (!isLoggedIn) {
+                  window.location.href = '/login';
+                } else {
+                  setShowConsultationDropdown(!showConsultationDropdown);
+                }
+              }}
+              onMouseEnter={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.5)"; 
+                e.target.style.transform = "translateY(-2px)"; 
+                e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; 
+              }}
+              onMouseLeave={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.4)"; 
+                e.target.style.transform = "translateY(0)"; 
+                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; 
+              }}
+            >
+              Đặt lịch tư vấn {isLoggedIn ? "▼" : ""}
+            </a>
+            
+            {/* Dropdown menu */}
+            {isLoggedIn && showConsultationDropdown && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.1)",
+                minWidth: "200px",
+                zIndex: 1000,
+                marginTop: 4
+              }}>
+                <a
+                  href="/consultation-booking"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    borderBottom: "1px solid rgba(0,0,0,0.1)",
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowConsultationDropdown(false);
+                    window.location.href = "/consultation-booking";
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  📅 Đặt lịch tư vấn mới
+                </a>
+                <a
+                  href="/my-appointments"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowConsultationDropdown(false);
+                    window.location.href = "/my-appointments";
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  📖 Xem lịch của tôi
+                </a>
+              </div>
+            )}
+          </div>
           <a
             href={isLoggedIn ? "/test-booking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
@@ -554,15 +678,120 @@ const App = () => {
           >
             Đặt lịch xét nghiệm
           </a>
-          <a
-            href={isLoggedIn ? "/ask-question" : "/login"}
-            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/ask-question' : '/login'; }}
-            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
-            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
+          <div 
+            className="question-dropdown"
+            style={{ 
+              position: "relative",
+              display: "inline-block"
+            }}
           >
-            Đặt câu hỏi cho tư vấn viên
-          </a>
+            <a
+              href="#"
+              style={{ 
+                color: "#fff", 
+                fontWeight: 600, 
+                fontSize: 16, 
+                textDecoration: "none", 
+                background: "rgba(255,255,255,0.4)", 
+                padding: "12px 32px", 
+                borderRadius: 8, 
+                border: "1px solid rgba(255,255,255,0.6)", 
+                transition: "all 0.3s ease", 
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)", 
+                minWidth: "140px", 
+                textAlign: "center",
+                display: "block"
+              }}
+              onClick={(e) => { 
+                e.preventDefault(); 
+                if (!isLoggedIn) {
+                  window.location.href = '/login';
+                } else {
+                  setShowQuestionDropdown(!showQuestionDropdown);
+                }
+              }}
+              onMouseEnter={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.5)"; 
+                e.target.style.transform = "translateY(-2px)"; 
+                e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; 
+              }}
+              onMouseLeave={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.4)"; 
+                e.target.style.transform = "translateY(0)"; 
+                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; 
+              }}
+            >
+              Đặt câu hỏi cho tư vấn viên {isLoggedIn ? "▼" : ""}
+            </a>
+            
+            {/* Dropdown menu */}
+            {isLoggedIn && showQuestionDropdown && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                background: "#fff",
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.1)",
+                minWidth: "220px",
+                zIndex: 1000,
+                marginTop: 4
+              }}>
+                <a
+                  href="/ask-question"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    borderBottom: "1px solid rgba(0,0,0,0.1)",
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowQuestionDropdown(false);
+                    window.location.href = "/ask-question";
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  ❓ Đặt câu hỏi mới
+                </a>
+                <a
+                  href="/user-questions"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowQuestionDropdown(false);
+                    window.location.href = "/user-questions";
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  📋 Xem câu hỏi của tôi
+                </a>
+              </div>
+            )}
+          </div>
         </nav>
       </header>
 

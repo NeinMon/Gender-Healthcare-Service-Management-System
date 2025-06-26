@@ -443,7 +443,9 @@ const AskQuestion = () => {
                     {formData.question.length}/5000 ký tự
                   </small>
                 </div>
-              </div>              <div style={{ marginTop: "35px", textAlign: "center" }}>
+              </div>
+
+              <div style={{ marginTop: "35px", textAlign: "center" }}>
                 <button
                   type="submit"
                   disabled={submitting || !formData.question || formData.question.length < 10 || !formData.questionCategory || !formData.fullName}
@@ -526,6 +528,9 @@ const AskQuestion = () => {
         }}>
           <h3 style={{ color: "#f57c00", marginBottom: "15px", fontSize: "20px" }}>Thông tin hữu ích:</h3>
           <ul style={{ color: "#e65100", paddingLeft: "25px", fontSize: "16px" }}>
+            <li style={{ marginBottom: "10px" }}>
+              <span>Chi phí dịch vụ: <strong>Miễn phí</strong></span>
+            </li>
             <li style={{ marginBottom: "10px" }}>Câu hỏi của bạn sẽ được trả lời trong vòng 24-48 giờ làm việc.</li>
             <li style={{ marginBottom: "10px" }}>Thông tin cá nhân của bạn sẽ được bảo mật và chỉ được sử dụng cho mục đích tư vấn.</li>
             <li style={{ marginBottom: "10px" }}>Vui lòng cung cấp đầy đủ thông tin liên quan đến câu hỏi để chuyên gia có thể tư vấn tốt nhất.</li>

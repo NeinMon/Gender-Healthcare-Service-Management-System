@@ -72,6 +72,11 @@ public class UserService {
             existingUser.setDob(updatedUser.getDob());
         }
         
+        // Cập nhật trường specification nếu người dùng là CONSULTANT
+        if (existingUser.getRole() == Role.CONSULTANT && updatedUser.getSpecification() != null) {
+            existingUser.setSpecification(updatedUser.getSpecification());
+        }
+        
         // Don't allow changing email or role through this method
         
         return userRepository.save(existingUser);

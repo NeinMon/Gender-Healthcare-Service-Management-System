@@ -407,7 +407,7 @@ const App = () => {
             letterSpacing: 1
           }}
         >
-          Chăm sóc sức khỏe giới tính
+          Chăm Sóc Sức Khỏe Giới Tính
         </h1>        <nav
           style={{
             display: "flex",

@@ -67,4 +67,25 @@ public class    UserAPI {
         return ResponseEntity.ok(consultants);
     }
 
+    @PutMapping("/consultant/{consultantId}/specification")
+    public ResponseEntity<?> updateConsultantSpecification(
+            @org.springframework.web.bind.annotation.PathVariable Integer consultantId,
+            @RequestBody String specification) {
+        try {
+            Users consultant = userService.getUserById(consultantId);
+            
+            if (consultant.getRole() != com.genderhealthcare.demo.entity.Role.CONSULTANT) {
+                return ResponseEntity.badRequest().body("Người dùng này không phải là consultant");
+            }
+            
+            Users updatedConsultant = new Users();
+            updatedConsultant.setSpecification(specification);
+            
+            Users result = userService.updateUser(consultantId, updatedConsultant);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Không thể cập nhật chuyên môn: " + e.getMessage());
+        }
+    }
+
 }

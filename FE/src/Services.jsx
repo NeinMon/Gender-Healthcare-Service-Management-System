@@ -175,7 +175,7 @@ const Services = () => {
               width: "100%"
             }}
           >
-            Dịch vụ Chăm sóc Sức khỏe Giới Tính
+            Dịch Vụ Chăm Sóc Sức Khỏe Giới Tính
           </h1>
         </div>
       </header>

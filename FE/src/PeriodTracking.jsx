@@ -898,7 +898,7 @@ const PeriodTracking = () => {
         color: "#0891b2",
         width: "100%"
       }}>
-        <p>© 2025 Hệ thống Chăm sóc Sức khỏe Phụ nữ. Mọi quyền được bảo lưu.</p>
+        <p>© 2025 Hệ thống Chăm Sóc Sức Khỏe Giới TÍnh.</p>
         <p style={{ marginTop: "10px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
       </footer>
     </div>

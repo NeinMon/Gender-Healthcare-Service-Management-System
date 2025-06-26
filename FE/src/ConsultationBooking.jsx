@@ -35,8 +35,21 @@ const ConsultationBooking = () => {
     };
     fetchConsultants();
 
-    // Lấy thông tin user
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+    // Lấy thông tin user từ localStorage dựa vào loggedInUser
+    let userId = 1; // Giá trị mặc định
+    const userJson = localStorage.getItem('loggedInUser');
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user && user.userID) {
+          userId = user.userID;
+        }
+      } catch (error) {
+        console.error("Lỗi khi đọc thông tin người dùng:", error);
+      }
+    }
+    
     const fetchUserInfo = async () => {
       try {
         const res = await fetch(`http://localhost:8080/api/users/${userId}`);
@@ -69,8 +82,20 @@ const ConsultationBooking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Lấy userId từ localStorage/sessionStorage (giả sử đã đăng nhập)
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId') || 1;
+    // Lấy userId từ localStorage (đảm bảo phù hợp với cách lưu trong MyAppointments.jsx)
+    const userJson = localStorage.getItem('loggedInUser');
+    let userId = 1; // Giá trị mặc định nếu không tìm thấy
+    
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user && user.userID) {
+          userId = user.userID;
+        }
+      } catch (error) {
+        console.error("Lỗi khi đọc thông tin người dùng:", error);
+      }
+    }
 
     // Gộp ngày và giờ thành appointmentDate với định dạng yyyy-MM-dd HH:mm:ss
     let appointmentDate = '';
@@ -95,7 +120,8 @@ const ConsultationBooking = () => {
       userId: Number(userId),
       consultantId: Number(formData.consultantId),
       content: formData.symptoms,
-      appointmentDate: appointmentDate
+      appointmentDate: appointmentDate,
+      status: "Chờ xác nhận" // Mặc định status cho booking mới là "Chờ xác nhận"
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
@@ -301,7 +327,7 @@ const ConsultationBooking = () => {
                         key={consultant.userID ?? idx}
                         value={consultant.userID ?? ''}
                       >
-                        {consultant.fullName || consultant.name} {consultant.specialty ? `- ${consultant.specialty}` : ""}
+                        {consultant.fullName || consultant.name} {consultant.specification ? `- ${consultant.specification}` : ""}
                       </option>
                     ))}
                   </select>
@@ -309,13 +335,14 @@ const ConsultationBooking = () => {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", marginTop: "25px", width: "100%" }}>
-                <label style={labelStyle}>Triệu chứng/Mô tả vấn đề</label>
+                <label style={labelStyle}>Triệu chứng/Mô tả vấn đề *</label>
                 <textarea
                   name="symptoms"
                   value={formData.symptoms}
                   onChange={handleChange}
+                  required
                   style={{ ...inputStyle, height: "120px" }}
-                  placeholder="Mô tả chi tiết triệu chứng hoặc vấn đề bạn muốn tư vấn (nếu có)"
+                  placeholder="Mô tả chi tiết triệu chứng hoặc vấn đề bạn muốn tư vấn"
                 ></textarea>
               </div>
 
@@ -364,6 +391,7 @@ const ConsultationBooking = () => {
                 color: "#43a047"
               }}>
                 Đặt lịch thành công!
+<<<<<<< HEAD
               </h2>              <p style={{ 
                 fontSize: "16px", 
                 color: "#666", 
@@ -388,13 +416,36 @@ const ConsultationBooking = () => {
                   fontWeight: "600",
                   cursor: "pointer",
                   marginTop: "20px",
+=======
+              </h2>
+              
+              
+              <Link 
+                to="/my-appointments"
+                style={{
+                  display: "inline-block",
+                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                  color: "#fff",
+                  textDecoration: "none",
+                  padding: "12px 30px",
+                  borderRadius: "30px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  marginTop: "20px",
+                  boxShadow: "0 4px 10px rgba(8, 145, 178, 0.2)",
+>>>>>>> b1cc4d83b2c1471e8ddbdbacb717139e369571eb
                   transition: "all 0.3s ease"
                 }}
                 onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
                 onMouseOut={(e) => e.target.style.transform = "scale(1)"}
               >
+<<<<<<< HEAD
                 🎥 Bắt đầu tư vấn video
               </button>
+=======
+                Xem lịch hẹn của tôi
+              </Link>
+>>>>>>> b1cc4d83b2c1471e8ddbdbacb717139e369571eb
             </div>
           </div>
         )}
@@ -411,9 +462,8 @@ const ConsultationBooking = () => {
           <h3 style={{ color: "#0891b2", marginBottom: "10px" }}>Lưu ý quan trọng:</h3>
           <ul style={{ color: "#0891b2", paddingLeft: "20px" }}>
             <li style={{ marginBottom: "8px" }}>Vui lòng đến trước giờ hẹn 15 phút để hoàn thành thủ tục.</li>
-            <li style={{ marginBottom: "8px" }}>Mang theo CMND/CCCD và các giấy tờ y tế liên quan (nếu có).</li>
+            <li style={{ marginBottom: "8px" }}>Mang theo CMND/CCCD và các giấy tờ y tế liên quan.</li>
             <li style={{ marginBottom: "8px" }}>Chuẩn bị danh sách các triệu chứng và câu hỏi muốn tư vấn.</li>
-            {/* <li style={{ marginBottom: "8px" }}>Chúng tôi sẽ xác nhận lịch hẹn qua điện thoại trong vòng 24 giờ.</li> */}
           </ul>
         </div>
       </main>
@@ -427,7 +477,7 @@ const ConsultationBooking = () => {
         color: "#0891b2",
         width: "100%"
       }}>
-        <p>© 2025 Hệ thống Chăm sóc Sức khỏe Phụ nữ. Mọi quyền được bảo lưu.</p>
+        <p>© 2025 Hệ thống Chăm sóc Sức khỏe Giới Tính.</p>
         <p style={{ marginTop: "10px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
       </footer>
 

@@ -90,10 +90,6 @@ FE/
 ├── src/
 │   ├── components/                 # Reusable components
 │   │   └── CustomerAvatar.jsx     # Avatar component
-│   ├── data/                      # Mock data
-│   │   ├── chatMessages.js        # Dữ liệu tin nhắn mẫu
-│   │   ├── consultations.js       # Dữ liệu tư vấn
-│   │   └── questions.js           # Câu hỏi thường gặp
 │   ├── App.jsx                    # Homepage với form đăng ký/đăng nhập
 │   ├── Services.jsx               # Trang dịch vụ chính
 │   ├── Login.jsx                  # Trang đăng nhập

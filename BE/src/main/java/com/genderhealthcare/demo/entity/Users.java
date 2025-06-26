@@ -52,6 +52,7 @@ public class Users {
     private String password;
 
     @NotBlank(message = "Gender không được để trống")
+    @Column(name = "gender", columnDefinition = "NVARCHAR(50)")
     private String gender;
 
     @Past(message = "Ngày sinh phải là ngày trong quá khứ")
@@ -67,6 +68,10 @@ public class Users {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
+    
+    // Thuộc tính chỉ áp dụng cho người dùng có vai trò consultant
+    @Column(name = "specification", columnDefinition = "NVARCHAR(255)")
+    private String specification; // Lưu chuyên môn của consultant
     
     @PrePersist
     protected void onCreate() {

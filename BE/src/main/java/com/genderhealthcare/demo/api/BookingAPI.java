@@ -41,12 +41,24 @@ public class BookingAPI {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateBookingStatus(@PathVariable("id") Integer id) {
+    public ResponseEntity<?> updateBookingStatus(
+            @PathVariable("id") Integer id,
+            @RequestParam(value = "status", required = true) String status) {
+
         Booking booking = bookingService.getBookingById(id);
         if (booking == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
         }
-        booking.setStatus("Đã xác nhận");
+
+        // Validate status value
+        if (!status.equals("Đã duyệt") &&
+            !status.equals("Đã kết thúc") &&
+            !status.equals("Không được duyệt")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Invalid status. Valid values: 'Đã duyệt', 'Đã kết thúc', 'Không được duyệt'");
+        }
+
+        booking.setStatus(status);
         Booking updated = bookingService.createBooking(booking);
         return ResponseEntity.ok(updated);
     }

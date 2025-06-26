@@ -82,7 +82,7 @@ const Login = () => {
           } else if (role === 'STAFF') {
             navigate('/staff-test-bookings');
           } else {
-            navigate('/services');
+            navigate('/');
           }
         }
       }, 2000);

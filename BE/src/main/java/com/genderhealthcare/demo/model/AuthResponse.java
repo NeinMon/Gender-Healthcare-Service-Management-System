@@ -23,7 +23,7 @@ public class AuthResponse {
         // Xác định URL chuyển hướng dựa trên role
         String redirectUrl;
         if (role == Role.CUSTOMER) {
-            redirectUrl = "/services";  // URL cho customer
+            redirectUrl = "/";  // URL cho customer
         } else if (role == Role.CONSULTANT) {
             redirectUrl = "/consultant-interface"; // URL cho consultant
         } else if (role == Role.MANAGER) {

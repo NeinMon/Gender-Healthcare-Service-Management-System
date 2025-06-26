@@ -19,30 +19,6 @@ const PeriodTracking = () => {
   const [error, setError] = useState('');
   const [hasExistingCycle, setHasExistingCycle] = useState(false);
 
-  // Hàm test kết nối với backend
-  const testBackendConnection = async () => {
-    try {
-      console.log('Testing backend connection...');
-      const response = await fetch('http://localhost:8080/api/menstrual-cycles/test', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        console.log('Backend connection successful');
-        return true;
-      } else {
-        console.log('Backend responded with status:', response.status);
-        return false;
-      }
-    } catch (error) {
-      console.error('Backend connection failed:', error);
-      return false;
-    }
-  };
-
   // Lấy userid từ localStorage
   const userid = localStorage.getItem('userId');
   // Hàm kiểm tra xem user đã có chu kỳ hay chưa
@@ -438,20 +414,7 @@ const PeriodTracking = () => {
         marginTop: "-20px",
         boxSizing: "border-box"
       }}>
-        <div style={{ marginBottom: "20px" }}>
-          <Link 
-            to="/services" 
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#0891b2",
-              textDecoration: "none",
-              fontWeight: 500
-            }}
-          >
-            ← Quay lại trang dịch vụ
-          </Link>
-        </div>        {!userid ? (
+        {!userid ? (
           <div style={{ textAlign: "center", padding: "50px", fontSize: "18px", color: "#dc2626" }}>
             Vui lòng đăng nhập để sử dụng tính năng theo dõi chu kỳ.
           </div>
@@ -724,7 +687,7 @@ const PeriodTracking = () => {
                 � Cập nhật thông tin
               </button>
               <Link
-                to="/services"
+                to="/"
                 style={{
                   display: "inline-block",
                   background: "linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)",
@@ -748,7 +711,7 @@ const PeriodTracking = () => {
                   e.target.style.boxShadow = "0 4px 15px rgba(107, 114, 128, 0.3)";
                 }}
               >
-                ← Quay lại dịch vụ
+                ← Quay về trang chủ
               </Link>
             </div>
           </div>        ) : (
@@ -796,28 +759,6 @@ const PeriodTracking = () => {
                 margin: "0 auto 20px auto"
               }}>
                 <p style={{ margin: 0, fontSize: "14px", fontWeight: "500" }}>{error}</p>
-                <button
-                  onClick={async () => {
-                    const isConnected = await testBackendConnection();
-                    if (isConnected) {
-                      alert('Kết nối backend thành công! Vui lòng thử lại.');
-                    } else {
-                      alert('Không thể kết nối đến backend. Vui lòng kiểm tra:\n1. Server có đang chạy tại localhost:8080?\n2. Kết nối mạng\n3. CORS configuration');
-                    }
-                  }}
-                  style={{
-                    marginTop: "10px",
-                    padding: "8px 16px",
-                    background: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "12px"
-                  }}
-                >
-                  Test kết nối Backend
-                </button>
               </div>
             )}
             

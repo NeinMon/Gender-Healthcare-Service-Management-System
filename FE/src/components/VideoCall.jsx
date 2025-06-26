@@ -249,6 +249,17 @@ const VideoCall = ({ channelName, onLeave, userRole = 'audience' }) => {
 
   const leaveChannel = async () => {
     try {
+      // Luôn đánh dấu kết thúc cuộc gọi nếu là host (tư vấn viên) trước khi thực hiện các thao tác khác
+      // để đảm bảo callback được gọi ngay cả khi có lỗi
+      const shouldEndCall = userRole === 'host';
+      console.log(`🏁 [TRƯỚC] Tự động cập nhật trạng thái cuộc gọi: ${shouldEndCall ? 'Đã kết thúc' : 'Không thay đổi'}`);
+      
+      // Gọi callback ngay lập tức để cập nhật trạng thái cuộc gọi
+      if (shouldEndCall && typeof onLeave === 'function') {
+        console.log(`📱 Gọi callback onLeave(true) để cập nhật trạng thái "Đã kết thúc"`);
+        onLeave(true);
+      }
+      
       console.log("🚪 Đang rời khỏi kênh...");
       
       // Release local tracks
@@ -268,16 +279,18 @@ const VideoCall = ({ channelName, onLeave, userRole = 'audience' }) => {
       setLocalVideoTrack(null);
       setIsJoined(false);
       
-      // Call onLeave callback if provided
-      if (typeof onLeave === 'function') {
-        onLeave();
+      // Gọi lại callback onLeave cho người dùng không phải host
+      if (!shouldEndCall && typeof onLeave === 'function') {
+        console.log(`📱 Gọi callback onLeave(false) cho người dùng không phải tư vấn viên`);
+        onLeave(false);
       }
+      
     } catch (err) {
       console.error(`❌ Lỗi khi rời khỏi kênh: ${err}`);
       
-      // Still call onLeave even if there's an error
-      if (typeof onLeave === 'function') {
-        onLeave();
+      // Vẫn gọi onLeave ngay cả khi có lỗi nếu chưa được gọi trước đó
+      if (typeof onLeave === 'function' && userRole !== 'host') {
+        onLeave(false);
       }
     }
   };

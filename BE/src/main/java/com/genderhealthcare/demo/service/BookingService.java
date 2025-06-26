@@ -15,7 +15,7 @@ public class BookingService {
     public Booking createBooking(Booking booking) {
         // Đặt trạng thái mặc định nếu chưa có
         if (booking.getStatus() == null || booking.getStatus().isBlank()) {
-            booking.setStatus("Chờ xác nhận");
+            booking.setStatus("Đang chờ duyệt");
         }
         // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
         return bookingRepository.save(booking);

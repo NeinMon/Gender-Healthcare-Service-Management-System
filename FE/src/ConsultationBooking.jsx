@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import VideoCall from './components/VideoCall';
 
 const ConsultationBooking = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +14,6 @@ const ConsultationBooking = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
-  const [showVideoCall, setShowVideoCall] = useState(false);
-  const [videoCallData, setVideoCallData] = useState(null);
 
   useEffect(() => {
     // Gọi API lấy danh sách tư vấn viên
@@ -125,22 +122,16 @@ const ConsultationBooking = () => {
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
-    console.log("Payload gửi booking:", payload);    try {
+    console.log("Payload gửi booking:", payload);
+
+    try {
       const response = await fetch("http://localhost:8080/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (response.ok) {
-        const bookingResult = await response.json();
         setIsSubmitted(true);
-        
-        // Lưu thông tin để có thể tạo video call sau
-        setVideoCallData({
-          bookingId: bookingResult.id || Date.now(),
-          channelName: `consultation_${bookingResult.id || Date.now()}`,
-          consultantId: formData.consultantId
-        });
       } else {
         const errorText = await response.text();
         alert("Đặt lịch thất bại. Lý do: " + errorText);
@@ -151,39 +142,8 @@ const ConsultationBooking = () => {
     }
   };
 
-  const startVideoCall = async () => {
-    if (!videoCallData) return;
-    
-    try {
-      // Tạo token giả lập (trong thực tế sẽ gọi API backend)
-      // Thay bằng token thực từ backend API
-      const demoToken = "007eJxTYCi7+Oc1XfV3jlMLOpzfGD+0lffGfDiQwCn0rJm0LuQBhRoFhpRkW4u0ZBPLlMRki7Q045TkJMuUtCRLM5M0c7PkxOTkVCubfW8k0hiZGJkZmRiYQb0Oiim8Cz8kPyMjAwsDAz8jkKbYtCe/7yRtYGBggGKPFpJnM/Dt//n1P9f1U1hm/2+fFrNfvRWJu3X9zcgGBgYAM+MdOA=="; // Token demo
-      
-      setVideoCallData(prev => ({ 
-        ...prev, 
-        token: demoToken 
-      }));
-      setShowVideoCall(true);
-    } catch (error) {
-      alert("Không thể khởi tạo cuộc gọi video");
-    }
-  };
-
-  const endVideoCall = () => {
-    setShowVideoCall(false);
-  };
   return (
     <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>
-      {/* Hiển thị Video Call nếu được kích hoạt */}
-      {showVideoCall && videoCallData && (
-        <VideoCall
-          channelName={videoCallData.channelName}
-          token={videoCallData.token}
-          onLeave={endVideoCall}
-          userRole="audience"
-        />
-      )}
-
       {/* Header */}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
@@ -391,32 +351,6 @@ const ConsultationBooking = () => {
                 color: "#43a047"
               }}>
                 Đặt lịch thành công!
-<<<<<<< HEAD
-              </h2>              <p style={{ 
-                fontSize: "16px", 
-                color: "#666", 
-                marginBottom: "20px",
-                lineHeight: "1.6"
-              }}>
-                Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ để xác nhận lịch hẹn.
-                <br />
-                Vui lòng kiểm tra điện thoại và email thường xuyên.
-              </p>
-              
-              {/* Nút bắt đầu tư vấn video */}
-              <button
-                onClick={startVideoCall}
-                style={{
-                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                  color: "#fff",
-                  border: "none",
-                  padding: "14px 35px",
-                  borderRadius: "30px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  marginTop: "20px",
-=======
               </h2>
               
               
@@ -433,19 +367,13 @@ const ConsultationBooking = () => {
                   fontWeight: "600",
                   marginTop: "20px",
                   boxShadow: "0 4px 10px rgba(8, 145, 178, 0.2)",
->>>>>>> b1cc4d83b2c1471e8ddbdbacb717139e369571eb
                   transition: "all 0.3s ease"
                 }}
                 onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
                 onMouseOut={(e) => e.target.style.transform = "scale(1)"}
               >
-<<<<<<< HEAD
-                🎥 Bắt đầu tư vấn video
-              </button>
-=======
                 Xem lịch hẹn của tôi
               </Link>
->>>>>>> b1cc4d83b2c1471e8ddbdbacb717139e369571eb
             </div>
           </div>
         )}
@@ -480,15 +408,6 @@ const ConsultationBooking = () => {
         <p>© 2025 Hệ thống Chăm sóc Sức khỏe Giới Tính.</p>
         <p style={{ marginTop: "10px" }}>Hotline: 1900-xxxx | Email: support@healthcare.com</p>
       </footer>
-
-      {/* Video Call Component */}
-      {showVideoCall && videoCallData && (
-        <VideoCall
-          channelName={videoCallData.channelName}
-          token={videoCallData.token}
-          onEndCall={endVideoCall}
-        />
-      )}
     </div>
   );
 };

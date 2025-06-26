@@ -81,7 +81,7 @@ const Login = () => {
           } else if (role === 'MANAGER') {
             navigate('/manager');
           } else {
-            navigate('/services');
+            navigate('/');
           }
         }
       }, 2000);

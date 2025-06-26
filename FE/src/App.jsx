@@ -14,7 +14,8 @@ const App = () => {
     password: "",
     confirmPassword: ""
   });
-  const [showLogin, setShowLogin] = useState(false);  const [loginData, setLoginData] = useState({
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginData, setLoginData] = useState({
     email: "",
     password: ""
   });
@@ -27,6 +28,36 @@ const App = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleSections, setVisibleSections] = useState(new Set());
   const [isContentLoading, setIsContentLoading] = useState(true);
+
+  // Thêm state để theo dõi trạng thái đăng nhập
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Kiểm tra trạng thái đăng nhập khi component mount
+  React.useEffect(() => {
+    const loggedInUser = localStorage.getItem('loggedInUser');
+    if (loggedInUser) {
+      try {
+        const userData = JSON.parse(loggedInUser);
+        setCurrentUser(userData);
+        setIsLoggedIn(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('loggedInUser');
+      }
+    }
+  }, []);
+
+  // Hàm đăng xuất
+  const handleLogout = () => {
+    localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+    localStorage.removeItem('fullName');
+    localStorage.removeItem('role');
+    setCurrentUser(null);
+    setIsLoggedIn(false);
+  };
 
   // Animated counter for statistics
   const animateCounter = (target, current, setter, increment) => {
@@ -142,7 +173,28 @@ const App = () => {
       alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
       return;
     }
-    alert("Đăng nhập thành công!");    setShowLogin(false);
+    
+    // Simulate login success và cập nhật state
+    const userData = {
+      userID: 1,
+      fullName: "Người dùng",
+      email: loginData.email,
+      role: "USER"
+    };
+    
+    // Lưu vào localStorage
+    localStorage.setItem('loggedInUser', JSON.stringify(userData));
+    localStorage.setItem('userId', userData.userID);
+    localStorage.setItem('email', userData.email);
+    localStorage.setItem('fullName', userData.fullName);
+    localStorage.setItem('role', userData.role);
+    
+    // Cập nhật state
+    setCurrentUser(userData);
+    setIsLoggedIn(true);
+    
+    alert("Đăng nhập thành công!");
+    setShowLogin(false);
     setLoginData({ email: "", password: "" });
   };
 
@@ -361,34 +413,67 @@ const App = () => {
           gap: 10,
           zIndex: 2
         }}>
-          <button
-            style={{
-              background: "#fff",
-              color: "#0891b2",
-              border: "none",
-              borderRadius: 6,
-              padding: "8px 20px",
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-            onClick={() => window.location.href = "/register"}
-          >
-            Đăng ký
-          </button>
-          <button
-            style={{
-              background: "#0891b2",
-              color: "#fff",
-              border: "2px solid #fff",
-              borderRadius: 6,
-              padding: "8px 20px",
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-            onClick={() => window.location.href = "/login"}
-          >
-            Đăng nhập
-          </button>
+          {isLoggedIn ? (
+            // Hiển thị khi đã đăng nhập
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: "rgba(255,255,255,0.9)",
+              borderRadius: 8,
+              padding: "8px 16px"
+            }}>
+              <span style={{ color: "#0891b2", fontWeight: 600 }}>
+                Xin chào, {currentUser?.fullName}
+              </span>
+              <button
+                style={{
+                  background: "#0891b2",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "8px 16px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+                onClick={handleLogout}
+              >
+                Đăng xuất
+              </button>
+            </div>
+          ) : (
+            // Hiển thị khi chưa đăng nhập
+            <>
+              <button
+                style={{
+                  background: "#fff",
+                  color: "#0891b2",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "8px 20px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+                onClick={() => window.location.href = "/register"}
+              >
+                Đăng ký
+              </button>
+              <button
+                style={{
+                  background: "#0891b2",
+                  color: "#fff",
+                  border: "2px solid #fff",
+                  borderRadius: 6,
+                  padding: "8px 20px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+                onClick={() => window.location.href = "/login"}
+              >
+                Đăng nhập
+              </button>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", paddingTop: 18 }}>
           <img
@@ -440,36 +525,36 @@ const App = () => {
             Giới thiệu
           </a>
           <a
-            href="/login"
+            href={isLoggedIn ? "/period-tracking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/period-tracking' : '/login'; }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
             Theo dõi chu kỳ kinh nguyệt
           </a>
           <a
-            href="/login"
+            href={isLoggedIn ? "/consultation-booking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/consultation-booking' : '/login'; }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
             Đặt lịch tư vấn
           </a>
           <a
-            href="/login"
+            href={isLoggedIn ? "/test-booking" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/test-booking' : '/login'; }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
             Đặt lịch xét nghiệm
           </a>
           <a
-            href="/login"
+            href={isLoggedIn ? "/ask-question" : "/login"}
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); window.location.href = '/login'; }}
+            onClick={e => { e.preventDefault(); window.location.href = isLoggedIn ? '/ask-question' : '/login'; }}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
@@ -929,77 +1014,7 @@ const App = () => {
       </section>
 
       <main style={{ padding: "40px 20px" }}>
-        <section id="gioi-thieu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('gioi-thieu') ? 'visible' : ''}`} style={{
-          background: "#e0f2fe",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(8,145,178,0.07)",
-          padding: 24,
-          margin: "32px 0"        }}>
-          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-            <span role="img" aria-label="health">🏥</span> Giới Thiệu Dịch Vụ
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ 
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              alignItems: "center"
-            }}>
-              <img
-                src="/Doctor.png"
-                alt="Chăm sóc sức khỏe chuyên nghiệp"
-                style={{
-                  width: 240,
-                  height: 240,
-                  objectFit: "cover",
-                  borderRadius: 12,
-                  boxShadow: "0 4px 12px rgba(17,153,142,0.15)"
-                }}
-              />
-              <div style={{
-                display: "flex",
-                gap: 12,
-                flexWrap: "wrap",
-                justifyContent: "center"
-              }}>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 12,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.1)",
-                  textAlign: "center",
-                  minWidth: 100
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 4 }}>🩺</div>
-                  <div style={{ fontSize: 12, color: "#0891b2", fontWeight: 600 }}>Khám tổng quát</div>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 12,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.1)",
-                  textAlign: "center",
-                  minWidth: 100
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 4 }}>🧪</div>
-                  <div style={{ fontSize: 12, color: "#0891b2", fontWeight: 600 }}>Xét nghiệm</div>
-                </div>
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <p style={{ fontSize: 17, marginBottom: 16 }}>
-                Chúng tôi cung cấp dịch vụ chăm sóc sức khỏe giới tính toàn diện, chuyên nghiệp và bảo mật cho mọi đối tượng.
-              </p>
-              <ul style={{ fontSize: 16, color: "#0891b2", margin: 0, paddingLeft: 24 }}>
-                <li>🔸 Theo dõi chu kỳ kinh nguyệt thông minh</li>
-                <li>🔸 Xét nghiệm STIs chính xác và nhanh chóng</li>
-                <li>🔸 Tư vấn sức khỏe sinh sản chuyên sâu</li>
-                <li>🔸 Đội ngũ y bác sĩ giàu kinh nghiệm</li>
-                <li>🔸 Bảo mật thông tin tuyệt đối</li>
-              </ul>
-            </div>
-          </div>        </section>        <section id="dich-vu"data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
+        <section id="dich-vu"data-animate="fade-in" className={`fade-in-section ${visibleSections.has('dich-vu') ? 'visible' : ''}`} style={{
           background: "#e0f2fe",
           borderRadius: 12,
           boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
@@ -1072,449 +1087,475 @@ const App = () => {
             </div>
           </div>
         </section>
-        {/* Testimonials Section */}
-        <section id="testimonials" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('testimonials') ? 'visible' : ''}`} style={{
-          background: "#f8fffe",
+
+        {/* Giới Thiệu Dịch Vụ Section */}
+        <section id="gioi-thieu" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('gioi-thieu') ? 'visible' : ''}`} style={{
+          background: "#fff",
           borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
-          padding: 32,
-          margin: "32px 0",
+          boxShadow: "0 4px 16px rgba(17,153,142,0.1)",
+          padding: 40,
+          margin: "40px 0",
           position: "relative",
           overflow: "hidden"
         }}>
-          {/* Additional floating particles for testimonials section */}
-          {showParticles && (
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none", zIndex: 1 }}>
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={`testimonial-particle-${i}`}
-                  style={{
-                    position: "absolute",
-                    right: `${10 + i * 25}%`,
-                    top: `${20 + i * 20}%`,
-                    width: `${5 + i * 3}px`,
-                    height: `${5 + i * 3}px`,
-                    background: `rgba(17,153,142,${0.15 + i * 0.1})`,
-                    borderRadius: "50%",
-                    animation: `particleFloat ${3.5 + i}s ease-in-out infinite`,
-                    animationDelay: `${i * 1.2}s`
-                  }}
-                />
-              ))}
+          <div style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 200,
+            height: 200,
+            background: "linear-gradient(135deg, rgba(17,153,142,0.1) 0%, rgba(56,239,125,0.05) 100%)",
+            borderRadius: "50%",
+            transform: "translate(50%, -50%)",
+            zIndex: 0
+          }}></div>
+          
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <h2 style={{ 
+              color: "#0891b2", 
+              marginTop: 0, 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 12, 
+              justifyContent: "center", 
+              marginBottom: 30,
+              fontSize: 28,
+              fontWeight: 700
+            }}>
+              <span role="img" aria-label="medical">🏥</span> Giới Thiệu Dịch Vụ
+            </h2>
+            
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", 
+              gap: 30, 
+              marginBottom: 30 
+            }}>
+              <div className="slide-in-left" style={{
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+                borderRadius: 16,
+                padding: 24,
+                border: "2px solid rgba(17,153,142,0.1)",
+                transition: "all 0.3s ease"
+              }}>
+                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>🔬</div>
+                <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
+                  Xét Nghiệm Chuyên Sâu
+                </h3>
+                <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.6, textAlign: "center" }}>
+                  Cung cấp các dịch vụ xét nghiệm toàn diện về sức khỏe sinh sản và giới tính. 
+                  Từ xét nghiệm STI cơ bản đến các gói xét nghiệm chuyên sâu với công nghệ hiện đại.
+                </p>
+                <div style={{ 
+                  marginTop: 16, 
+                  padding: 16, 
+                  background: "rgba(17,153,142,0.05)", 
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: "#0891b2"
+                }}>
+                  ✓ Kết quả chính xác 99.9%<br/>
+                  ✓ Bảo mật thông tin tuyệt đối<br/>
+                  ✓ Trả kết quả nhanh trong 24-48h
+                </div>
+              </div>
+
+              <div className="slide-in-right" style={{
+                background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                borderRadius: 16,
+                padding: 24,
+                border: "2px solid rgba(17,153,142,0.1)",
+                transition: "all 0.3s ease"
+              }}>
+                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>👩‍⚕️</div>
+                <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
+                  Tư Vấn Chuyên Nghiệp
+                </h3>
+                <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.6, textAlign: "center" }}>
+                  Đội ngũ chuyên gia y tế có kinh nghiệm nhiều năm trong lĩnh vực sức khỏe sinh sản. 
+                  Tư vấn riêng tư, tận tâm và chu đáo cho từng khách hàng.
+                </p>
+                <div style={{ 
+                  marginTop: 16, 
+                  padding: 16, 
+                  background: "rgba(17,153,142,0.05)", 
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: "#0891b2"
+                }}>
+                  ✓ Tư vấn trực tuyến 24/7<br/>
+                  ✓ Đội ngũ bác sĩ chuyên khoa<br/>
+                  ✓ Hỗ trợ tâm lý chuyên nghiệp
+                </div>
+              </div>
+
+              <div className="scale-in" style={{
+                background: "linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)",
+                borderRadius: 16,
+                padding: 24,
+                border: "2px solid rgba(17,153,142,0.1)",
+                transition: "all 0.3s ease",
+                gridColumn: "span 2"
+              }}>
+                <div style={{ fontSize: 56, textAlign: "center", marginBottom: 16 }}>🛡️</div>
+                <h3 style={{ color: "#0891b2", textAlign: "center", marginBottom: 16, fontSize: 20 }}>
+                  Cam Kết Chất Lượng & Bảo Mật
+                </h3>
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
+                  gap: 20,
+                  marginTop: 20
+                }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🏆</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2", marginBottom: 4 }}>Chứng Nhận ISO</div>
+                    <div style={{ fontSize: 14, color: "#475569" }}>Đạt chuẩn quốc tế về chất lượng dịch vụ y tế</div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2", marginBottom: 4 }}>Bảo Mật Tuyệt Đối</div>
+                    <div style={{ fontSize: 14, color: "#475569" }}>Mã hóa dữ liệu theo chuẩn quốc tế</div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>⚡</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2", marginBottom: 4 }}>Nhanh Chóng</div>
+                    <div style={{ fontSize: 14, color: "#475569" }}>Phục vụ 24/7, kết quả trong ngày</div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>💝</div>
+                    <div style={{ fontWeight: 600, color: "#0891b2", marginBottom: 4 }}>Tận Tâm</div>
+                    <div style={{ fontSize: 14, color: "#475569" }}>Đặt sức khỏe khách hàng lên hàng đầu</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        </section>
+
+        {/* Chuyên mục Blog Section */}
+        <section data-animate="fade-in" className={`fade-in-section ${visibleSections.has('blog') ? 'visible' : ''}`} style={{
+          background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+          borderRadius: 12,
+          boxShadow: "0 4px 16px rgba(17,153,142,0.1)",
+          padding: 40,
+          margin: "40px 0",
+          position: "relative"
+        }}>
           <h2 style={{ 
             color: "#0891b2", 
             marginTop: 0, 
             display: "flex", 
             alignItems: "center", 
-            gap: 8, 
+            gap: 12, 
             justifyContent: "center", 
-            marginBottom: 32 
+            marginBottom: 30,
+            fontSize: 28,
+            fontWeight: 700
           }}>
-            <span role="img" aria-label="testimonial">💬</span> Khách Hàng Nói Gì Về Chúng Tôi
+            <span role="img" aria-label="blog">📚</span> Chuyên mục Blog: Kiến Thức Sức Khỏe Giới Tính
           </h2>
+          
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
-            gap: 24 
+            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", 
+            gap: 24,
+            marginBottom: 30
           }}>
-            <div style={{
+            <article className="fade-in" style={{
               background: "#fff",
               borderRadius: 12,
               padding: 24,
               boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
               border: "1px solid rgba(17,153,142,0.1)",
-              position: "relative"
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
             }}>
-              <div style={{
-                position: "absolute",
-                top: -10,
-                left: 20,
-                background: "#0891b2",
-                color: "#fff",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20
-              }}>💭</div>
-              <div style={{ marginTop: 20 }}>
-                <p style={{ 
-                  fontSize: 15, 
-                  fontStyle: "italic", 
-                  color: "#555", 
-                  marginBottom: 16,
-                  lineHeight: 1.6
-                }}>
-                  "Dịch vụ tuyệt vời! Đội ngũ tư vấn rất chuyên nghiệp và thân thiện. Tôi cảm thấy an toàn và được bảo mật hoàn toàn khi sử dụng dịch vụ."
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    background: "linear-gradient(135deg, #0891b2, #22d3ee)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 600
-                  }}>L</div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Linh Nguyen</div>
-                    <div style={{ fontSize: 14, color: "#666" }}>Khách hàng thân thiết</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              position: "relative"
-            }}>
-              <div style={{
-                position: "absolute",
-                top: -10,
-                left: 20,
-                background: "#22d3ee",
-                color: "#fff",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20
-              }}>⭐</div>
-              <div style={{ marginTop: 20 }}>
-                <p style={{ 
-                  fontSize: 15, 
-                  fontStyle: "italic", 
-                  color: "#555", 
-                  marginBottom: 16,
-                  lineHeight: 1.6
-                }}>
-                  "Xét nghiệm nhanh chóng, kết quả chính xác. Đặc biệt là ứng dụng theo dõi chu kỳ rất hữu ích và dễ sử dụng."
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    background: "linear-gradient(135deg, #22d3ee, #0891b2)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 600
-                  }}>M</div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Mai Tran</div>
-                    <div style={{ fontSize: 14, color: "#666" }}>Đã sử dụng 2 năm</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
-              border: "1px solid rgba(17,153,142,0.1)",
-              position: "relative"
-            }}>
-              <div style={{
-                position: "absolute",
-                top: -10,
-                left: 20,
-                background: "#fbc02d",
-                color: "#fff",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20
-              }}>👍</div>
-              <div style={{ marginTop: 20 }}>
-                <p style={{ 
-                  fontSize: 15, 
-                  fontStyle: "italic", 
-                  color: "#555", 
-                  marginBottom: 16,
-                  lineHeight: 1.6
-                }}>
-                  "Bác sĩ tư vấn rất tận tâm và giải đáp mọi thắc mắc một cách chi tiết. Cảm ơn đội ngũ đã hỗ trợ tôi rất nhiều."
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    background: "linear-gradient(135deg, #fbc02d, #0891b2)",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 600
-                  }}>H</div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#0891b2" }}>Huy Le</div>
-                    <div style={{ fontSize: 14, color: "#666" }}>Tư vấn trực tuyến</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>        <section id="nhan-vien" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('nhan-vien') ? 'visible' : ''}`} style={{
-          background: "#e0f2fe",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
-          padding: 24,
-          margin: "32px 0"
-        }}>
-          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-            <span role="img" aria-label="doctor">👨‍⚕️</span> Đội Ngũ Nhân Viên Y Tế
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ 
-              flexShrink: 0,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center"
-            }}>
-              <img
-                src="/Doctor.png"
-                alt="Đội ngũ bác sĩ chuyên khoa"
-                style={{
-                  width: 200,
-                  height: 200,
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                  boxShadow: "0 4px 12px rgba(17,153,142,0.15)",
-                  border: "4px solid #0891b2"
-                }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <p style={{ fontSize: 17, marginBottom: 16 }}>
-                Đội ngũ nhân viên y tế chuyên nghiệp với kinh nghiệm nhiều năm trong lĩnh vực chăm sóc sức khỏe sinh sản và giới tính:
-              </p>
-              <ul style={{ fontSize: 16, color: "#0891b2", margin: 0, paddingLeft: 24 }}>
-                <li>🔸 Bác sĩ chuyên khoa Sản phụ khoa với hơn 10 năm kinh nghiệm</li>
-                <li>🔸 Bác sĩ chuyên khoa Nam học và Andrologia</li>
-                <li>🔸 Điều dưỡng viên được đào tạo chuyên sâu về chăm sóc sinh sản</li>
-                <li>🔸 Kỹ thuật viên xét nghiệm chuyên nghiệp</li>
-                <li>🔸 Nhân viên hỗ trợ khách hàng 24/7</li>
-              </ul>
-            </div>
-          </div>
-        </section>        <section id="tu-van-vien" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('tu-van-vien') ? 'visible' : ''}`} style={{
-          background: "#e0f2fe",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
-          padding: 24,
-          margin: "32px 0"
-        }}>
-          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-            <span role="img" aria-label="counselor">🧑‍💼</span> Tư Vấn Viên Chuyên Nghiệp
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap-reverse" }}>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <p style={{ fontSize: 17, marginBottom: 16 }}>
-                Đội ngũ tư vấn viên giàu kinh nghiệm, được đào tạo chuyên sâu về tâm lý học và giáo dục giới tính:
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🧠</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Tư vấn Tâm lý</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Chuyên về sức khỏe tình dục và tâm lý</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎓</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Giáo dục Giới tính</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Chứng chỉ quốc tế về giáo dục giới tính</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>❤️</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Mối quan hệ</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Hỗ trợ các vấn đề về mối quan hệ</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)"
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>👶</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Kế hoạch hóa gia đình</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Tư vấn chuyên nghiệp về kế hoạch sinh đẻ</p>
-                </div>
-              </div>
-            </div>
-            <div style={{ 
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 16
-            }}>
-              <div style={{
-                width: 180,
-                height: 180,
-                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 6px 20px rgba(17,153,142,0.3)"
-              }}>
-                <span style={{ fontSize: 72, color: "#fff" }}>🧑‍💼</span>
-              </div>
-              <div style={{
-                background: "#fff",
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%)",
                 borderRadius: 8,
-                padding: 12,
-                boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
-                textAlign: "center"
-              }}>
-                <p style={{ fontSize: 14, color: "#0891b2", margin: 0, fontWeight: 600 }}>
-                  🔒 Bảo mật tuyệt đối<br/>
-                  💻 Tư vấn online & offline
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>        <section id="blog" data-animate="fade-in" className={`fade-in-section ${visibleSections.has('blog') ? 'visible' : ''}`} style={{
-          background: "#e0f2fe",
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(17,153,142,0.07)",
-          padding: 24,
-          margin: "32px 0"
-        }}>
-          <h2 style={{ color: "#0891b2", marginTop: 0, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 24 }}>
-            <span role="img" aria-label="book">📚</span> Chuyên mục Blog: Kiến Thức Sức Khỏe Giới Tính
-          </h2>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <p style={{ fontSize: 17, marginBottom: 16 }}>
-                Chúng tôi chia sẻ những bài viết thiết thực, cập nhật, khoa học về:
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #0891b2"
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>🛡️</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Giáo dục giới tính an toàn</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Cho mọi lứa tuổi</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #22d3ee"
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>⚕️</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Sức khỏe sinh sản</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Điều cần biết cho nữ giới & nam giới</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #fbc02d"
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>🦠</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Phòng tránh STIs</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Cách phòng tránh và nhận biết bệnh lây truyền</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #0891b2"
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>📅</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Chu kỳ kinh nguyệt</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Hiểu rõ chu kỳ và dấu hiệu rụng trứng</p>
-                </div>
-                <div style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: 16,
-                  boxShadow: "0 2px 6px rgba(17,153,142,0.08)",
-                  borderLeft: "4px solid #e91e63"
-                }}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>💝</div>
-                  <h4 style={{ color: "#0891b2", margin: "0 0 8px 0" }}>Tư vấn tâm lý</h4>
-                  <p style={{ fontSize: 14, color: "#555", margin: 0 }}>Tình dục học, quan hệ lành mạnh</p>
-                </div>
-              </div>
-            </div>
-            <div style={{ 
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 16
-            }}>
-              <div style={{
-                width: 150,
-                height: 150,                background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
-                borderRadius: 12,
+                marginBottom: 16,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 6px 20px rgba(8,145,178,0.3)"
+                fontSize: 48
               }}>
-                <span style={{ fontSize: 56, color: "#fff" }}>📖</span>
+                🔍
               </div>
-              <div style={{
-                background: "#fff",
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Hiểu Biết Về Các Bệnh Lây Truyền Qua Đường Tình Dục
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                Tìm hiểu về các loại STI phổ biến, triệu chứng, cách phòng ngừa và điều trị. 
+                Kiến thức cần thiết để bảo vệ bản thân và người thân.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👩‍⚕️ Bác sĩ Nguyễn Thị Mai</span>
+                <span>📅 25/06/2025</span>
+              </div>
+            </article>
+
+            <article className="fade-in" style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
+              border: "1px solid rgba(17,153,142,0.1)",
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
+            }}>
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
                 borderRadius: 8,
-                padding: 12,
-                boxShadow: "0 2px 8px rgba(17,153,142,0.1)",
-                textAlign: "center"
+                marginBottom: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48
               }}>
-                <p style={{ fontSize: 14, color: "#0891b2", margin: 0, fontWeight: 600 }}>
-                  📝 Bài viết khoa học<br/>
-                  🔄 Cập nhật liên tục
-                </p>
+                📅
               </div>
-            </div>
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Chu Kỳ Kinh Nguyệt: Những Điều Cần Biết
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                Hướng dẫn chi tiết về chu kỳ kinh nguyệt, cách theo dõi và nhận biết các dấu hiệu bất thường. 
+                Kiến thức quan trọng cho phụ nữ ở mọi lứa tuổi.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👩‍⚕️ Bác sĩ Lê Văn Hùng</span>
+                <span>📅 22/06/2025</span>
+              </div>
+            </article>
+
+            <article className="fade-in" style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
+              border: "1px solid rgba(17,153,142,0.1)",
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
+            }}>
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%)",
+                borderRadius: 8,
+                marginBottom: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48
+              }}>
+                💊
+              </div>
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Các Phương Pháp Tránh Thai An Toàn
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                So sánh các phương pháp tránh thai hiện đại, hiệu quả và tác dụng phụ. 
+                Lời khuyên từ chuyên gia để lựa chọn phù hợp nhất.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👩‍⚕️ Bác sĩ Trần Thị Lan</span>
+                <span>📅 20/06/2025</span>
+              </div>
+            </article>
+
+            <article className="fade-in" style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
+              border: "1px solid rgba(17,153,142,0.1)",
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
+            }}>
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)",
+                borderRadius: 8,
+                marginBottom: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48
+              }}>
+                🧘‍♀️
+              </div>
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Sức Khỏe Tâm Lý Trong Mối Quan Hệ
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                Khám phá tầm quan trọng của sức khỏe tinh thần trong các mối quan hệ tình cảm. 
+                Cách xây dựng mối quan hệ lành mạnh và hạnh phúc.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👨‍⚕️ Thạc sĩ Phạm Minh Đức</span>
+                <span>📅 18/06/2025</span>
+              </div>
+            </article>
+
+            <article className="fade-in" style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
+              border: "1px solid rgba(17,153,142,0.1)",
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
+            }}>
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #fff1f2 0%, #fecaca 100%)",
+                borderRadius: 8,
+                marginBottom: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48
+              }}>
+                🤱
+              </div>
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Chăm Sóc Sức Khỏe Sinh Sản Tuổi Teen
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                Hướng dẫn cha mẹ và thanh thiếu niên về giáo dục giới tính, sức khỏe sinh sản và các vấn đề tâm lý ở tuổi dậy thì.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👩‍⚕️ Bác sĩ Hoàng Thị Nga</span>
+                <span>📅 15/06/2025</span>
+              </div>
+            </article>
+
+            <article className="fade-in" style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              boxShadow: "0 4px 12px rgba(17,153,142,0.08)",
+              border: "1px solid rgba(17,153,142,0.1)",
+              transition: "all 0.3s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(17,153,142,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(17,153,142,0.08)";
+            }}>
+              <div style={{ 
+                width: "100%", 
+                height: 180, 
+                background: "linear-gradient(135deg, #f0f9ff 0%, #bae6fd 100%)",
+                borderRadius: 8,
+                marginBottom: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48
+              }}>
+                ⚖️
+              </div>
+              <h3 style={{ color: "#0891b2", marginBottom: 12, fontSize: 18 }}>
+                Quyền Lợi và Trách Nhiệm Trong Sức Khỏe Giới Tính
+              </h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
+                Tìm hiểu về quyền lợi cá nhân trong chăm sóc sức khỏe sinh sản và trách nhiệm đối với bản thân cũng như đối tác.
+              </p>
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                fontSize: 12,
+                color: "#64748b"
+              }}>
+                <span>👨‍⚕️ Luật sư Y khoa Ngô Văn Thành</span>
+                <span>📅 12/06/2025</span>
+              </div>
+            </article>
           </div>
-        </section>      </main>
+        </section>
+      </main>
 
       {/* Call to Action Section */}      <section style={{
         background: "linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)",
@@ -1556,7 +1597,7 @@ const App = () => {
             justifyContent: "center", 
             flexWrap: "wrap" 
           }}>            <Link 
-              to="/login" 
+              to={isLoggedIn ? "/consultation-booking" : "/login"} 
               style={{
                 background: "#fff",
                 color: "#0891b2",

@@ -47,8 +47,8 @@ public class Booking {
     private String appointmentDate; // Date and time of the appointment
 
     @Pattern(
-        regexp = "Chờ xác nhận|Đã xác nhận|Đã xong",
-        message = "Status must be one of: Chờ xác nhận, Đã xác nhận, Đã xong"
+        regexp = "Đang chờ duyệt|Đã duyệt|Đã kết thúc|Không được duyệt",
+        message = "Status must be one of: Đang chờ duyệt, Đã duyệt, Đã kết thúc, Không được duyệt"
     )
     @Column(name = "status", columnDefinition = "NVARCHAR(50)")
     private String status; // "Chờ xác nhận", "Đã xác nhận", "Đã xong"

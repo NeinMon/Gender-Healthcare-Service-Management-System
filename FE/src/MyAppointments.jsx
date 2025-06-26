@@ -12,6 +12,7 @@ const MyAppointments = () => {
   const [consultantNames, setConsultantNames] = useState({});
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [videoChannel, setVideoChannel] = useState(null);
+  const [activeBookingId, setActiveBookingId] = useState(null);
   
   useEffect(() => {
     // Kiểm tra login
@@ -56,6 +57,7 @@ const MyAppointments = () => {
       }
       
       const data = await response.json();
+      console.log(`🔄 [MyAppointments] Làm mới dữ liệu: ${data.length} lịch hẹn`);
       setAppointments(data);
       
       // Lấy danh sách consultantId duy nhất
@@ -79,11 +81,12 @@ const MyAppointments = () => {
           }
         })
       );
-        setConsultantNames(namesObj);
+      setConsultantNames(namesObj);
       setLoading(false);
     } catch (err) {
       setError('Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau: ' + err.message);
-      setLoading(false);    }
+      setLoading(false);
+    }
   };
 
   const filteredAppointments = appointments.filter(app => {
@@ -100,11 +103,16 @@ const MyAppointments = () => {
   const formatStatus = (status) => {
     switch (status) {
       case 'Đã xác nhận':
-        return 'Đã xác nhận';
+      case 'Đã duyệt':
+        return 'Đã duyệt';
       case 'Chờ xác nhận':
-        return 'Chờ xác nhận';
+      case 'Đang chờ duyệt':
+        return 'Đang chờ duyệt';
       case 'Đã xong':
-        return 'Đã hoàn thành';
+      case 'Đã kết thúc':
+        return 'Đã kết thúc';
+      case 'Không được duyệt':
+        return 'Không được duyệt';
       default:
         return status || 'Không xác định';
     }
@@ -114,11 +122,16 @@ const MyAppointments = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Đã xác nhận':
+      case 'Đã duyệt':
         return '#4caf50';
       case 'Chờ xác nhận':
+      case 'Đang chờ duyệt':
         return '#ff9800';
       case 'Đã xong':
+      case 'Đã kết thúc':
         return '#2196f3';
+      case 'Không được duyệt':
+        return '#f44336';
       default:
         return '#757575';
     }
@@ -127,158 +140,378 @@ const MyAppointments = () => {
 
   return (
     <div style={{ 
-      backgroundColor: "#f0f9ff !important", 
-      background: "#f0f9ff !important",
-      colorScheme: "light",
+      backgroundColor: "#f0f9ff", 
       minHeight: "100vh",
-      width: "100vw",
-      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+      width: "100%",
+      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      display: "flex",
+      flexDirection: "column"
     }}>
       {showVideoCall && (
         <VideoCall 
           channelName={videoChannel} 
-          onLeave={() => { setShowVideoCall(false); setVideoChannel(null); }} 
+          onLeave={(endCall = false) => {
+            console.log(`🔄 [MyAppointments] Cuộc gọi kết thúc`);
+            setShowVideoCall(false);
+            setVideoChannel(null);
+            
+            // Xóa ID lịch hẹn đang hoạt động
+            if (activeBookingId) {
+              setActiveBookingId(null);
+            }
+          }} 
           userRole="audience"
         />
       )}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
         position: "relative"
       }}>
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
+          maxWidth: "1400px",
+          margin: "0 auto",
+          width: "100%",
+          padding: "12px 24px"
         }}>
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
-          />
+          <Link to="/">
+            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ height: 60, width: 60, objectFit: "contain" }}
+            />
+          </Link>
           <UserAvatar userName="Khách hàng" />
         </div>
-        <h1
-          style={{
+        <div style={{
+          textAlign: "center",
+          padding: "16px 0 28px"
+        }}>
+          <h1 style={{
             color: "#fff",
             margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
+            fontSize: "28px",
             fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Lịch hẹn của tôi
-        </h1>
+            letterSpacing: "0.5px"
+          }}>
+            Lịch hẹn của tôi
+          </h1>
+        </div>
       </header>
       <main style={{
-        padding: "40px 20px",
-        minHeight: "calc(100vh - 200px)",
+        padding: "32px 24px",
+        flex: 1,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-start",
         alignItems: "center",
-        background: "#f0f9ff !important",
-        backgroundColor: "#f0f9ff !important",
-        colorScheme: "light"
+        backgroundColor: "#f0f9ff"
       }}>
         <div style={{
           maxWidth: "1200px",
           width: "100%",
-          margin: "0 auto"
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px"
         }}>
-          <div style={{ margin: '32px 0 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px' }}>
-            <div>
-              <label style={{ fontWeight: 600, color: '#0891b2' }}>Lọc theo trạng thái: </label>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid #22d3ee', outline: 'none', fontWeight: 600, color: '#0891b2', background: '#fff' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            backgroundColor: "#fff",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            flexWrap: "wrap",
+            gap: "12px"
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center", 
+              gap: "12px"
+            }}>
+              <label style={{ 
+                fontWeight: 600, 
+                color: '#0891b2' 
+              }}>Lọc theo trạng thái: </label>
+              <select 
+                value={filterStatus} 
+                onChange={e => setFilterStatus(e.target.value)} 
+                style={{ 
+                  padding: "10px 16px", 
+                  borderRadius: "8px", 
+                  border: '1px solid #22d3ee', 
+                  outline: 'none', 
+                  fontWeight: 500, 
+                  color: '#0891b2', 
+                  background: '#fff',
+                  cursor: "pointer" 
+                }}
+              >
                 <option value="all">Tất cả</option>
-                <option value="Đã xác nhận">Đã xác nhận</option>
-                <option value="Chờ xác nhận">Chờ xác nhận</option>
-                <option value="Đã xong">Đã hoàn thành</option>
+                <option value="Đã duyệt">Đã duyệt</option>
+                <option value="Đang chờ duyệt">Đang chờ duyệt</option>
+                <option value="Đã kết thúc">Đã kết thúc</option>
+                <option value="Không được duyệt">Không được duyệt</option>
               </select>
             </div>
-            <Link to="/services" style={{ textDecoration: 'none', color: '#22d3ee', fontWeight: 600, fontSize: 16, border: '1px solid #22d3ee', borderRadius: 8, padding: '8px 20px', background: '#fff', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(34,211,238,0.08)' }}>← Quay lại trang dịch vụ</Link>
+            <Link 
+              to="/services" 
+              style={{ 
+                textDecoration: 'none', 
+                color: '#0891b2', 
+                fontWeight: 600, 
+                fontSize: "15px", 
+                border: '1px solid #22d3ee', 
+                borderRadius: "8px", 
+                padding: '10px 20px', 
+                background: '#fff', 
+                transition: 'all 0.2s', 
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
+            >
+              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang dịch vụ
+            </Link>
           </div>
           {loading ? (
-            <div style={{ textAlign: 'center', marginTop: 60 }}>
-              <span style={{ color: '#0891b2', fontWeight: 600, fontSize: 18 }}>Đang tải dữ liệu...</span>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: "60px 0",
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+            }}>
+              <div style={{ 
+                display: "inline-block", 
+                border: "3px solid #22d3ee",
+                borderTop: "3px solid transparent",
+                borderRadius: "50%",
+                width: "30px",
+                height: "30px",
+                animation: "spin 1s linear infinite",
+                marginBottom: "15px"
+              }}></div>
+              <style>{`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}</style>
+              <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải dữ liệu...</p>
             </div>
           ) : error ? (
-            <div style={{ color: '#f44336', textAlign: 'center', marginTop: 60, fontWeight: 600 }}>{error}</div>          ) : filteredAppointments.length === 0 ? (
-            <div style={{ textAlign: 'center', marginTop: 60, color: '#0891b2', fontWeight: 600 }}>Không có lịch hẹn nào.</div>
+            <div style={{ 
+              color: '#f44336', 
+              textAlign: 'center', 
+              padding: "40px 20px",
+              fontWeight: 600,
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+            }}>
+              <div style={{ fontSize: "40px", marginBottom: "10px" }}>⚠️</div>
+              <div>{error}</div>
+            </div>
+          ) : filteredAppointments.length === 0 ? (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: "60px 20px",
+              color: '#0891b2', 
+              fontWeight: 600,
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+            }}>
+              <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
+              <div>Không có lịch hẹn nào.</div>
+            </div>
           ) : (
-            <div style={{ width: '100%', overflowX: 'auto', padding: '0 32px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
-                <thead style={{ background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)' }}>
-                  <tr>
-                    <th style={{ padding: 14, color: '#fff', fontWeight: 700 }}>Tư vấn viên</th>
-                    <th style={{ color: '#fff', fontWeight: 700 }}>Nội dung</th>
-                    <th style={{ color: '#fff', fontWeight: 700 }}>Ngày đặt lịch</th>
-                    <th style={{ color: '#fff', fontWeight: 700 }}>Trạng thái</th>
-                    <th style={{ color: '#fff', fontWeight: 700 }}>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAppointments.map((app, idx) => {
-                    const consultantId = app.consultantId;
-                    return (
-                      <tr key={app.bookingId || idx} style={{ borderBottom: '1px solid #e0f2fe', transition: 'background 0.2s' }}>
-                        <td style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14 }}>
-                          <span style={{ fontWeight: 600, color: '#0891b2' }}>{consultantNames[consultantId] || '...'}</span>
-                        </td>
-                        <td style={{ fontWeight: 500 }}>{app.content || 'Không có nội dung'}</td>
-                        <td style={{ fontWeight: 500 }}>{app.appointmentDate || 'N/A'}</td>
-                        <td style={{ color: getStatusColor(app.status), fontWeight: 700 }}>{formatStatus(app.status)}</td>
-                        <td>
-                          {app.status === 'Đã xác nhận' && (
-                            <button
-                              style={{
-                                background: '#22d3ee', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontSize: 14
-                              }}
-                              onClick={() => { 
-                                // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
-                                // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với ConsultantInterface.jsx
-                                const bookingId = app.bookingId;
-                                // Luôn sử dụng "booking_" + bookingId làm tên kênh
-                                const channelName = bookingId ? `booking_${bookingId}` : null;
-                                
-                                if (!channelName) {
-                                  alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
-                                  return;
-                                }
-                                
-                                console.log(`[CLIENT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
-                                setVideoChannel(channelName);
-                                setShowVideoCall(true);
-                              }}
-                            >
-                              Tham gia tư vấn
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div style={{ 
+              width: '100%', 
+              backgroundColor: "#fff",
+              borderRadius: "12px",
+              overflow: "hidden",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+            }}>
+              <div style={{ overflowX: 'auto', width: "100%" }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ 
+                      background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                      textAlign: "center"
+                    }}>
+                      <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAppointments.map((app, idx) => {
+                      const consultantId = app.consultantId;
+                      return (
+                        <tr 
+                          key={app.bookingId || idx} 
+                          style={{ 
+                            borderBottom: '1px solid #e0f2fe', 
+                            transition: "all 0.2s"
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                        >
+                          <td style={{ padding: '16px 24px', textAlign: "center" }}>
+                            <div style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: 10,
+                              justifyContent: "center"
+                            }}>
+                              <div style={{ 
+                                width: "36px", 
+                                height: "36px", 
+                                borderRadius: "50%", 
+                                backgroundColor: "#0891b2", 
+                                color: "white", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                fontWeight: "bold",
+                                fontSize: "16px"
+                              }}>
+                                {(consultantNames[consultantId] || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <span style={{ 
+                                fontWeight: 600, 
+                                color: '#0891b2' 
+                              }}>
+                                {consultantNames[consultantId] || 'Đang tải...'}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
+                            <div style={{ 
+                              overflow: "hidden", 
+                              textOverflow: "ellipsis", 
+                              whiteSpace: "nowrap", 
+                              maxWidth: "100%"
+                            }}>
+                              {app.content || 'Không có nội dung'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                            {app.appointmentDate || 'N/A'}
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                            <div style={{ display: "flex", justifyContent: "center" }}>
+                              <span style={{ 
+                                display: "inline-block",
+                                padding: "6px 12px",
+                                borderRadius: "20px",
+                                fontWeight: 600,
+                                fontSize: "13px",
+                                color: "#fff",
+                                backgroundColor: getStatusColor(app.status)
+                              }}>
+                                {formatStatus(app.status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                            {(app.status === 'Đã xác nhận' || app.status === 'Đã duyệt') && (
+                              <button
+                                style={{
+                                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: "8px",
+                                  padding: '10px 16px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: "14px",
+                                  transition: "all 0.2s",
+                                  boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                                }}
+                                onMouseOver={(e) => {
+                                  e.currentTarget.style.transform = "translateY(-2px)";
+                                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                                }}
+                                onMouseOut={(e) => {
+                                  e.currentTarget.style.transform = "translateY(0)";
+                                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                                }}
+                                onClick={() => { 
+                                  // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
+                                  // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với ConsultantInterface.jsx
+                                  const bookingId = app.bookingId;
+                                  // Luôn sử dụng "booking_" + bookingId làm tên kênh
+                                  const channelName = bookingId ? `booking_${bookingId}` : null;
+                                  
+                                  if (!channelName) {
+                                    alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
+                                    return;
+                                  }
+                                  
+                                  console.log(`[CLIENT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
+                                  setActiveBookingId(bookingId); // Lưu bookingId đang tham gia
+                                  setVideoChannel(channelName);
+                                  setShowVideoCall(true);
+                                }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span style={{ fontSize: "16px" }}>🎥</span> Tham gia tư vấn
+                                </span>
+                              </button>
+                            )}
+                            {(app.status !== 'Đã xác nhận' && app.status !== 'Đã duyệt') && (
+                              <span style={{ color: "#999", fontSize: "14px" }}>
+                                {(app.status === 'Chờ xác nhận' || app.status === 'Đang chờ duyệt') ? 'Đang chờ tư vấn viên duyệt...' : 
+                                 (app.status === 'Không được duyệt') ? 'Lịch hẹn bị từ chối' : 
+                                 'Đã hoàn thành'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           {/* Modal chi tiết đã được ẩn */}
           {/* Modal hủy lịch hẹn đã được ẩn */}
         </div>
       </main>
+      
       <footer style={{ 
-        background: "#e0f2fe !important", 
-        backgroundColor: "#e0f2fe !important",
-        colorScheme: "light",
+        backgroundColor: "#e0f2fe",
         color: "#0891b2", 
-        padding: "20px", 
-        textAlign: "center" 
+        padding: "20px",
+        textAlign: "center",
+        borderTop: "1px solid rgba(8,145,178,0.1)"
       }}>
-        &copy; {new Date().getFullYear()} Sức khỏe giới tính - Một sản phẩm của cơ sở y tế Việt Nam
+        <div style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px"
+        }}>
+          <div style={{ fontWeight: 600, fontSize: "16px" }}>
+            &copy; {new Date().getFullYear()} Sức khỏe giới tính
+          </div>
+          <div style={{ fontSize: "14px", opacity: 0.8 }}>
+            Một sản phẩm của cơ sở y tế Việt Nam
+          </div>
+        </div>
       </footer>
     </div>
   );

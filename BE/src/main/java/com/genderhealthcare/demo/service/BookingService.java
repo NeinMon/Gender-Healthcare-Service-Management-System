@@ -17,6 +17,12 @@ public class BookingService {
         if (booking.getStatus() == null || booking.getStatus().isBlank()) {
             booking.setStatus("Đang chờ duyệt");
         }
+        
+        // Đảm bảo serviceId luôn có giá trị (validation business logic)
+        if (booking.getServiceId() == null) {
+            throw new IllegalArgumentException("Service ID cannot be null");
+        }
+        
         // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
         return bookingRepository.save(booking);
     }
@@ -42,6 +48,15 @@ public class BookingService {
         }
         return bookingRepository.findAll().stream()
                 .filter(b -> consultantId.equals(b.getConsultantId()))
+                .toList();
+    }
+
+    public List<Booking> getBookingsByServiceId(Integer serviceId) {
+        if (serviceId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> serviceId.equals(b.getServiceId()))
                 .toList();
     }
 }

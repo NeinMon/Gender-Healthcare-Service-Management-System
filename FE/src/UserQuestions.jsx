@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
 const UserQuestions = () => {
@@ -171,35 +172,34 @@ const UserQuestions = () => {
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
-        position: "relative"
+        position: "relative",
+        width: "100%"
       }}>
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
+          padding: "15px 20px"
         }}>
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
+            style={{ height: 60, width: 60, objectFit: "contain" }}
           />
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1,
+              fontSize: "2.8rem"
+            }}
+          >
+            Câu hỏi của tôi
+          </h1>
           <UserAvatar userName="Khách hàng" />
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Câu hỏi của tôi
-        </h1>
       </header>
       <main style={{
         padding: "40px 20px",
@@ -217,7 +217,21 @@ const UserQuestions = () => {
           width: "100%",
           margin: "0 auto"
         }}>
-          <div style={{ margin: '32px 0 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px' }}>
+          <div style={{ marginBottom: "20px", padding: '0 32px' }}>
+            <Link 
+              to="/" 
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: "#0891b2",
+                textDecoration: "none",
+                fontWeight: 500
+              }}
+            >
+              ← Quay lại trang chủ
+            </Link>
+          </div>
+          <div style={{ margin: '24px 0 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px' }}>
             <div>
               <h2 style={{ fontWeight: 600, color: '#0891b2', margin: 0 }}>Danh sách câu hỏi của bạn</h2>
             </div>

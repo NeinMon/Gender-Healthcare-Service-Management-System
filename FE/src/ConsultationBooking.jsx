@@ -178,17 +178,21 @@ const ConsultationBooking = () => {
       {/* Header */}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
         position: "relative",
-        width: "100%"
+        width: "100%",
+        height: "160px",
+        display: "flex"
       }}>
         <div style={{ 
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
+          padding: "18px 20px",
+          width: "100%"
         }}>
           <Link to="/">
             <img
@@ -199,18 +203,25 @@ const ConsultationBooking = () => {
           </Link>
           <UserAvatar userName="Nguyễn Thị A" />
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Đặt lịch tư vấn
-        </h1>
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+          height: "100%"
+        }}>
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1
+            }}
+          >
+            Đặt lịch tư vấn
+          </h1>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -225,7 +236,7 @@ const ConsultationBooking = () => {
       }}>
         <div style={{ marginBottom: "20px" }}>
           <Link 
-            to="/services" 
+            to="/" 
             style={{
               display: "flex",
               alignItems: "center",
@@ -234,7 +245,7 @@ const ConsultationBooking = () => {
               fontWeight: 500
             }}
           >
-            ← Quay lại trang dịch vụ
+            ← Quay lại trang chủ
           </Link>
         </div>
 

@@ -128,19 +128,59 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
+          paddingTop: 12,
           paddingLeft: 20,
-          paddingRight: 20
+          paddingRight: 20,
+          paddingBottom: 12,
         }}>
-          <Link to="/services">
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
             <img
               src="/Logo.png"
               alt="Logo"
-              style={{ height: 80, width: 80, objectFit: "contain" }}
+              style={{ height: 70, width: 70, objectFit: "contain" }}
             />
-          </Link>          <div style={{ 
-            width: 40, 
-            height: 40, 
+            <Link 
+              to="/" 
+              style={{ 
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                color: "white",
+                textDecoration: "none",
+                padding: "4px 20px",
+                borderRadius: "14px",
+                fontSize: "13px",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                transition: "all 0.3s ease"
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = "rgba(255, 255, 255, 0.3)"}
+              onMouseOut={(e) => e.target.style.backgroundColor = "rgba(255, 255, 255, 0.2)"}
+            >
+              <span>←</span> Quay lại trang chủ
+            </Link>
+          </div>
+          
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              padding: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1,
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "auto"
+            }}
+          >
+            Thông Tin Tài Khoản
+          </h1>
+          
+          <div style={{ 
+            width: 36, 
+            height: 36, 
             borderRadius: "50%", 
             backgroundColor: "rgba(255,255,255,0.3)",
             display: "flex",
@@ -154,18 +194,6 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
             {userInfo.fullName ? userInfo.fullName.charAt(0) : "U"}
           </div>
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Thông Tin Tài Khoản
-        </h1>
       </header>
 
       <main style={{
@@ -352,101 +380,7 @@ const UserAccount = () => {  const [userInfo, setUserInfo] = useState({
           </div>
         </div>
         )}
-        {/* Khung chức năng mới */}
-        <div style={{
-          background: "rgba(255, 255, 255, 0.95)",
-          borderRadius: "20px",
-          padding: "40px",
-          boxShadow: "0 20px 40px rgba(8, 145, 178, 0.1)",
-          marginBottom: "30px"
-        }}>
-          <h2 style={{
-            color: "#0891b2",
-            fontSize: "28px",
-            fontWeight: "700",
-            marginBottom: "30px"
-          }}>
-            Quản Lý Dịch Vụ Của Tôi
-          </h2>
-          <div style={{
-            display: "grid",
-            gap: "20px"
-          }}>
-            <Link
-              to="/user-questions"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                textDecoration: "none",
-                color: "#1e293b",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#e2e8f0";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#f8fafc";
-              }}
-            >
-              <span style={{ fontSize: "16px", fontWeight: "500" }}>
-                ❓ Câu Hỏi Của Tôi
-              </span>
-              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
-            </Link>
-            <Link
-              to="/my-appointments"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                textDecoration: "none",
-                color: "#1e293b",
-                transition: "all 0.3s ease"
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#e2e8f0";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "#f8fafc";
-              }}
-            >
-              <span style={{ fontSize: "16px", fontWeight: "500" }}>
-                📖 Lịch Hẹn Của Tôi
-              </span>
-              <span style={{ fontSize: "18px", color: "#64748b" }}>→</span>
-            </Link>
-            <button
-              disabled
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "20px",
-                backgroundColor: "#f8fafc",
-                borderRadius: "12px",
-                border: "1px solid #e2e8f0",
-                color: "#64748b",
-                fontSize: "16px",
-                fontWeight: "500",
-                opacity: 0.6,
-                cursor: "not-allowed"
-              }}
-            >
-              <span>🧪 Xem Lịch Xét Nghiệm (sắp có)</span>
-              <span style={{ fontSize: "18px" }}>→</span>
-            </button>
-          </div>
-        </div>
-        {/* Đưa Cài Đặt Tài Khoản xuống dưới cùng */}
+        {/* Cài Đặt Tài Khoản */}
         <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           borderRadius: "20px",

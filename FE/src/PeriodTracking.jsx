@@ -353,47 +353,58 @@ const PeriodTracking = () => {
         minHeight: 90,
         boxShadow: "0 4px 20px rgba(8,145,178,0.15)",
         overflow: "hidden"
-      }}><div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: "100%",
-            margin: 0,
-            padding: 0,
-            position: "relative"
+      }}>
+        {/* Logo positioned to the left */}
+        <div style={{
+          position: "absolute",
+          left: 24,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 2
         }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            zIndex: 1
-          }}>            <img
+          <Link to="/">
+            <img
               src="/Logo.png"
               alt="Logo"
               style={{ 
-                height: 48, 
-                width: 48, 
+                height: 80, 
+                width: 80, 
                 objectFit: "contain", 
-                marginRight: 15,
                 filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
               }}
             />
-            <h1
-              style={{
-                color: "#fff",
-                margin: 0,
-                fontWeight: 800,
-                letterSpacing: 0.5,
-                fontSize: 30,
-                lineHeight: 1.1,
-                fontFamily: 'Montserrat, Arial, sans-serif',
-                textShadow: "0 2px 4px rgba(0,0,0,0.2)"
-              }}
-            >
-              Theo dõi chu kỳ
-            </h1>
-          </div>
+          </Link>
+        </div>
+        
+        {/* Title centered both horizontally and vertically */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0
+        }}>
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              fontWeight: 800,
+              letterSpacing: 0.5,
+              fontSize: 42, /* Increased from 38 to 42 */
+              lineHeight: 1.1,
+              fontFamily: 'Montserrat, Arial, sans-serif',
+              textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              textAlign: "center",
+              padding: "0 80px" /* Added padding to ensure text doesn't overlap with logo/avatar */
+            }}
+          >
+            Theo dõi chu kỳ
+          </h1>
         </div>        <div style={{ 
           position: "absolute", 
           top: 20, 

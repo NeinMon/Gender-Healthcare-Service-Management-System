@@ -247,29 +247,27 @@ const AskQuestion = () => {
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          paddingTop: 18,
-          paddingLeft: 20,
-          paddingRight: 20
+          padding: "15px 20px"
         }}>
           <img
             src="/Logo.png"
             alt="Logo"
-            style={{ height: 100, width: 100, objectFit: "contain" }}
+            style={{ height: 60, width: 60, objectFit: "contain" }}
           />
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1,
+              fontSize: "2rem"
+            }}
+          >
+            Đặt câu hỏi cho tư vấn viên
+          </h1>
           <UserAvatar userName="Nguyễn Thị A" />
         </div>
-        <h1
-          style={{
-            color: "#fff",
-            margin: 0,
-            padding: "24px 0 16px 0",
-            textAlign: "center",
-            fontWeight: 700,
-            letterSpacing: 1
-          }}
-        >
-          Đặt câu hỏi cho tư vấn viên
-        </h1>
       </header>      {/* Main Content */}
       <main style={{
         padding: "40px",
@@ -281,7 +279,7 @@ const AskQuestion = () => {
         boxSizing: "border-box"
       }}>
         <div style={{ marginBottom: "20px" }}>          <Link 
-            to="/services" 
+            to="/" 
             style={{
               display: "flex",
               alignItems: "center",
@@ -290,7 +288,7 @@ const AskQuestion = () => {
               fontWeight: 500
             }}
           >
-            ← Quay lại trang dịch vụ
+            ← Quay lại trang chủ
           </Link>
         </div>        {!isSubmitted ? (
           <>

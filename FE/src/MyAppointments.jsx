@@ -166,7 +166,8 @@ const MyAppointments = () => {
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        position: "relative"
+        position: "relative",
+        height: "160px"
       }}>
         <div style={{ 
           display: "flex", 
@@ -175,27 +176,53 @@ const MyAppointments = () => {
           maxWidth: "1400px",
           margin: "0 auto",
           width: "100%",
-          padding: "12px 24px"
+          padding: "0 24px",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          pointerEvents: "none"
         }}>
-          <Link to="/">
+          <Link to="/" style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            pointerEvents: "auto" 
+          }}>
             <img
               src="/Logo.png"
               alt="Logo"
-              style={{ height: 60, width: 60, objectFit: "contain" }}
+              style={{ height: 85, width: 85, objectFit: "contain" }}
             />
           </Link>
-          <UserAvatar userName="Khách hàng" />
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            pointerEvents: "auto" 
+          }}>
+            <UserAvatar userName="Khách hàng" />
+          </div>
         </div>
         <div style={{
-          textAlign: "center",
-          padding: "16px 0 28px"
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flex: 1,
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0
         }}>
           <h1 style={{
             color: "#fff",
             margin: 0,
-            fontSize: "28px",
+            fontSize: "48px",
             fontWeight: 700,
-            letterSpacing: "0.5px"
+            letterSpacing: "0.5px",
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
             Lịch hẹn của tôi
           </h1>
@@ -259,7 +286,7 @@ const MyAppointments = () => {
               </select>
             </div>
             <Link 
-              to="/services" 
+              to="/" 
               style={{ 
                 textDecoration: 'none', 
                 color: '#0891b2', 
@@ -277,7 +304,7 @@ const MyAppointments = () => {
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
             >
-              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang dịch vụ
+              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang chủ
             </Link>
           </div>
           {loading ? (

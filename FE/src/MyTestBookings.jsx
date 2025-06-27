@@ -1,104 +1,110 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import VideoCall from './components/VideoCall';
 
-const MyAppointments = () => {
+const MyTestBookings = () => {
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
+  const [testBookings, setTestBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [consultantNames, setConsultantNames] = useState({});
-  const [showVideoCall, setShowVideoCall] = useState(false);
-  const [videoChannel, setVideoChannel] = useState(null);
-  const [activeBookingId, setActiveBookingId] = useState(null);
+  const [serviceNames, setServiceNames] = useState({});
   
   useEffect(() => {
     // Kiểm tra login
     const userJson = localStorage.getItem('loggedInUser');
     if (!userJson) {
-      navigate('/login', { state: { from: '/my-appointments' } });
+      navigate('/login', { state: { from: '/my-test-bookings' } });
       return;
     }
     
     try {
       // Xác nhận là user object hợp lệ
       const user = JSON.parse(userJson);
-      if (!user.userID) { // Sửa từ user.id thành user.userID theo Users entity
-        navigate('/login', { state: { from: '/my-appointments' } });
+      if (!user.userID) {
+        navigate('/login', { state: { from: '/my-test-bookings' } });
         return;
       }
     } catch (err) {
-      navigate('/login', { state: { from: '/my-appointments' } });
+      navigate('/login', { state: { from: '/my-test-bookings' } });
       return;
     }
     
-    // Tải danh sách lịch hẹn
-    fetchAppointments();
+    // Tải danh sách lịch xét nghiệm
+    fetchTestBookings();
   }, [navigate]);
   
-  const fetchAppointments = async () => {
+  const fetchTestBookings = async () => {
     try {
       setLoading(true);
       const userJson = localStorage.getItem('loggedInUser');
       const user = JSON.parse(userJson);
-      // Kiểm tra ID dựa trên entity Users.java sử dụng userID
       const userId = user?.userID;
       
       if (!userId) {
         throw new Error('Không tìm thấy thông tin người dùng');
       }
       
-      // Lấy danh sách booking của user - sử dụng endpoint consultations
-      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}/consultations`);
+      // Lấy danh sách booking xét nghiệm của user - sử dụng endpoint other-services
+      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}/other-services`);
       if (!response.ok) {
-        throw new Error('Lỗi khi lấy danh sách lịch hẹn');
+        throw new Error('Lỗi khi lấy danh sách lịch xét nghiệm');
       }
       
-      const data = await response.json();
-      console.log(`🔄 [MyAppointments] Làm mới dữ liệu: ${data.length} lịch hẹn`);
-      setAppointments(data);
+      const testBookingsData = await response.json();
       
-      // Lấy danh sách consultantId duy nhất
-      const consultantIds = [...new Set(data.map(item => item.consultantId).filter(Boolean))];
+      console.log(`🔄 [MyTestBookings] Làm mới dữ liệu: ${testBookingsData.length} lịch xét nghiệm`);
+      setTestBookings(testBookingsData);
       
-      // Gọi API lấy thông tin tư vấn viên cho từng consultantId
-      const namesObj = {};
-      await Promise.all(
-        consultantIds.map(async (id) => {
-          try {
-            const res = await fetch(`http://localhost:8080/api/users/${id}`);
-            if (res.ok) {
-              const consultantData = await res.json();
-              // Sử dụng fullName từ entity Users
-              namesObj[id] = consultantData.fullName || `Tư vấn viên #${id}`;
-            } else {
-              namesObj[id] = `Tư vấn viên #${id}`;
+      // Lấy danh sách serviceId duy nhất và lấy thông tin service
+      const serviceIds = [...new Set(testBookingsData.map(item => item.serviceId).filter(Boolean))];
+      
+      // Gọi API lấy tất cả services một lần
+      try {
+        const servicesResponse = await fetch('http://localhost:8080/api/services');
+        if (servicesResponse.ok) {
+          const allServices = await servicesResponse.json();
+          const namesObj = {};
+          allServices.forEach(service => {
+            if (serviceIds.includes(service.serviceId)) {
+              namesObj[service.serviceId] = service.serviceName;
             }
-          } catch {
-            namesObj[id] = `Tư vấn viên #${id}`;
-          }
-        })
-      );
-      setConsultantNames(namesObj);
+          });
+          // Thêm fallback cho các service không tìm thấy
+          serviceIds.forEach(id => {
+            if (!namesObj[id]) {
+              namesObj[id] = `Xét nghiệm #${id}`;
+            }
+          });
+          setServiceNames(namesObj);
+        } else {
+          // Fallback nếu không lấy được danh sách services
+          const namesObj = {};
+          serviceIds.forEach(id => {
+            namesObj[id] = `Xét nghiệm #${id}`;
+          });
+          setServiceNames(namesObj);
+        }
+      } catch (err) {
+        console.warn('Không thể lấy thông tin services:', err);
+        // Fallback nếu có lỗi
+        const namesObj = {};
+        serviceIds.forEach(id => {
+          namesObj[id] = `Xét nghiệm #${id}`;
+        });
+        setServiceNames(namesObj);
+      }
       setLoading(false);
     } catch (err) {
-      setError('Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau: ' + err.message);
+      setError('Không thể tải danh sách lịch xét nghiệm. Vui lòng thử lại sau: ' + err.message);
       setLoading(false);
     }
   };
 
-  const filteredAppointments = appointments.filter(app => {
+  const filteredTestBookings = testBookings.filter(booking => {
     if (filterStatus === 'all') return true;
-    
-    // Xử lý trạng thái theo đúng entity Booking trong backend
-    // So sánh trực tiếp với giá trị status từ backend: "Chờ xác nhận", "Đã xác nhận", "Đã xong"
-    return app.status === filterStatus;
+    return booking.status === filterStatus;
   });
-  // Chức năng hủy lịch hẹn đã được gỡ bỏ
-  // Chức năng kiểm tra điều kiện hủy lịch hẹn đã được gỡ bỏ
-  // Đã xóa hàm kiểm tra điều kiện tham gia
   
   const formatStatus = (status) => {
     switch (status) {
@@ -117,7 +123,6 @@ const MyAppointments = () => {
         return status || 'Không xác định';
     }
   };
-  // Đã xóa hàm formatMethod vì không cần thiết
   
   const getStatusColor = (status) => {
     switch (status) {
@@ -136,7 +141,6 @@ const MyAppointments = () => {
         return '#757575';
     }
   };
-  // Đã xóa các hàm xử lý hành động
 
   return (
     <div style={{ 
@@ -147,22 +151,6 @@ const MyAppointments = () => {
       display: "flex",
       flexDirection: "column"
     }}>
-      {showVideoCall && (
-        <VideoCall 
-          channelName={videoChannel} 
-          onLeave={(endCall = false) => {
-            console.log(`🔄 [MyAppointments] Cuộc gọi kết thúc`);
-            setShowVideoCall(false);
-            setVideoChannel(null);
-            
-            // Xóa ID lịch hẹn đang hoạt động
-            if (activeBookingId) {
-              setActiveBookingId(null);
-            }
-          }} 
-          userRole="audience"
-        />
-      )}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
@@ -224,7 +212,7 @@ const MyAppointments = () => {
             letterSpacing: "0.5px",
             textShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
-            Lịch hẹn của tôi
+            Lịch xét nghiệm của tôi
           </h1>
         </div>
       </header>
@@ -285,27 +273,56 @@ const MyAppointments = () => {
                 <option value="Không được duyệt">Không được duyệt</option>
               </select>
             </div>
-            <Link 
-              to="/" 
-              style={{ 
-                textDecoration: 'none', 
-                color: '#0891b2', 
-                fontWeight: 600, 
-                fontSize: "15px", 
-                border: '1px solid #22d3ee', 
-                borderRadius: "8px", 
-                padding: '10px 20px', 
-                background: '#fff', 
-                transition: 'all 0.2s', 
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
-            >
-              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang chủ
-            </Link>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <Link 
+                to="/test-booking" 
+                style={{ 
+                  textDecoration: 'none', 
+                  color: '#fff', 
+                  fontWeight: 600, 
+                  fontSize: "15px", 
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)', 
+                  borderRadius: "8px", 
+                  padding: '10px 20px', 
+                  transition: 'all 0.2s', 
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                }}
+              >
+                <span style={{ fontSize: "18px" }}>+</span> Đặt lịch xét nghiệm mới
+              </Link>
+              <Link 
+                to="/" 
+                style={{ 
+                  textDecoration: 'none', 
+                  color: '#0891b2', 
+                  fontWeight: 600, 
+                  fontSize: "15px", 
+                  border: '1px solid #22d3ee', 
+                  borderRadius: "8px", 
+                  padding: '10px 20px', 
+                  background: '#fff', 
+                  transition: 'all 0.2s', 
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
+              >
+                <span style={{ fontSize: "18px" }}>←</span> Quay lại trang chủ
+              </Link>
+            </div>
           </div>
           {loading ? (
             <div style={{ 
@@ -346,7 +363,7 @@ const MyAppointments = () => {
               <div style={{ fontSize: "40px", marginBottom: "10px" }}>⚠️</div>
               <div>{error}</div>
             </div>
-          ) : filteredAppointments.length === 0 ? (
+          ) : filteredTestBookings.length === 0 ? (
             <div style={{ 
               textAlign: 'center', 
               padding: "60px 20px",
@@ -356,8 +373,8 @@ const MyAppointments = () => {
               borderRadius: "12px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
             }}>
-              <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
-              <div>Không có lịch hẹn nào.</div>
+              <div style={{ fontSize: "40px", marginBottom: "15px" }}>🧪</div>
+              <div>Không có lịch xét nghiệm nào.</div>
             </div>
           ) : (
             <div style={{ 
@@ -374,19 +391,19 @@ const MyAppointments = () => {
                       background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
                       textAlign: "center"
                     }}>
-                      <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
-                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
+                      <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Loại xét nghiệm</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAppointments.map((app, idx) => {
-                      const consultantId = app.consultantId;
+                    {filteredTestBookings.map((booking, idx) => {
+                      const serviceId = booking.serviceId;
                       return (
                         <tr 
-                          key={app.bookingId || idx} 
+                          key={booking.bookingId || idx} 
                           style={{ 
                             borderBottom: '1px solid #e0f2fe', 
                             transition: "all 0.2s"
@@ -413,13 +430,13 @@ const MyAppointments = () => {
                                 fontWeight: "bold",
                                 fontSize: "16px"
                               }}>
-                                {(consultantNames[consultantId] || '?').charAt(0).toUpperCase()}
+                                🧪
                               </div>
                               <span style={{ 
                                 fontWeight: 600, 
                                 color: '#0891b2' 
                               }}>
-                                {consultantNames[consultantId] || 'Đang tải...'}
+                                {serviceNames[serviceId] || 'Đang tải...'}
                               </span>
                             </div>
                           </td>
@@ -430,11 +447,11 @@ const MyAppointments = () => {
                               whiteSpace: "nowrap", 
                               maxWidth: "100%"
                             }}>
-                              {app.content || 'Không có nội dung'}
+                              {booking.content || 'Không có ghi chú'}
                             </div>
                           </td>
                           <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
-                            {app.appointmentDate || 'N/A'}
+                            {booking.appointmentDate || 'N/A'}
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
                             <div style={{ display: "flex", justifyContent: "center" }}>
@@ -445,63 +462,47 @@ const MyAppointments = () => {
                                 fontWeight: 600,
                                 fontSize: "13px",
                                 color: "#fff",
-                                backgroundColor: getStatusColor(app.status)
+                                backgroundColor: getStatusColor(booking.status)
                               }}>
-                                {formatStatus(app.status)}
+                                {formatStatus(booking.status)}
                               </span>
                             </div>
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                            {(app.status === 'Đã xác nhận' || app.status === 'Đã duyệt') && (
-                              <button
-                                style={{
-                                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: "8px",
-                                  padding: '10px 16px',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  fontSize: "14px",
-                                  transition: "all 0.2s",
-                                  boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
-                                }}
-                                onMouseOver={(e) => {
-                                  e.currentTarget.style.transform = "translateY(-2px)";
-                                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
-                                }}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.style.transform = "translateY(0)";
-                                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
-                                }}
-                                onClick={() => { 
-                                  // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
-                                  // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với ConsultantInterface.jsx
-                                  const bookingId = app.bookingId;
-                                  // Luôn sử dụng "booking_" + bookingId làm tên kênh
-                                  const channelName = bookingId ? `booking_${bookingId}` : null;
-                                  
-                                  if (!channelName) {
-                                    alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
-                                    return;
-                                  }
-                                  
-                                  console.log(`[CLIENT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
-                                  setActiveBookingId(bookingId); // Lưu bookingId đang tham gia
-                                  setVideoChannel(channelName);
-                                  setShowVideoCall(true);
-                                }}
-                              >
-                                <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <span style={{ fontSize: "16px" }}>🎥</span> Tham gia tư vấn
-                                </span>
-                              </button>
+                            {(booking.status === 'Đã xác nhận' || booking.status === 'Đã duyệt') && (
+                              <span style={{ 
+                                color: "#4caf50", 
+                                fontSize: "14px", 
+                                fontWeight: 600,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
+                              }}>
+                                <span style={{ fontSize: "16px" }}>✅</span> Sẵn sàng làm xét nghiệm
+                              </span>
                             )}
-                            {(app.status !== 'Đã xác nhận' && app.status !== 'Đã duyệt') && (
-                              <span style={{ color: "#999", fontSize: "14px" }}>
-                                {(app.status === 'Chờ xác nhận' || app.status === 'Đang chờ duyệt') ? 'Đang chờ tư vấn viên duyệt...' : 
-                                 (app.status === 'Không được duyệt') ? 'Lịch hẹn bị từ chối' : 
-                                 'Đã hoàn thành'}
+                            {(booking.status === 'Chờ xác nhận' || booking.status === 'Đang chờ duyệt') && (
+                              <span style={{ color: "#ff9800", fontSize: "14px" }}>
+                                Đang chờ xác nhận...
+                              </span>
+                            )}
+                            {(booking.status === 'Đã xong' || booking.status === 'Đã kết thúc') && (
+                              <span style={{ 
+                                color: "#2196f3", 
+                                fontSize: "14px", 
+                                fontWeight: 600,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
+                              }}>
+                                <span style={{ fontSize: "16px" }}>🏁</span> Đã hoàn thành
+                              </span>
+                            )}
+                            {booking.status === 'Không được duyệt' && (
+                              <span style={{ color: "#f44336", fontSize: "14px" }}>
+                                Bị từ chối
                               </span>
                             )}
                           </td>
@@ -513,8 +514,6 @@ const MyAppointments = () => {
               </div>
             </div>
           )}
-          {/* Modal chi tiết đã được ẩn */}
-          {/* Modal hủy lịch hẹn đã được ẩn */}
         </div>
       </main>
       
@@ -544,4 +543,4 @@ const MyAppointments = () => {
   );
 };
 
-export default MyAppointments;
+export default MyTestBookings;

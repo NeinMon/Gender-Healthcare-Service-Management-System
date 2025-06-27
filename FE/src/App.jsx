@@ -34,6 +34,7 @@ const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [showConsultationDropdown, setShowConsultationDropdown] = useState(false);
+  const [showTestBookingDropdown, setShowTestBookingDropdown] = useState(false);
   const [showQuestionDropdown, setShowQuestionDropdown] = useState(false);
 
   // Tự động cuộn lên đầu trang khi component mount
@@ -101,6 +102,9 @@ const App = () => {
       if (showConsultationDropdown && !event.target.closest('.consultation-dropdown')) {
         setShowConsultationDropdown(false);
       }
+      if (showTestBookingDropdown && !event.target.closest('.test-booking-dropdown')) {
+        setShowTestBookingDropdown(false);
+      }
       if (showQuestionDropdown && !event.target.closest('.question-dropdown')) {
         setShowQuestionDropdown(false);
       }
@@ -110,7 +114,7 @@ const App = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showConsultationDropdown, showQuestionDropdown]);
+  }, [showConsultationDropdown, showTestBookingDropdown, showQuestionDropdown]);
   // Intersection Observer for fade-in animations
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -675,15 +679,122 @@ const App = () => {
               </div>
             )}
           </div>
-          <a
-            href={isLoggedIn ? "/test-booking" : "/login"}
-            style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); navigate(isLoggedIn ? '/test-booking' : '/login'); }}
-            onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
-            onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
+          <div 
+            className="test-booking-dropdown"
+            style={{ 
+              position: "relative",
+              display: "inline-block"
+            }}
           >
-            Đặt lịch xét nghiệm
-          </a>
+            <a
+              href="#"
+              style={{ 
+                color: "#fff", 
+                fontWeight: 600, 
+                fontSize: 16, 
+                textDecoration: "none", 
+                background: "rgba(255,255,255,0.4)", 
+                padding: "12px 32px", 
+                borderRadius: 8, 
+                border: "1px solid rgba(255,255,255,0.6)", 
+                transition: "all 0.3s ease", 
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)", 
+                minWidth: "140px", 
+                textAlign: "center",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                if (isLoggedIn) {
+                  setShowTestBookingDropdown(!showTestBookingDropdown);
+                } else {
+                  navigate('/login');
+                }
+              }}
+              onMouseEnter={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.5)"; 
+                e.target.style.transform = "translateY(-2px)"; 
+                e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; 
+              }}
+              onMouseLeave={(e) => { 
+                e.target.style.background = "rgba(255,255,255,0.4)"; 
+                e.target.style.transform = "translateY(0)"; 
+                e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; 
+              }}
+            >
+              Đặt lịch xét nghiệm
+              {isLoggedIn && <span style={{fontSize: "12px"}}>▼</span>}
+            </a>
+            {isLoggedIn && showTestBookingDropdown && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  minWidth: "200px",
+                  zIndex: 1000,
+                  marginTop: "4px"
+                }}
+              >
+                <a
+                  href="/test-booking"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowTestBookingDropdown(false);
+                    navigate("/test-booking");
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  🧪 Đặt lịch xét nghiệm mới
+                </a>
+                <a
+                  href="/my-test-bookings"
+                  style={{
+                    display: "block",
+                    padding: "12px 16px",
+                    color: "#0891b2",
+                    textDecoration: "none",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    transition: "background 0.2s ease"
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowTestBookingDropdown(false);
+                    navigate("/my-test-bookings");
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = "#f0f9ff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = "transparent";
+                  }}
+                >
+                  📋 Xem lịch xét nghiệm của tôi
+                </a>
+              </div>
+            )}
+          </div>
           <div 
             className="question-dropdown"
             style={{ 

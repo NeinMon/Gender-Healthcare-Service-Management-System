@@ -23,6 +23,11 @@ public class BookingService {
             throw new IllegalArgumentException("Service ID cannot be null");
         }
         
+        // Validation bổ sung: Nếu serviceId = 1 thì consultantId phải có
+        if (booking.getServiceId().equals(1) && booking.getConsultantId() == null) {
+            throw new IllegalArgumentException("Consultant ID is required when Service ID is 1");
+        }
+        
         // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
         return bookingRepository.save(booking);
     }
@@ -57,6 +62,28 @@ public class BookingService {
         }
         return bookingRepository.findAll().stream()
                 .filter(b -> serviceId.equals(b.getServiceId()))
+                .toList();
+    }
+
+    public List<Booking> getConsultationBookingsByUserId(Integer userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()) && 
+                           b.getServiceId() != null && 
+                           b.getServiceId().equals(1))
+                .toList();
+    }
+
+    public List<Booking> getNonConsultationBookingsByUserId(Integer userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()) && 
+                           b.getServiceId() != null && 
+                           !b.getServiceId().equals(1))
                 .toList();
     }
 }

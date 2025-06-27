@@ -75,4 +75,15 @@ public class BookingService {
                            b.getServiceId().equals(1))
                 .toList();
     }
+
+    public List<Booking> getNonConsultationBookingsByUserId(Integer userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()) && 
+                           b.getServiceId() != null && 
+                           !b.getServiceId().equals(1))
+                .toList();
+    }
 }

@@ -38,6 +38,8 @@ public class Booking {
     @NotNull(message = "Consultant ID is required")
     private Integer consultantId;
 
+    private Integer serviceId; // Service ID - có thể được set tự động hoặc từ frontend
+
     @NotBlank(message = "Content is required")
     @Size(max = 500, message = "Content must be less than 500 characters")
     @Column(name = "content", columnDefinition = "NVARCHAR(500)")

@@ -17,10 +17,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Answer {
     @Id
-    private Integer questionID;  // Đặt trực tiếp, không dùng @MapsId
+    private Integer questionID;  // Primary key cũng là foreign key
 
     @OneToOne
-    @JoinColumn(name = "questionID", insertable = false, updatable = false)
+    @MapsId  // Sử dụng questionID làm cả primary key và foreign key
+    @JoinColumn(name = "questionID")
     private Question question;
 
     @NotNull(message = "ID tư vấn viên không được để trống")

@@ -21,6 +21,21 @@ public class BookingAPI {
 
     @PostMapping
     public ResponseEntity<?> createBooking(@Valid @RequestBody Booking booking) {
+        // API mặc định: tự động set serviceId = 1 nếu chưa có
+        if (booking.getServiceId() == null) {
+            booking.setServiceId(1);
+        }
+        Booking saved = bookingService.createBooking(booking);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @PostMapping("/with-service")
+    public ResponseEntity<?> createBookingWithService(@Valid @RequestBody Booking booking) {
+        // API yêu cầu serviceId từ frontend - serviceId phải được gửi trong request body
+        if (booking.getServiceId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Service ID is required for this endpoint");
+        }
         Booking saved = bookingService.createBooking(booking);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
@@ -38,6 +53,11 @@ public class BookingAPI {
     @GetMapping("/consultant/{consultantId}")
     public List<Booking> getBookingsByConsultantId(@PathVariable("consultantId") Integer consultantId) {
         return bookingService.getBookingsByConsultantId(consultantId);
+    }
+
+    @GetMapping("/service/{serviceId}")
+    public List<Booking> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
+        return bookingService.getBookingsByServiceId(serviceId);
     }
 
     @PutMapping("/{id}/status")

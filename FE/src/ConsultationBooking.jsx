@@ -68,12 +68,43 @@ const ConsultationBooking = () => {
     "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
   ];
 
+  // Kiểm tra xem thời gian đã qua hay chưa để disable option
+  const isTimeSlotPassed = (timeSlot) => {
+    // Nếu chưa chọn ngày, không disable thời gian
+    if (!formData.date) return false;
+    
+    const today = new Date();
+    const selectedDate = new Date(formData.date);
+    
+    // Nếu ngày được chọn khác với ngày hiện tại, không cần disable
+    if (selectedDate.toDateString() !== today.toDateString()) return false;
+    
+    // Lấy giờ hiện tại
+    const currentHour = today.getHours();
+    const currentMinute = today.getMinutes();
+    
+    // Lấy giờ từ chuỗi timeSlot (ví dụ: "08:00 - 09:00" -> 8)
+    const slotStartTime = timeSlot.split(' - ')[0];
+    const [slotHour, slotMinute] = slotStartTime.split(':').map(Number);
+    
+    // Nếu giờ hiện tại lớn hơn giờ bắt đầu slot, hoặc bằng nhau nhưng phút hiện tại lớn hơn
+    return (currentHour > slotHour) || (currentHour === slotHour && currentMinute >= slotMinute);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value
     });
+    
+    // Reset thời gian đã chọn nếu thay đổi ngày và thời gian đó đã qua
+    if (name === 'date' && formData.time && isTimeSlotPassed(formData.time)) {
+      setFormData(prev => ({
+        ...prev,
+        time: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -118,7 +149,7 @@ const ConsultationBooking = () => {
       consultantId: Number(formData.consultantId),
       content: formData.symptoms,
       appointmentDate: appointmentDate,
-      status: "Chờ xác nhận" // Mặc định status cho booking mới là "Chờ xác nhận"
+      status: "Đang chờ duyệt" // Mặc định status cho booking mới là "Đang chờ duyệt"
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
@@ -267,7 +298,9 @@ const ConsultationBooking = () => {
                   >
                     <option value="">-- Chọn thời gian --</option>
                     {availableTimes.map(time => (
-                      <option key={time} value={time}>{time}</option>
+                      <option key={time} value={time} disabled={isTimeSlotPassed(time)}>
+                        {time}
+                      </option>
                     ))}
                   </select>
                 </div>

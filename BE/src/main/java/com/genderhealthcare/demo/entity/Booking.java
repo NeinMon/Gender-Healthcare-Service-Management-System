@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.genderhealthcare.demo.validation.ValidBooking;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidBooking
 public class Booking {
 
     @Id
@@ -35,8 +37,7 @@ public class Booking {
     @NotNull(message = "User ID is required")
     private Integer userId;
 
-    @NotNull(message = "Consultant ID is required")
-    private Integer consultantId;
+    private Integer consultantId; // Required only when serviceId = 1
 
     private Integer serviceId; // Service ID - có thể được set tự động hoặc từ frontend
 

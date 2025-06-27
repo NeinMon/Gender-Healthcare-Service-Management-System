@@ -21,23 +21,31 @@ public class BookingAPI {
 
     @PostMapping
     public ResponseEntity<?> createBooking(@Valid @RequestBody Booking booking) {
-        // API mặc định: tự động set serviceId = 1 nếu chưa có
-        if (booking.getServiceId() == null) {
-            booking.setServiceId(1);
+        try {
+            // API mặc định: tự động set serviceId = 1 nếu chưa có
+            if (booking.getServiceId() == null) {
+                booking.setServiceId(1);
+            }
+            Booking saved = bookingService.createBooking(booking);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        Booking saved = bookingService.createBooking(booking);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PostMapping("/with-service")
     public ResponseEntity<?> createBookingWithService(@Valid @RequestBody Booking booking) {
-        // API yêu cầu serviceId từ frontend - serviceId phải được gửi trong request body
-        if (booking.getServiceId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Service ID is required for this endpoint");
+        try {
+            // API yêu cầu serviceId từ frontend - serviceId phải được gửi trong request body
+            if (booking.getServiceId() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Service ID is required for this endpoint");
+            }
+            Booking saved = bookingService.createBooking(booking);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        Booking saved = bookingService.createBooking(booking);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping
@@ -58,6 +66,12 @@ public class BookingAPI {
     @GetMapping("/service/{serviceId}")
     public List<Booking> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
         return bookingService.getBookingsByServiceId(serviceId);
+    }
+
+    @GetMapping("/user/{userId}/consultations")
+    public ResponseEntity<List<Booking>> getConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
+        List<Booking> consultationBookings = bookingService.getConsultationBookingsByUserId(userId);
+        return ResponseEntity.ok(consultationBookings);
     }
 
     @PutMapping("/{id}/status")

@@ -50,8 +50,8 @@ const MyAppointments = () => {
         throw new Error('Không tìm thấy thông tin người dùng');
       }
       
-      // Lấy danh sách booking của user
-      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}`);
+      // Lấy danh sách booking của user - sử dụng endpoint consultations
+      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}/consultations`);
       if (!response.ok) {
         throw new Error('Lỗi khi lấy danh sách lịch hẹn');
       }

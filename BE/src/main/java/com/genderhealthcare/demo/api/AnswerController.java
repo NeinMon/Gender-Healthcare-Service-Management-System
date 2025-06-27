@@ -54,7 +54,7 @@ public class AnswerController {
             if (answerRepository.existsById(answer.getQuestionID())) {
                 return ResponseEntity.status(400).body("Câu hỏi này đã có câu trả lời");
             }
-              // Cập nhật trạng thái câu hỏi thành "đã giải quyết"
+            // Cập nhật trạng thái câu hỏi thành "đã giải quyết"
             Question question = questionRepository.findById(answer.getQuestionID()).get();
             question.setStatus("resolved");
             questionRepository.save(question);

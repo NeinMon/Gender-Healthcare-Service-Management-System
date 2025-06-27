@@ -74,12 +74,13 @@ const Login = () => {
           // Fallback dựa trên vai trò  
           const role = userToSave.role;
           if (role === 'CONSULTANT') {
-            // Chắc chắn dùng đường dẫn đúng
             navigate('/consultant-interface');
           } else if (role === 'ADMIN') {
             navigate('/admin');
           } else if (role === 'MANAGER') {
             navigate('/manager');
+          } else if (role === 'STAFF') {
+            navigate('/staff-test-bookings');
           } else {
             navigate('/');
           }

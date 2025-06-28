@@ -54,33 +54,43 @@ public class BookingAPI {
 
     @GetMapping
     public List<Booking> getAllBookings() {
-        return bookingService.getAllBookings();
+        List<Booking> bookings = bookingService.getAllBookings();
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/user/{userId}")
     public List<Booking> getBookingsByUserId(@PathVariable("userId") Integer userId) {
-        return bookingService.getBookingsByUserId(userId);
+        List<Booking> bookings = bookingService.getBookingsByUserId(userId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/consultant/{consultantId}")
     public List<Booking> getBookingsByConsultantId(@PathVariable("consultantId") Integer consultantId) {
-        return bookingService.getBookingsByConsultantId(consultantId);
+        List<Booking> bookings = bookingService.getBookingsByConsultantId(consultantId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/service/{serviceId}")
     public List<Booking> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
-        return bookingService.getBookingsByServiceId(serviceId);
+        List<Booking> bookings = bookingService.getBookingsByServiceId(serviceId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/user/{userId}/consultations")
     public ResponseEntity<List<Booking>> getConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
         List<Booking> consultationBookings = bookingService.getConsultationBookingsByUserId(userId);
+        consultationBookings.forEach(Booking::updateStatus);
         return ResponseEntity.ok(consultationBookings);
     }
 
     @GetMapping("/user/{userId}/other-services")
     public ResponseEntity<List<Booking>> getNonConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
         List<Booking> otherServiceBookings = bookingService.getNonConsultationBookingsByUserId(userId);
+        otherServiceBookings.forEach(Booking::updateStatus);
         return ResponseEntity.ok(otherServiceBookings);
     }
 

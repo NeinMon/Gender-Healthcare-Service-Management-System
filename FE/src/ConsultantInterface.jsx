@@ -11,6 +11,7 @@ const ConsultantInterface = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [answerText, setAnswerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Đúng mapping status backend: 'Chờ bắt đầu', 'Đang diễn ra', 'Đã kết thúc'
   const [filterStatus, setFilterStatus] = useState('all');
   const [existingAnswer, setExistingAnswer] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -193,6 +194,14 @@ const ConsultantInterface = () => {
   const handleFilterChange = (e) => {
     setFilterStatus(e.target.value);
   };
+  // Đúng mapping status backend
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
+    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
+    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
+  ];
+
   const filteredQuestions = questions.filter(question => {
     if (filterStatus === 'all') return true;
     
@@ -663,8 +672,8 @@ const ConsultantInterface = () => {
                     color: '#0891b2' 
                   }}>Lọc theo trạng thái: </label>
                   <select 
-                    onChange={handleFilterChange}
-                    value={filterStatus}
+                    value={filterStatus} 
+                    onChange={e => setFilterStatus(e.target.value)} 
                     style={{ 
                       padding: "10px 16px", 
                       borderRadius: "8px", 
@@ -676,10 +685,9 @@ const ConsultantInterface = () => {
                       cursor: "pointer" 
                     }}
                   >
-                    <option value="all">Tất cả câu hỏi</option>
-                    <option value="pending">Chờ trả lời</option>
-                    <option value="answered">Đã trả lời</option>
-                    <option value="closed">Đã đóng</option>
+                    {statusOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 <h2 style={{ 
@@ -1030,7 +1038,7 @@ const ConsultantInterface = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {bookings.map((booking, idx) => (
+                        {filteredBookings.map((booking, idx) => (
                           <tr 
                             key={booking.bookingId || idx} 
                             style={{ 

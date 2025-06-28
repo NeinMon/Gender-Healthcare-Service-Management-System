@@ -87,21 +87,20 @@ public class Booking {
 
     /**
      * Tự động cập nhật status dựa trên thời gian hiện tại so với appointmentDate và startTime/endTime
+     * Chỉ tự động chuyển giữa 'Chờ bắt đầu' và 'Đang diễn ra'.
+     * 'Đã kết thúc' chỉ được set thủ công khi endTime được cập nhật qua API.
      */
     public void updateStatus() {
-        // Ưu tiên giữ trạng thái 'Đã kết thúc' nếu đã set endTime hoặc status đã là 'Đã kết thúc'
-        if ("Đã kết thúc".equals(this.status) || this.endTime != null && (this.status != null && this.status.equals("Đã kết thúc"))) {
-            this.status = "Đã kết thúc";
+        // Nếu status đã là 'Đã kết thúc' thì giữ nguyên, không tự động chuyển lại
+        if ("Đã kết thúc".equals(this.status)) {
             return;
         }
-        if (appointmentDate != null && startTime != null && endTime != null) {
+        if (appointmentDate != null && startTime != null) {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime appointmentStart = LocalDateTime.of(appointmentDate, startTime);
-            LocalDateTime appointmentEnd = LocalDateTime.of(appointmentDate, endTime);
+            // Nếu endTime đã được set (tức là đã kết thúc thủ công), status sẽ là 'Đã kết thúc' và không vào đây
             if (now.isBefore(appointmentStart)) {
                 this.status = "Chờ bắt đầu";
-            } else if (now.isAfter(appointmentEnd)) {
-                this.status = "Đã kết thúc";
             } else {
                 this.status = "Đang diễn ra";
             }

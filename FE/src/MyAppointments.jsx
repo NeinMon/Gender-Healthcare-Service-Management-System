@@ -8,6 +8,7 @@ const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Đúng mapping status backend: 'Chờ bắt đầu', 'Đang diễn ra', 'Đã kết thúc'
   const [filterStatus, setFilterStatus] = useState('all');
   const [consultantNames, setConsultantNames] = useState({});
   const [showVideoCall, setShowVideoCall] = useState(false);
@@ -93,9 +94,7 @@ const MyAppointments = () => {
 
   const filteredAppointments = appointments.filter(app => {
     if (filterStatus === 'all') return true;
-    
-    // Xử lý trạng thái theo đúng entity Booking trong backend
-    // So sánh trực tiếp với giá trị status từ backend: "Chờ xác nhận", "Đã xác nhận", "Đã xong"
+    // So sánh đúng với status backend
     return app.status === filterStatus;
   });
   // Chức năng hủy lịch hẹn đã được gỡ bỏ
@@ -127,6 +126,14 @@ const MyAppointments = () => {
         return '#757575';
     }
   };
+
+  // Đúng mapping status backend
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
+    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
+    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
+  ];
 
   return (
     <div style={{ 
@@ -268,11 +275,9 @@ const MyAppointments = () => {
                   cursor: "pointer" 
                 }}
               >
-                <option value="all">Tất cả</option>
-                <option value="Đã duyệt">Đã duyệt</option>
-                <option value="Đang chờ duyệt">Đang chờ duyệt</option>
-                <option value="Đã kết thúc">Đã kết thúc</option>
-                <option value="Không được duyệt">Không được duyệt</option>
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
             <Link 

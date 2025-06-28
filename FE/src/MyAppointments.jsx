@@ -13,6 +13,8 @@ const MyAppointments = () => {
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [videoChannel, setVideoChannel] = useState(null);
   const [activeBookingId, setActiveBookingId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailData, setDetailData] = useState(null);
   
   useEffect(() => {
     // Kiểm tra login
@@ -490,9 +492,35 @@ const MyAppointments = () => {
                               </span>
                             )}
                             {app.status === 'Đã kết thúc' && (
-                              <span style={{ color: "#64748b", fontSize: "14px", fontWeight: "500" }}>
-                                Lịch hẹn đã kết thúc
-                              </span>
+                              <>
+                                <button
+                                  style={{
+                                    background: '#e0f2fe',
+                                    color: '#0891b2',
+                                    border: '1px solid #22d3ee',
+                                    borderRadius: "8px",
+                                    padding: '8px 14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    marginLeft: 4,
+                                    transition: "all 0.2s"
+                                  }}
+                                  onClick={() => {
+                                    setDetailData({
+                                      consultant: consultantNames[app.consultantId] || 'N/A',
+                                      content: app.content || 'Không có',
+                                      date: app.appointmentDate || 'N/A',
+                                      startTime: app.startTime || 'N/A',
+                                      endTime: app.endTime || 'N/A',
+                                      status: app.status
+                                    });
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  Xem chi tiết cuộc gọi
+                                </button>
+                              </>
                             )}
                           </td>
                         </tr>
@@ -530,6 +558,70 @@ const MyAppointments = () => {
           </div>
         </div>
       </footer>
+      {showDetailModal && detailData && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 340,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            position: 'relative'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 18 }}>Chi tiết cuộc gọi</h2>
+            <div style={{ marginBottom: 10 }}><b>Tư vấn viên:</b> {detailData.consultant}</div>
+            <div style={{ marginBottom: 10 }}><b>Nội dung:</b> {detailData.content}</div>
+            <div style={{ marginBottom: 10 }}><b>Ngày:</b> {detailData.date}</div>
+            <div style={{ marginBottom: 10 }}><b>Bắt đầu:</b> {detailData.startTime}</div>
+            <div style={{ marginBottom: 10 }}><b>Kết thúc:</b> {detailData.endTime}</div>
+            <div style={{ marginBottom: 18 }}><b>Trạng thái:</b> {detailData.status}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <button
+                style={{
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 32,
+                  padding: '14px 48px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  boxShadow: '0 4px 24px rgba(34,211,238,0.18)',
+                  letterSpacing: 1,
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                  margin: 0
+                }}
+                onClick={() => setShowDetailModal(false)}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)';
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(34,211,238,0.28)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(34,211,238,0.18)';
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

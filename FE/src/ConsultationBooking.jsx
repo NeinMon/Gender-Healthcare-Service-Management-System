@@ -125,11 +125,18 @@ const ConsultationBooking = () => {
       }
     }
 
-    // Gộp ngày và giờ thành appointmentDate với định dạng yyyy-MM-dd HH:mm:ss
+    // Gộp ngày và giờ thành appointmentDate (yyyy-MM-dd) và startTime (HH:mm)
     let appointmentDate = '';
+    let startTime = '';
+    let endTime = '';
     if (formData.date && formData.time) {
-      const timePart = formData.time.split(' - ')[0];
-      appointmentDate = `${formData.date} ${timePart}:00`;
+      appointmentDate = formData.date; // yyyy-MM-dd
+      const timePart = formData.time.split(' - ')[0]; // "08:00"
+      startTime = timePart;
+      // Tính endTime tự động +1h
+      const [h, m] = timePart.split(":").map(Number);
+      const end = new Date(0, 0, 0, h + 1, m, 0);
+      endTime = end.toTimeString().slice(0,5); // HH:mm
     }
 
     // Validate dữ liệu trước khi gửi
@@ -137,7 +144,8 @@ const ConsultationBooking = () => {
       !userId ||
       !formData.consultantId ||
       !formData.symptoms.trim() ||
-      !appointmentDate
+      !appointmentDate ||
+      !startTime
     ) {
       alert("Vui lòng điền đầy đủ thông tin hợp lệ!");
       return;
@@ -148,8 +156,9 @@ const ConsultationBooking = () => {
       userId: Number(userId),
       consultantId: Number(formData.consultantId),
       content: formData.symptoms,
-      appointmentDate: appointmentDate,
-      status: "Đang chờ duyệt" // Mặc định status cho booking mới là "Đang chờ duyệt"
+      appointmentDate: appointmentDate, // yyyy-MM-dd
+      startTime: startTime // HH:mm
+      // Không gửi endTime
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên

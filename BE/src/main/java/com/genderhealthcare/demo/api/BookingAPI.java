@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
+import java.time.LocalTime;
 
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
@@ -26,6 +27,9 @@ public class BookingAPI {
             if (booking.getServiceId() == null) {
                 booking.setServiceId(1);
             }
+            // Luôn chỉ nhận startTime, endTime để null khi tạo mới
+            booking.setEndTime(null);
+            // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
             Booking saved = bookingService.createBooking(booking);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
@@ -83,7 +87,8 @@ public class BookingAPI {
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateBookingStatus(
             @PathVariable("id") Integer id,
-            @RequestParam(value = "status", required = true) String status) {
+            @RequestParam(value = "status", required = true) String status,
+            @RequestParam(value = "endTime", required = false) String endTimeStr) {
 
         Booking booking = bookingService.getBookingById(id);
         if (booking == null) {
@@ -91,14 +96,24 @@ public class BookingAPI {
         }
 
         // Validate status value
-        if (!status.equals("Đã duyệt") &&
-            !status.equals("Đã kết thúc") &&
-            !status.equals("Không được duyệt")) {
+        if (!status.equals("Đã kết thúc")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Invalid status. Valid values: 'Đã duyệt', 'Đã kết thúc', 'Không được duyệt'");
+                .body("Invalid status. Only 'Đã kết thúc' is allowed for this action");
         }
 
-        booking.setStatus(status);
+        // Parse endTime nếu có
+        if (endTimeStr != null) {
+            try {
+                LocalTime endTime = LocalTime.parse(endTimeStr);
+                booking.setEndTime(endTime);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid endTime format. Use HH:mm");
+            }
+        } else {
+            // Nếu không truyền endTime thì lấy thời điểm hiện tại
+            booking.setEndTime(LocalTime.now());
+        }
+        booking.setStatus("Đã kết thúc");
         Booking updated = bookingService.createBooking(booking);
         return ResponseEntity.ok(updated);
     }

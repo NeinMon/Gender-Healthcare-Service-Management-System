@@ -217,7 +217,13 @@ const ConsultantInterface = () => {
     }
     
     return false;
-  });  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
+  });  
+  // Lọc booking theo trạng thái
+  const filteredBookings = filterStatus === 'all'
+    ? bookings
+    : bookings.filter(b => b.status === filterStatus);
+
+  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
   const submitAnswer = async () => {
     if (!answerText.trim()) {
       alert('Vui lòng nhập câu trả lời');

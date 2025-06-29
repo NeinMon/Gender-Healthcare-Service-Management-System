@@ -58,6 +58,9 @@ public class Booking {
 
     private String createdAt; // Timestamp of when the booking was created
 
+    @Column(name = "testresults", columnDefinition = "NVARCHAR(1000)")
+    private String testResults; // Kết quả xét nghiệm (nếu là lịch xét nghiệm)
+
     // Tự động thiết lập thời gian tạo trước khi lưu vào database
     @PrePersist
     protected void onCreate() {

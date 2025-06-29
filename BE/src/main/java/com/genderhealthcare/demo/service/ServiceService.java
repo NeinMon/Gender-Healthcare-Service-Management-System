@@ -71,4 +71,9 @@ public class ServiceService {
     public List<com.genderhealthcare.demo.entity.Service> searchServicesByName(String serviceName) {
         return serviceRepository.findByServiceNameContainingIgnoreCase(serviceName);
     }
+
+    // Lấy service theo tên (chính xác)
+    public com.genderhealthcare.demo.entity.Service getServiceByName(String serviceName) {
+        return serviceRepository.findByServiceName(serviceName);
+    }
 }

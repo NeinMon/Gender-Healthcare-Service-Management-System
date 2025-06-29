@@ -14,4 +14,10 @@ public interface ServiceRepository extends JpaRepository<Service, Integer> {
     
     // Find services by service name (case-insensitive)
     List<Service> findByServiceNameContainingIgnoreCase(String serviceName);
+
+    // Find service by exact service name
+    Service findByServiceName(String serviceName);
+
+
+    boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, String appointmentDate);
 }

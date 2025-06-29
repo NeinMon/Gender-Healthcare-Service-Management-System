@@ -75,4 +75,19 @@ public class BookingService {
                            b.getServiceId().equals(1))
                 .toList();
     }
+    public List<Booking> getBookingsByServiceIdAndStatus(Integer serviceId, String status) {
+        return bookingRepository.findByServiceIdAndStatus(serviceId, status);
+    }
+
+    // Kiểm tra trùng lịch tư vấn viên theo khung giờ
+    public boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, String appointmentDate) {
+        return bookingRepository.existsByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
+    }
+
+    // Lấy tất cả booking của 1 tư vấn viên trong 1 ngày (để kiểm tra khung giờ rảnh)
+    public List<Booking> getBookingsByConsultantIdAndDate(Integer consultantId, String date) {
+        return bookingRepository.findByConsultantIdAndDate(consultantId, date);
+    }
+
+
 }

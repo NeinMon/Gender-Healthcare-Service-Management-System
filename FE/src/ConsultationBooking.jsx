@@ -14,6 +14,8 @@ const ConsultationBooking = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Gọi API lấy danh sách tư vấn viên
@@ -63,10 +65,17 @@ const ConsultationBooking = () => {
     fetchUserInfo();
   }, []);
 
-  const availableTimes = [
-    "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
-    "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
-  ];
+  // Lấy khung giờ rảnh từ backend khi chọn ngày và tư vấn viên
+  useEffect(() => {
+    if (formData.consultantId && formData.date) {
+      fetch(`http://localhost:8080/api/bookings/available-times?consultantId=${formData.consultantId}&date=${formData.date}`)
+        .then(res => res.json())
+        .then(data => setAvailableTimes(data))
+        .catch(() => setAvailableTimes([]));
+    } else {
+      setAvailableTimes([]);
+    }
+  }, [formData.consultantId, formData.date]);
 
   // Kiểm tra xem thời gian đã qua hay chưa để disable option
   const isTimeSlotPassed = (timeSlot) => {
@@ -349,6 +358,12 @@ const ConsultationBooking = () => {
                   placeholder="Mô tả chi tiết triệu chứng hoặc vấn đề bạn muốn tư vấn"
                 ></textarea>
               </div>
+
+              {error && (
+                <div style={{ color: "red", marginBottom: "16px", textAlign: "center" }}>
+                  {error}
+                </div>
+              )}
 
               <div style={{ marginTop: "35px", textAlign: "center" }}>
                 <button

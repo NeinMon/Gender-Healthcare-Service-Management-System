@@ -86,8 +86,8 @@ public class BookingService {
     }
 
     // Lấy tất cả booking của 1 tư vấn viên trong 1 ngày (để kiểm tra khung giờ rảnh)
-    public List<Booking> getBookingsByConsultantIdAndDate(Integer consultantId, String date) {
-        return bookingRepository.findByConsultantIdAndDate(consultantId, date);
+    public List<Booking> getBookingsByConsultantIdAndDate(Integer consultantId, LocalDate appointmentDate) {
+        return bookingRepository.findByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
     }
 
     public List<Booking> getNonConsultationBookingsByUserId(Integer userId) {

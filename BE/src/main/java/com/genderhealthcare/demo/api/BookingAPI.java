@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
@@ -187,7 +188,8 @@ public class BookingAPI {
             "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
         };
         // Lấy tất cả booking của consultant trong ngày
-        List<Booking> bookings = bookingService.getBookingsByConsultantIdAndDate(consultantId, date);
+        LocalDate localDate = LocalDate.parse(date); // Chuyển String sang LocalDate
+        List<Booking> bookings = bookingService.getBookingsByConsultantIdAndDate(consultantId, localDate);
         java.util.Set<String> bookedSlots = new java.util.HashSet<>();
         for (Booking b : bookings) {
             // Lấy giờ và phút từ LocalTime (startTime)

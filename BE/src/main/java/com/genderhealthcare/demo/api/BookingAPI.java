@@ -31,29 +31,26 @@ public class BookingAPI {
             if (booking.getServiceId() == null) {
                 booking.setServiceId(1);
             }
-<<<<<<< HEAD
-            // Kiểm tra trùng lịch tư vấn viên
-            if (booking.getConsultantId() != null && booking.getAppointmentDate() != null) {
-                boolean exists = bookingService.existsByConsultantIdAndAppointmentDate(
-                    booking.getConsultantId(),
-                    booking.getAppointmentDate()
-                );
-                if (exists) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body("Tư vấn viên đã có lịch trong khung giờ này!");
-                }
+        // Kiểm tra trùng lịch tư vấn viên
+        if (booking.getConsultantId() != null && booking.getAppointmentDate() != null) {
+            boolean exists = bookingService.existsByConsultantIdAndAppointmentDate(
+                booking.getConsultantId(),
+                booking.getAppointmentDate()
+            );
+            if (exists) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Tư vấn viên đã có lịch trong khung giờ này!");
             }
-=======
-            // Luôn chỉ nhận startTime, endTime để null khi tạo mới
-            booking.setEndTime(null);
-            // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
->>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
-            Booking saved = bookingService.createBooking(booking);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+        // Luôn chỉ nhận startTime, endTime để null khi tạo mới
+        booking.setEndTime(null);
+        // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
+        Booking saved = bookingService.createBooking(booking);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+}
 
     @PostMapping("/with-service")
     public ResponseEntity<?> createBookingWithService(@Valid @RequestBody Booking booking) {
@@ -193,8 +190,10 @@ public class BookingAPI {
         List<Booking> bookings = bookingService.getBookingsByConsultantIdAndDate(consultantId, date);
         java.util.Set<String> bookedSlots = new java.util.HashSet<>();
         for (Booking b : bookings) {
-            // Giả sử appointmentDate lưu dạng "yyyy-MM-dd HH:mm:ss" hoặc tương tự
-            String time = b.getAppointmentDate().substring(11, 16); // lấy HH:mm
+            // Lấy giờ và phút từ LocalTime (startTime)
+            int hour = b.getStartTime().getHour();
+            int minute = b.getStartTime().getMinute();
+            String time = String.format("%02d:%02d", hour, minute); // lấy HH:mm
             for (String slot : allSlots) {
                 if (slot.startsWith(time)) {
                     bookedSlots.add(slot);

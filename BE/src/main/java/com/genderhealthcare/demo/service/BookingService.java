@@ -5,6 +5,7 @@ import com.genderhealthcare.demo.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -75,13 +76,12 @@ public class BookingService {
                            b.getServiceId().equals(1))
                 .toList();
     }
-<<<<<<< HEAD
     public List<Booking> getBookingsByServiceIdAndStatus(Integer serviceId, String status) {
         return bookingRepository.findByServiceIdAndStatus(serviceId, status);
     }
 
     // Kiểm tra trùng lịch tư vấn viên theo khung giờ
-    public boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, String appointmentDate) {
+    public boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, LocalDate appointmentDate) {
         return bookingRepository.existsByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
     }
 
@@ -90,18 +90,14 @@ public class BookingService {
         return bookingRepository.findByConsultantIdAndDate(consultantId, date);
     }
 
-
-=======
-
     public List<Booking> getNonConsultationBookingsByUserId(Integer userId) {
         if (userId == null) {
             return List.of();
         }
         return bookingRepository.findAll().stream()
-                .filter(b -> userId.equals(b.getUserId()) && 
-                           b.getServiceId() != null && 
-                           !b.getServiceId().equals(1))
+                .filter(b -> userId.equals(b.getUserId()) &&
+                        b.getServiceId() != null &&
+                        !b.getServiceId().equals(1))
                 .toList();
     }
->>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
 }

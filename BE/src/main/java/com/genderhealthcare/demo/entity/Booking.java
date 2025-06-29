@@ -68,11 +68,8 @@ public class Booking {
 
     private String createdAt; // Timestamp of when the booking was created
 
-<<<<<<< HEAD
     @Column(name = "testresults", columnDefinition = "NVARCHAR(1000)")
-    private String testResults; // Kết quả xét nghiệm (nếu là lịch xét nghiệm)
-=======
->>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
+    private String testResults; // Kết quả xét nghiệm (nếu là lịch xét nghiệm)9908fb
 
     // Tự động thiết lập thời gian tạo trước khi lưu vào database
     @PrePersist

@@ -19,5 +19,5 @@ public interface ServiceRepository extends JpaRepository<Service, Integer> {
     Service findByServiceName(String serviceName);
 
 
-    boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, String appointmentDate);
+//    boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, String appointmentDate);
 }

@@ -8,8 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -18,7 +18,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import com.genderhealthcare.demo.validation.ValidBooking;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 @Entity
@@ -46,26 +48,115 @@ public class Booking {
     @Column(name = "content", columnDefinition = "NVARCHAR(500)")
     private String content;
 
-    @NotBlank(message = "Appointment date is required")
-    private String appointmentDate; // Date and time of the appointment
+    @NotNull(message = "Appointment date is required")
+    @Column(name = "appointment_date")
+    private LocalDate appointmentDate; // Date of the appointment (chỉ ngày)
+
+    @NotNull(message = "Start time is required")
+    @Column(name = "start_time")
+    private LocalTime startTime; // Time when appointment starts
+
+    @Column(name = "end_time")
+    private LocalTime endTime; // Time when appointment ends
 
     @Pattern(
-        regexp = "Đang chờ duyệt|Đã duyệt|Đã kết thúc|Không được duyệt",
-        message = "Status must be one of: Đang chờ duyệt, Đã duyệt, Đã kết thúc, Không được duyệt"
+        regexp = "Chờ bắt đầu|Đang diễn ra|Đã kết thúc",
+        message = "Status must be one of: Chờ bắt đầu, Đang diễn ra, Đã kết thúc"
     )
     @Column(name = "status", columnDefinition = "NVARCHAR(50)")
-    private String status; // "Chờ xác nhận", "Đã xác nhận", "Đã xong"
+    private String status;
 
     private String createdAt; // Timestamp of when the booking was created
 
+<<<<<<< HEAD
     @Column(name = "testresults", columnDefinition = "NVARCHAR(1000)")
     private String testResults; // Kết quả xét nghiệm (nếu là lịch xét nghiệm)
+=======
+>>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
 
     // Tự động thiết lập thời gian tạo trước khi lưu vào database
     @PrePersist
     protected void onCreate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = LocalDateTime.now().format(formatter);
+        // Không tự động set endTime khi tạo mới, chỉ set khi kết thúc thủ công
+        // Cập nhật status ban đầu
+        updateStatus();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        // Cập nhật status mỗi khi entity được update
+        updateStatus();
+    }
+
+    /**
+     * Tự động cập nhật status dựa trên thời gian hiện tại so với appointmentDate và startTime/endTime
+     * Chỉ tự động chuyển giữa 'Chờ bắt đầu' và 'Đang diễn ra'.
+     * 'Đã kết thúc' chỉ được set thủ công khi endTime được cập nhật qua API.
+     */
+    public void updateStatus() {
+        // Nếu status đã là 'Đã kết thúc' thì giữ nguyên, không tự động chuyển lại
+        if ("Đã kết thúc".equals(this.status)) {
+            return;
+        }
+        if (appointmentDate != null && startTime != null) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime appointmentStart = LocalDateTime.of(appointmentDate, startTime);
+            // Nếu endTime đã được set (tức là đã kết thúc thủ công), status sẽ là 'Đã kết thúc' và không vào đây
+            if (now.isBefore(appointmentStart)) {
+                this.status = "Chờ bắt đầu";
+            } else {
+                this.status = "Đang diễn ra";
+            }
+        }
+    }
+
+    /**
+     * Thiết lập appointmentDate và startTime, tự động tính endTime (mặc định 1 giờ)
+     */
+    public void setAppointmentDate(LocalDate appointmentDate) {
+        this.appointmentDate = appointmentDate;
+        updateStatus();
+    }
+
+    /**
+     * Thiết lập startTime và tự động tính endTime (mặc định 1 giờ)
+     */
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+        if (this.endTime == null && startTime != null) {
+            this.endTime = startTime.plusHours(1);
+        }
+        updateStatus();
+    }
+
+    /**
+     * Thiết lập appointmentDate và startTime với duration tùy chỉnh (tính bằng giờ)
+     */
+    public void setAppointmentDateTime(LocalDate appointmentDate, LocalTime startTime, int durationHours) {
+        this.appointmentDate = appointmentDate;
+        this.startTime = startTime;
+        if (startTime != null) {
+            this.endTime = startTime.plusHours(durationHours);
+        }
+        updateStatus();
+    }
+
+    /**
+     * Thiết lập endTime và cập nhật status
+     */
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+        updateStatus();
+    }
+
+    /**
+     * Get current status dựa trên thời gian thực
+     */
+    public String getCurrentStatus() {
+        updateStatus();
+        return this.status;
     }
     
     // Additional fields can be added as needed

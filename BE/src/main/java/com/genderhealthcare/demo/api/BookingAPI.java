@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
+import java.time.LocalTime;
 
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
@@ -30,6 +31,7 @@ public class BookingAPI {
             if (booking.getServiceId() == null) {
                 booking.setServiceId(1);
             }
+<<<<<<< HEAD
             // Kiểm tra trùng lịch tư vấn viên
             if (booking.getConsultantId() != null && booking.getAppointmentDate() != null) {
                 boolean exists = bookingService.existsByConsultantIdAndAppointmentDate(
@@ -41,6 +43,11 @@ public class BookingAPI {
                         .body("Tư vấn viên đã có lịch trong khung giờ này!");
                 }
             }
+=======
+            // Luôn chỉ nhận startTime, endTime để null khi tạo mới
+            booking.setEndTime(null);
+            // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
+>>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
             Booking saved = bookingService.createBooking(booking);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
@@ -65,34 +72,51 @@ public class BookingAPI {
 
     @GetMapping
     public List<Booking> getAllBookings() {
-        return bookingService.getAllBookings();
+        List<Booking> bookings = bookingService.getAllBookings();
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/user/{userId}")
     public List<Booking> getBookingsByUserId(@PathVariable("userId") Integer userId) {
-        return bookingService.getBookingsByUserId(userId);
+        List<Booking> bookings = bookingService.getBookingsByUserId(userId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/consultant/{consultantId}")
     public List<Booking> getBookingsByConsultantId(@PathVariable("consultantId") Integer consultantId) {
-        return bookingService.getBookingsByConsultantId(consultantId);
+        List<Booking> bookings = bookingService.getBookingsByConsultantId(consultantId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/service/{serviceId}")
     public List<Booking> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
-        return bookingService.getBookingsByServiceId(serviceId);
+        List<Booking> bookings = bookingService.getBookingsByServiceId(serviceId);
+        bookings.forEach(Booking::updateStatus);
+        return bookings;
     }
 
     @GetMapping("/user/{userId}/consultations")
     public ResponseEntity<List<Booking>> getConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
         List<Booking> consultationBookings = bookingService.getConsultationBookingsByUserId(userId);
+        consultationBookings.forEach(Booking::updateStatus);
         return ResponseEntity.ok(consultationBookings);
+    }
+
+    @GetMapping("/user/{userId}/other-services")
+    public ResponseEntity<List<Booking>> getNonConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
+        List<Booking> otherServiceBookings = bookingService.getNonConsultationBookingsByUserId(userId);
+        otherServiceBookings.forEach(Booking::updateStatus);
+        return ResponseEntity.ok(otherServiceBookings);
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateBookingStatus(
             @PathVariable("id") Integer id,
-            @RequestParam(value = "status", required = true) String status) {
+            @RequestParam(value = "status", required = true) String status,
+            @RequestParam(value = "endTime", required = false) String endTimeStr) {
 
         Booking booking = bookingService.getBookingById(id);
         if (booking == null) {
@@ -100,14 +124,24 @@ public class BookingAPI {
         }
 
         // Validate status value
-        if (!status.equals("Đã duyệt") &&
-            !status.equals("Đã kết thúc") &&
-            !status.equals("Không được duyệt")) {
+        if (!status.equals("Đã kết thúc")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Invalid status. Valid values: 'Đã duyệt', 'Đã kết thúc', 'Không được duyệt'");
+                .body("Invalid status. Only 'Đã kết thúc' is allowed for this action");
         }
 
-        booking.setStatus(status);
+        // Parse endTime nếu có
+        if (endTimeStr != null) {
+            try {
+                LocalTime endTime = LocalTime.parse(endTimeStr);
+                booking.setEndTime(endTime);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid endTime format. Use HH:mm");
+            }
+        } else {
+            // Nếu không truyền endTime thì lấy thời điểm hiện tại
+            booking.setEndTime(LocalTime.now());
+        }
+        booking.setStatus("Đã kết thúc");
         Booking updated = bookingService.createBooking(booking);
         return ResponseEntity.ok(updated);
     }

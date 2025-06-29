@@ -8,11 +8,14 @@ const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Đúng mapping status backend: 'Chờ bắt đầu', 'Đang diễn ra', 'Đã kết thúc'
   const [filterStatus, setFilterStatus] = useState('all');
   const [consultantNames, setConsultantNames] = useState({});
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [videoChannel, setVideoChannel] = useState(null);
   const [activeBookingId, setActiveBookingId] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailData, setDetailData] = useState(null);
   
   useEffect(() => {
     // Kiểm tra login
@@ -91,9 +94,7 @@ const MyAppointments = () => {
 
   const filteredAppointments = appointments.filter(app => {
     if (filterStatus === 'all') return true;
-    
-    // Xử lý trạng thái theo đúng entity Booking trong backend
-    // So sánh trực tiếp với giá trị status từ backend: "Chờ xác nhận", "Đã xác nhận", "Đã xong"
+    // So sánh đúng với status backend
     return app.status === filterStatus;
   });
   // Chức năng hủy lịch hẹn đã được gỡ bỏ
@@ -102,41 +103,37 @@ const MyAppointments = () => {
   
   const formatStatus = (status) => {
     switch (status) {
-      case 'Đã xác nhận':
-      case 'Đã duyệt':
-        return 'Đã duyệt';
-      case 'Chờ xác nhận':
-      case 'Đang chờ duyệt':
-        return 'Đang chờ duyệt';
-      case 'Đã xong':
+      case 'Chờ bắt đầu':
+        return 'Chờ bắt đầu';
+      case 'Đang diễn ra':
+        return 'Đang diễn ra';
       case 'Đã kết thúc':
         return 'Đã kết thúc';
-      case 'Không được duyệt':
-        return 'Không được duyệt';
       default:
         return status || 'Không xác định';
     }
   };
-  // Đã xóa hàm formatMethod vì không cần thiết
-  
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Đã xác nhận':
-      case 'Đã duyệt':
-        return '#4caf50';
-      case 'Chờ xác nhận':
-      case 'Đang chờ duyệt':
-        return '#ff9800';
-      case 'Đã xong':
+      case 'Chờ bắt đầu':
+        return '#fde68a'; // vàng nhạt
+      case 'Đang diễn ra':
+        return '#22d3ee'; // xanh cyan
       case 'Đã kết thúc':
-        return '#2196f3';
-      case 'Không được duyệt':
-        return '#f44336';
+        return '#cbd5e1'; // xám nhạt
       default:
         return '#757575';
     }
   };
-  // Đã xóa các hàm xử lý hành động
+
+  // Đúng mapping status backend
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
+    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
+    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
+  ];
 
   return (
     <div style={{ 
@@ -278,11 +275,9 @@ const MyAppointments = () => {
                   cursor: "pointer" 
                 }}
               >
-                <option value="all">Tất cả</option>
-                <option value="Đã duyệt">Đã duyệt</option>
-                <option value="Đang chờ duyệt">Đang chờ duyệt</option>
-                <option value="Đã kết thúc">Đã kết thúc</option>
-                <option value="Không được duyệt">Không được duyệt</option>
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
             <Link 
@@ -438,13 +433,13 @@ const MyAppointments = () => {
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
                             <div style={{ display: "flex", justifyContent: "center" }}>
-                              <span style={{ 
+                              <span style={{
                                 display: "inline-block",
                                 padding: "6px 12px",
                                 borderRadius: "20px",
                                 fontWeight: 600,
                                 fontSize: "13px",
-                                color: "#fff",
+                                color: app.status === 'Đang diễn ra' ? '#fff' : (app.status === 'Chờ bắt đầu' ? '#b45309' : '#64748b'),
                                 backgroundColor: getStatusColor(app.status)
                               }}>
                                 {formatStatus(app.status)}
@@ -452,7 +447,7 @@ const MyAppointments = () => {
                             </div>
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                            {(app.status === 'Đã xác nhận' || app.status === 'Đã duyệt') && (
+                            {app.status === 'Đang diễn ra' && (
                               <button
                                 style={{
                                   background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
@@ -460,34 +455,33 @@ const MyAppointments = () => {
                                   border: 'none',
                                   borderRadius: "8px",
                                   padding: '10px 16px',
-                                  fontWeight: 600,
+                                  fontWeight: 700,
                                   cursor: 'pointer',
-                                  fontSize: "14px",
-                                  transition: "all 0.2s",
-                                  boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                                  fontSize: "15px",
+                                  boxShadow: "0 2px 8px rgba(34,211,238,0.25)",
+                                  outline: 'none',
+                                  opacity: 1,
+                                  filter: 'none',
+                                  transition: "all 0.2s"
                                 }}
-                                onMouseOver={(e) => {
-                                  e.currentTarget.style.transform = "translateY(-2px)";
-                                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                                onMouseOver={e => {
+                                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #06b6d4 100%)';
+                                  e.currentTarget.style.transform = "scale(1.04)";
+                                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(34,211,238,0.35)";
                                 }}
-                                onMouseOut={(e) => {
-                                  e.currentTarget.style.transform = "translateY(0)";
-                                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                                onMouseOut={e => {
+                                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)';
+                                  e.currentTarget.style.transform = "scale(1)";
+                                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(34,211,238,0.25)";
                                 }}
                                 onClick={() => { 
-                                  // QUAN TRỌNG: Sử dụng bookingId làm tên kênh để đảm bảo nhất quán
-                                  // Đảm bảo cách tạo kênh GIỐNG CHÍNH XÁC với ConsultantInterface.jsx
                                   const bookingId = app.bookingId;
-                                  // Luôn sử dụng "booking_" + bookingId làm tên kênh
                                   const channelName = bookingId ? `booking_${bookingId}` : null;
-                                  
                                   if (!channelName) {
                                     alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
                                     return;
                                   }
-                                  
-                                  console.log(`[CLIENT] Bắt đầu cuộc gọi trên kênh: ${channelName}`);
-                                  setActiveBookingId(bookingId); // Lưu bookingId đang tham gia
+                                  setActiveBookingId(bookingId);
                                   setVideoChannel(channelName);
                                   setShowVideoCall(true);
                                 }}
@@ -497,12 +491,41 @@ const MyAppointments = () => {
                                 </span>
                               </button>
                             )}
-                            {(app.status !== 'Đã xác nhận' && app.status !== 'Đã duyệt') && (
-                              <span style={{ color: "#999", fontSize: "14px" }}>
-                                {(app.status === 'Chờ xác nhận' || app.status === 'Đang chờ duyệt') ? 'Đang chờ tư vấn viên duyệt...' : 
-                                 (app.status === 'Không được duyệt') ? 'Lịch hẹn bị từ chối' : 
-                                 'Đã hoàn thành'}
+                            {app.status === 'Chờ bắt đầu' && (
+                              <span style={{ color: "#b45309", fontSize: "14px", fontWeight: "500" }}>
+                                Chưa đến giờ hẹn
                               </span>
+                            )}
+                            {app.status === 'Đã kết thúc' && (
+                              <>
+                                <button
+                                  style={{
+                                    background: '#e0f2fe',
+                                    color: '#0891b2',
+                                    border: '1px solid #22d3ee',
+                                    borderRadius: "8px",
+                                    padding: '8px 14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    marginLeft: 4,
+                                    transition: "all 0.2s"
+                                  }}
+                                  onClick={() => {
+                                    setDetailData({
+                                      consultant: consultantNames[app.consultantId] || 'N/A',
+                                      content: app.content || 'Không có',
+                                      date: app.appointmentDate || 'N/A',
+                                      startTime: app.startTime || 'N/A',
+                                      endTime: app.endTime || 'N/A',
+                                      status: app.status
+                                    });
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  Xem chi tiết cuộc gọi
+                                </button>
+                              </>
                             )}
                           </td>
                         </tr>
@@ -540,6 +563,70 @@ const MyAppointments = () => {
           </div>
         </div>
       </footer>
+      {showDetailModal && detailData && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 340,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            position: 'relative'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 18 }}>Chi tiết cuộc gọi</h2>
+            <div style={{ marginBottom: 10 }}><b>Tư vấn viên:</b> {detailData.consultant}</div>
+            <div style={{ marginBottom: 10 }}><b>Nội dung:</b> {detailData.content}</div>
+            <div style={{ marginBottom: 10 }}><b>Ngày:</b> {detailData.date}</div>
+            <div style={{ marginBottom: 10 }}><b>Bắt đầu:</b> {detailData.startTime}</div>
+            <div style={{ marginBottom: 10 }}><b>Kết thúc:</b> {detailData.endTime}</div>
+            <div style={{ marginBottom: 18 }}><b>Trạng thái:</b> {detailData.status}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <button
+                style={{
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 32,
+                  padding: '14px 48px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  boxShadow: '0 4px 24px rgba(34,211,238,0.18)',
+                  letterSpacing: 1,
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                  margin: 0
+                }}
+                onClick={() => setShowDetailModal(false)}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)';
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(34,211,238,0.28)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(34,211,238,0.18)';
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

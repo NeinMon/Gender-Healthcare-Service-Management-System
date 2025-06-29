@@ -75,6 +75,7 @@ public class BookingService {
                            b.getServiceId().equals(1))
                 .toList();
     }
+<<<<<<< HEAD
     public List<Booking> getBookingsByServiceIdAndStatus(Integer serviceId, String status) {
         return bookingRepository.findByServiceIdAndStatus(serviceId, status);
     }
@@ -90,4 +91,17 @@ public class BookingService {
     }
 
 
+=======
+
+    public List<Booking> getNonConsultationBookingsByUserId(Integer userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()) && 
+                           b.getServiceId() != null && 
+                           !b.getServiceId().equals(1))
+                .toList();
+    }
+>>>>>>> 9286e237e8b9406594149f5d7010861bc49908fb
 }

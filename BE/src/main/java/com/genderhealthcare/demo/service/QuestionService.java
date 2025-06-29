@@ -19,7 +19,7 @@ public class QuestionService {
 
     @Autowired
     private QuestionRepository questionRepository;
-      /**
+    /**
      * Kiểm tra tính hợp lệ của tiêu đề câu hỏi
      * Chấp nhận các tiêu đề thuộc danh mục đã định nghĩa
      */
@@ -27,19 +27,19 @@ public class QuestionService {
         try {
             // Check if the title matches any of the standard categories
             List<String> validTitles = Arrays.asList(
-                "Sức khỏe sinh sản",
-                "Thai sản và phụ khoa",
-                "Kế hoạch hóa gia đình",
-                "Kinh nguyệt và mãn kinh",
-                "Sức khỏe tình dục",
-                "Dinh dưỡng và lối sống"
+                    "Sức khỏe sinh sản",
+                    "Thai sản và phụ khoa",
+                    "Kế hoạch hóa gia đình",
+                    "Kinh nguyệt và mãn kinh",
+                    "Sức khỏe tình dục",
+                    "Dinh dưỡng và lối sống"
             );
             return validTitles.contains(title);
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     /**
      * Tạo câu hỏi mới với validation
      */
@@ -48,19 +48,19 @@ public class QuestionService {
         if (!isValidQuestionTitle(question.getTitle())) {
             throw new InvalidQuestionTitleException("Tiêu đề câu hỏi không hợp lệ");
         }
-          // Thiết lập trạng thái mặc định là "pending" nếu chưa được thiết lập
+        // Thiết lập trạng thái mặc định là "pending" nếu chưa được thiết lập
         if (question.getStatus() == null || question.getStatus().isEmpty()) {
             question.setStatus("pending");
         }
-        
+
         // Thiết lập thời gian tạo câu hỏi là thời gian hiện tại
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         question.setCreatedAt(now.format(formatter));
-        
+
         return questionRepository.save(question);
     }
-    
+
     /**
      * Lấy câu hỏi theo ID với xử lý ngoại lệ
      */
@@ -71,13 +71,13 @@ public class QuestionService {
         }
         return questionOpt.get();
     }
-    
+
     /**
      * Cập nhật câu hỏi với validation
      */
     public Question updateQuestion(Integer questionId, Question questionDetails) {
         Question question = getQuestionById(questionId);
-        
+
         // Kiểm tra tiêu đề mới có hợp lệ không nếu được cung cấp
         if (questionDetails.getTitle() != null && !questionDetails.getTitle().isEmpty()) {
             if (!isValidQuestionTitle(questionDetails.getTitle())) {
@@ -85,12 +85,12 @@ public class QuestionService {
             }
             question.setTitle(questionDetails.getTitle());
         }
-        
+
         // Cập nhật các trường khác nếu được cung cấp
         if (questionDetails.getContent() != null && !questionDetails.getContent().isEmpty()) {
             question.setContent(questionDetails.getContent());
         }
-          if (questionDetails.getStatus() != null && !questionDetails.getStatus().isEmpty()) {
+        if (questionDetails.getStatus() != null && !questionDetails.getStatus().isEmpty()) {
             // Kiểm tra trạng thái hợp lệ
             List<String> validStatuses = Arrays.asList("pending", "resolved");
             if (!validStatuses.contains(questionDetails.getStatus())) {
@@ -98,10 +98,10 @@ public class QuestionService {
             }
             question.setStatus(questionDetails.getStatus());
         }
-        
+
         return questionRepository.save(question);
     }
-    
+
     /**
      * Xóa câu hỏi
      */
@@ -109,14 +109,14 @@ public class QuestionService {
         Question question = getQuestionById(questionId);
         questionRepository.delete(question);
     }
-    
+
     /**
      * Lấy danh sách tất cả câu hỏi
      */
     public List<Question> getAllQuestions() {
         return questionRepository.findAll();
     }
-    
+
     /**
      * Lấy danh sách câu hỏi theo userID
      */
@@ -127,4 +127,4 @@ public class QuestionService {
         }
         return questions;
     }
-}
+}   

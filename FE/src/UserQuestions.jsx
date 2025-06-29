@@ -7,6 +7,7 @@ const UserQuestions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [consultantNames, setConsultantNames] = useState({});
+  const [filterStatus, setFilterStatus] = useState('all');
   
   // Hàm lấy thông tin tư vấn viên
   const fetchConsultantInfo = async (consultantId) => {
@@ -142,96 +143,231 @@ const UserQuestions = () => {
       setLoading(false);
     }
   };
-    // Hàm format ngày giờ
+  
+  // Hàm format trạng thái câu hỏi
+  const formatStatus = (status) => {
+    switch (status) {
+      case 'resolved':
+        return 'Đã trả lời';
+      case 'pending':
+        return 'Đang chờ';
+      default:
+        return status || 'Không xác định';
+    }
+  };
+  
+  // Hàm lấy màu cho từng trạng thái
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'resolved':
+        return '#4caf50';
+      case 'pending':
+        return '#ff9800';
+      default:
+        return '#757575';
+    }
+  };
+    
+  // Hàm format ngày giờ
   const formatDate = (dateString) => {
     if (!dateString) return "Không có thông tin";
     
     try {
-      return new Date(dateString).toLocaleDateString('vi-VN', {
+      const formattedDate = new Date(dateString).toLocaleDateString('vi-VN', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
       });
+      
+      // Loại bỏ từ "lúc" trong chuỗi ngày tháng
+      return formattedDate.replace('lúc ', '');
     } catch (e) {
       console.error('Lỗi khi format ngày:', e);
       return "Định dạng ngày không hợp lệ";
     }
   };
+
+  // Filter questions based on selected status
+  const filteredQuestions = questions.filter(question => {
+    if (filterStatus === 'all') return true;
+    
+    // Map the backend status to our filter status
+    if (filterStatus === 'Đã trả lời' && question.status === 'resolved') return true;
+    if (filterStatus === 'Đang chờ' && question.status === 'pending') return true;
+    
+    return false;
+  });
+
+  // Modal state for showing question details
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+
+  const openQuestionDetail = (question) => {
+    setSelectedQuestion(question);
+    setModalOpen(true);
+  };
+
   return (
-    <div style={{
-      backgroundColor: "#f0f9ff !important",
-      background: "#f0f9ff !important",
+    <div style={{ 
+      backgroundColor: "#f0f9ff", 
       minHeight: "100vh",
-      colorScheme: "light",
-      width: "100vw",
-      margin: 0,
-      padding: 0
+      width: "100%",
+      fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      display: "flex",
+      flexDirection: "column"
     }}>
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        paddingBottom: 0,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
         position: "relative",
-        width: "100%"
+        height: "160px"
       }}>
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          padding: "15px 20px"
+          maxWidth: "1400px",
+          margin: "0 auto",
+          width: "100%",
+          padding: "0 24px",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 2,
+          pointerEvents: "none"
         }}>
-          <img
-            src="/Logo.png"
-            alt="Logo"
-            style={{ height: 60, width: 60, objectFit: "contain" }}
-          />
-          <h1
-            style={{
-              color: "#fff",
-              margin: 0,
-              textAlign: "center",
-              fontWeight: 700,
-              letterSpacing: 1,
-              fontSize: "2.8rem"
-            }}
-          >
+          <Link to="/" style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            pointerEvents: "auto" 
+          }}>
+            <img
+              src="/Logo.png"
+              alt="Logo"
+              style={{ height: 85, width: 85, objectFit: "contain" }}
+            />
+          </Link>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            pointerEvents: "auto" 
+          }}>
+            <UserAvatar userName="Khách hàng" />
+          </div>
+        </div>
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flex: 1,
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0
+        }}>
+          <h1 style={{
+            color: "#fff",
+            margin: 0,
+            fontSize: "48px",
+            fontWeight: 700,
+            letterSpacing: "0.5px",
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)"
+          }}>
             Câu hỏi của tôi
           </h1>
-          <UserAvatar userName="Khách hàng" />
         </div>
       </header>
       <main style={{
-        padding: "40px 20px",
-        minHeight: "calc(100vh - 200px)",
+        padding: "32px 24px",
+        flex: 1,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-start",
         alignItems: "center",
-        background: "#f0f9ff !important",
-        backgroundColor: "#f0f9ff !important",
-        colorScheme: "light"
+        backgroundColor: "#f0f9ff"
       }}>
         <div style={{
           maxWidth: "1200px",
           width: "100%",
-          margin: "0 auto"
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px"
         }}>
-          <div style={{ marginBottom: "20px", padding: '0 32px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            backgroundColor: "#fff",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            flexWrap: "wrap",
+            gap: "12px"
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center", 
+              gap: "12px"
+            }}>
+              <label style={{ 
+                fontWeight: 600, 
+                color: '#0891b2' 
+              }}>Lọc theo trạng thái: </label>
+              <select 
+                value={filterStatus} 
+                onChange={e => setFilterStatus(e.target.value)} 
+                style={{ 
+                  padding: "10px 16px", 
+                  borderRadius: "8px", 
+                  border: '1px solid #22d3ee', 
+                  outline: 'none', 
+                  fontWeight: 500, 
+                  color: '#0891b2', 
+                  background: '#fff',
+                  cursor: "pointer" 
+                }}
+              >
+                <option value="all">Tất cả</option>
+                <option value="Đã trả lời">Đã trả lời</option>
+                <option value="Đang chờ">Đang chờ</option>
+              </select>
+            </div>
             <Link 
               to="/" 
-              style={{
+              style={{ 
+                textDecoration: 'none', 
+                color: '#0891b2', 
+                fontWeight: 600, 
+                fontSize: "15px", 
+                border: '1px solid #22d3ee', 
+                borderRadius: "8px", 
+                padding: '10px 20px', 
+                background: '#fff', 
+                transition: 'all 0.2s', 
                 display: "flex",
                 alignItems: "center",
-                color: "#0891b2",
-                textDecoration: "none",
-                fontWeight: 500
+                gap: "6px"
               }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fff"}
             >
-              ← Quay lại trang chủ
+              <span style={{ fontSize: "18px" }}>←</span> Quay lại trang chủ
             </Link>
           </div>
-          <div style={{ margin: '24px 0 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 32px' }}>
+          
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: "0 12px",
+            marginBottom: "12px"
+          }}>
             <div>
               <h2 style={{ fontWeight: 600, color: '#0891b2', margin: 0 }}>Danh sách câu hỏi của bạn</h2>
             </div>
@@ -241,11 +377,21 @@ const UserQuestions = () => {
                   backgroundColor: '#0891b2',
                   color: 'white',
                   border: 'none',
-                  padding: '0.5rem 1rem',
+                  padding: '12px 20px',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: 600
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  boxShadow: "0 2px 6px rgba(8,145,178,0.3)",
+                  transition: "all 0.2s"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(8,145,178,0.4)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(8,145,178,0.3)";
                 }}
                 onClick={() => window.location.href = "/ask-question"}
               >
@@ -254,138 +400,222 @@ const UserQuestions = () => {
             </div>
           </div>
 
-          <div className="question-answer-section">
-      {loading && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '3rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          margin: '0 32px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-          <p style={{ color: '#0891b2', fontWeight: 600, fontSize: '1.1rem' }}>Đang tải câu hỏi...</p>
-        </div>
-      )}
-      
-      {error && (
-        <div style={{ 
-          backgroundColor: '#ffebee', 
-          padding: '2rem', 
-          borderRadius: '12px', 
-          margin: '0 32px 1rem 32px',
-          color: '#c62828',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          border: '1px solid #ffcdd2'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>❌</span>
-            <strong>Có lỗi xảy ra</strong>
-          </div>
-          <p style={{ margin: 0 }}>Lỗi: {error}</p>
-        </div>
-      )}
-      
-      {!loading && questions.length === 0 && !error && (
-        <div style={{ 
-          backgroundColor: '#f8f9fa', 
-          padding: '3rem', 
-          borderRadius: '12px', 
-          textAlign: 'center',
-          margin: '0 32px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          border: '1px solid #e9ecef'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
-          <h3 style={{ color: '#0891b2', marginBottom: '1rem' }}>Chưa có câu hỏi nào</h3>
-          <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>
-            Bạn chưa có câu hỏi nào. Hãy đặt câu hỏi để nhận tư vấn từ các chuyên gia.
-          </p>
-          <button
-            style={{
-              backgroundColor: '#0891b2',
-              color: 'white',
-              border: 'none',
-              padding: '1rem 2rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              boxShadow: '0 2px 8px rgba(8,145,178,0.3)'
-            }}
-            onClick={() => window.location.href = "/ask-question"}
-          >
-            📝 Đặt câu hỏi đầu tiên
-          </button>
-        </div>
-      )}
-      
-      {questions.map((question) => {
-        // Map status cho hiển thị
-        const isAnswered = question.status === 'resolved';
-        const statusLabel = isAnswered ? 'Đã trả lời' : 'Đang chờ';
-        const statusBg = isAnswered ? '#e8f5e9' : '#fff3e0';
-        const statusColor = isAnswered ? '#2e7d32' : '#f57c00';
-        
-        return (
-          <div 
-            key={question.id || question.questionID}
-            style={{
-              padding: '2rem',
-              margin: '0 32px 2rem 32px',
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              border: '1px solid rgba(8,145,178,0.1)',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '1.5rem' 
-            }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ 
-                  margin: '0 0 0.5rem 0', 
-                  fontSize: '1.4rem', 
-                  color: '#0891b2',
-                  fontWeight: 700
-                }}>
-                  {question.title || 'Câu hỏi tư vấn'}
-                </h3>
+          <div>
+            {loading ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: "60px 0",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
                 <div style={{ 
-                  fontSize: '0.9rem', 
-                  color: '#666',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <span>📅</span>
-                  {formatDate(question.date || question.createdAt)}
+                  display: "inline-block", 
+                  border: "3px solid #22d3ee",
+                  borderTop: "3px solid transparent",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "15px"
+                }}></div>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải dữ liệu...</p>
+              </div>
+            ) : error ? (
+              <div style={{ 
+                color: '#f44336', 
+                textAlign: 'center', 
+                padding: "40px 20px",
+                fontWeight: 600,
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ fontSize: "40px", marginBottom: "10px" }}>⚠️</div>
+                <div>{error}</div>
+              </div>
+            ) : filteredQuestions.length === 0 ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: "60px 20px",
+                color: '#0891b2', 
+                fontWeight: 600,
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ fontSize: "40px", marginBottom: "15px" }}>💬</div>
+                <div>Không có câu hỏi nào phù hợp với bộ lọc.</div>
+                <button
+                  style={{
+                    backgroundColor: '#0891b2',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    marginTop: '20px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    boxShadow: '0 2px 8px rgba(8,145,178,0.3)'
+                  }}
+                  onClick={() => window.location.href = "/ask-question"}
+                >
+                  📝 Đặt câu hỏi mới
+                </button>
+              </div>
+            ) : (
+              <div style={{ 
+                width: '100%', 
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ overflowX: 'auto', width: "100%" }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ 
+                        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                        textAlign: "center"
+                      }}>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tiêu đề</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày tạo</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Chi tiết</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredQuestions.map((question) => (
+                        <tr 
+                          key={question.id || question.questionID} 
+                          style={{ 
+                            borderBottom: '1px solid #e0f2fe', 
+                            transition: "all 0.2s"
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                        >
+                          <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
+                            <div style={{ 
+                              overflow: "hidden", 
+                              textOverflow: "ellipsis", 
+                              whiteSpace: "nowrap", 
+                              maxWidth: "100%"
+                            }}>
+                              {question.title || 'Câu hỏi tư vấn'}
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                            {formatDate(question.date || question.createdAt)}
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                            <div style={{ display: "flex", justifyContent: "center" }}>
+                              <span style={{ 
+                                display: "inline-block",
+                                padding: "6px 12px",
+                                borderRadius: "20px",
+                                fontWeight: 600,
+                                fontSize: "13px",
+                                color: "#fff",
+                                backgroundColor: getStatusColor(question.status)
+                              }}>
+                                {formatStatus(question.status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                            <button
+                              style={{
+                                background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: "8px",
+                                padding: '10px 16px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                fontSize: "14px",
+                                transition: "all 0.2s",
+                                boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.transform = "translateY(-2px)";
+                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.transform = "translateY(0)";
+                                e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                              }}
+                              onClick={() => openQuestionDetail(question)}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "16px" }}>👁️</span> Xem chi tiết
+                              </span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '25px',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                backgroundColor: statusBg,
-                color: statusColor,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                {statusLabel}
-              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Modal cho xem chi tiết câu hỏi */}
+      {modalOpen && selectedQuestion && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "800px",
+            maxHeight: "90vh",
+            overflow: "auto",
+            padding: "24px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+              <h2 style={{ color: "#0891b2", margin: 0 }}>{selectedQuestion.title || "Câu hỏi tư vấn"}</h2>
+              <button
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#64748b"
+                }}
+                onClick={() => setModalOpen(false)}
+              >
+                ×
+              </button>
             </div>
-            
+
             {/* Câu hỏi của người dùng */}
             <div style={{ 
               padding: '1.5rem', 
               backgroundColor: '#f8fafc', 
               borderRadius: '12px',
-              marginBottom: isAnswered ? '1.5rem' : '0',
+              marginBottom: selectedQuestion.status === 'resolved' ? '1.5rem' : '0',
               border: '1px solid #e2e8f0'
             }}>
               <div style={{ 
@@ -409,7 +639,7 @@ const UserQuestions = () => {
                 <div>
                   <p style={{ margin: '0', fontWeight: 700, color: '#0891b2', fontSize: '1.1rem' }}>Bạn</p>
                   <span style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                    Người hỏi
+                    {formatDate(selectedQuestion.date || selectedQuestion.createdAt)}
                   </span>
                 </div>
               </div>
@@ -421,12 +651,12 @@ const UserQuestions = () => {
                 lineHeight: '1.6',
                 color: '#334155'
               }}>
-                {question.content || question.question}
+                {selectedQuestion.content || selectedQuestion.question}
               </div>
             </div>
 
             {/* Câu trả lời từ tư vấn viên */}
-            {isAnswered && (
+            {selectedQuestion.status === 'resolved' && (
               <div style={{ 
                 padding: '1.5rem', 
                 backgroundColor: '#f0f9ff', 
@@ -453,12 +683,10 @@ const UserQuestions = () => {
                   </div>
                   <div>
                     <p style={{ margin: '0', fontWeight: 700, color: '#22c55e', fontSize: '1.1rem' }}>
-                      {consultantNames[question.consultantID] || 'Tư vấn viên'}
+                      {consultantNames[selectedQuestion.consultantID] || 'Tư vấn viên'}
                     </p>
                     <span style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                      {question.answeredAt || question.replyDate ? 
-                        formatDate(question.answeredAt || question.replyDate) : 
-                        "Đã trả lời"}
+                      {formatDate(selectedQuestion.answeredAt || selectedQuestion.replyDate)}
                     </span>
                   </div>
                 </div>
@@ -470,7 +698,7 @@ const UserQuestions = () => {
                   lineHeight: '1.6',
                   color: '#334155'
                 }}>
-                  {question.reply || question.answer || (
+                  {selectedQuestion.reply || selectedQuestion.answer || (
                     <p style={{ margin: '0', fontStyle: 'italic', color: '#94a3b8' }}>
                       Câu hỏi đã được trả lời nhưng không thể hiển thị nội dung. Vui lòng làm mới trang.
                     </p>
@@ -480,7 +708,7 @@ const UserQuestions = () => {
             )}
             
             {/* Nút hành động cho câu hỏi chưa được trả lời */}
-            {!isAnswered && (
+            {selectedQuestion.status !== 'resolved' && (
               <div style={{ 
                 marginTop: '1.5rem', 
                 padding: '1rem',
@@ -505,12 +733,26 @@ const UserQuestions = () => {
                 </p>
               </div>
             )}
-          </div>
-        );
-      })}
+
+            <div style={{ marginTop: "24px", textAlign: "right" }}>
+              <button 
+                style={{
+                  backgroundColor: "#e2e8f0",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+                onClick={() => setModalOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
-      </main>
+      )}
+
     </div>
   );
 };

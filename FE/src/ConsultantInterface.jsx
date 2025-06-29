@@ -11,6 +11,7 @@ const ConsultantInterface = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [answerText, setAnswerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Đúng mapping status backend: 'Chờ bắt đầu', 'Đang diễn ra', 'Đã kết thúc'
   const [filterStatus, setFilterStatus] = useState('all');
   const [existingAnswer, setExistingAnswer] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -23,6 +24,8 @@ const ConsultantInterface = () => {
   const [bookingUserDetails, setBookingUserDetails] = useState({});
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [videoChannel, setVideoChannel] = useState('');
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailData, setDetailData] = useState(null);
 
   useEffect(() => {
     // Fetch thông tin tư vấn viên
@@ -191,6 +194,14 @@ const ConsultantInterface = () => {
   const handleFilterChange = (e) => {
     setFilterStatus(e.target.value);
   };
+  // Đúng mapping status backend
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
+    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
+    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
+  ];
+
   const filteredQuestions = questions.filter(question => {
     if (filterStatus === 'all') return true;
     
@@ -206,7 +217,13 @@ const ConsultantInterface = () => {
     }
     
     return false;
-  });  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
+  });  
+  // Lọc booking theo trạng thái
+  const filteredBookings = filterStatus === 'all'
+    ? bookings
+    : bookings.filter(b => b.status === filterStatus);
+
+  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
   const submitAnswer = async () => {
     if (!answerText.trim()) {
       alert('Vui lòng nhập câu trả lời');
@@ -395,13 +412,18 @@ const ConsultantInterface = () => {
   }, [activeSection]);
 
   // Confirm booking status
-  const updateBookingStatus = async (bookingId, newStatus) => {
+  const updateBookingStatus = async (bookingId, newStatus, endTime = null) => {
     try {
-      console.log(`⏳ Đang gọi API cập nhật trạng thái của booking ID ${bookingId} thành "${newStatus}"...`);
-      
-      const apiUrl = `http://localhost:8080/api/bookings/${bookingId}/status?status=${encodeURIComponent(newStatus)}`;
+      let apiUrl = `http://localhost:8080/api/bookings/${bookingId}/status?status=${encodeURIComponent(newStatus)}`;
+      if (newStatus === 'Đã kết thúc') {
+        // Truyền endTime dạng HH:mm nếu có
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const endTimeStr = endTime || `${hh}:${mm}`;
+        apiUrl += `&endTime=${encodeURIComponent(endTimeStr)}`;
+      }
       console.log(`API URL: ${apiUrl}`);
-      
       const res = await fetch(apiUrl, { 
         method: 'PUT',
         headers: {
@@ -496,15 +518,15 @@ const ConsultantInterface = () => {
                 
                 // Update booking status to "Đã kết thúc"
                 if (bookingId) {
-                  // Cập nhật UI trước để người dùng thấy kết quả ngay
                   setBookings(prev => prev.map(b => 
                     b.bookingId === parseInt(bookingId) ? { ...b, status: 'Đã kết thúc' } : b
                   ));
-                  console.log(`✅ [ConsultantInterface] Đã cập nhật UI cho booking ID ${bookingId} thành "Đã kết thúc"`);
-                  
-                  // Đợi cho API hoàn thành để đảm bảo dữ liệu được lưu vào server
-                  await updateBookingStatus(bookingId, 'Đã kết thúc');
-                  console.log(`✅ [ConsultantInterface] Đã gọi API cập nhật trạng thái cho booking ID ${bookingId}`);
+                  // Gửi endTime thực tế lên backend
+                  const now = new Date();
+                  const hh = String(now.getHours()).padStart(2, '0');
+                  const mm = String(now.getMinutes()).padStart(2, '0');
+                  const endTimeStr = `${hh}:${mm}`;
+                  await updateBookingStatus(bookingId, 'Đã kết thúc', endTimeStr);
                 }
               } catch (err) {
                 console.error('❌ [ConsultantInterface] Lỗi khi cập nhật trạng thái:', err);
@@ -656,8 +678,8 @@ const ConsultantInterface = () => {
                     color: '#0891b2' 
                   }}>Lọc theo trạng thái: </label>
                   <select 
-                    onChange={handleFilterChange}
-                    value={filterStatus}
+                    value={filterStatus} 
+                    onChange={e => setFilterStatus(e.target.value)} 
                     style={{ 
                       padding: "10px 16px", 
                       borderRadius: "8px", 
@@ -669,10 +691,9 @@ const ConsultantInterface = () => {
                       cursor: "pointer" 
                     }}
                   >
-                    <option value="all">Tất cả câu hỏi</option>
-                    <option value="pending">Chờ trả lời</option>
-                    <option value="answered">Đã trả lời</option>
-                    <option value="closed">Đã đóng</option>
+                    {statusOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 <h2 style={{ 
@@ -1023,7 +1044,7 @@ const ConsultantInterface = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {bookings.map((booking, idx) => (
+                        {filteredBookings.map((booking, idx) => (
                           <tr 
                             key={booking.bookingId || idx} 
                             style={{ 
@@ -1077,79 +1098,41 @@ const ConsultantInterface = () => {
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
                               <div style={{ display: "flex", justifyContent: "center" }}>
-                                <span style={{ 
-                                  display: "inline-block",
-                                  padding: "6px 12px",
-                                  borderRadius: "20px",
-                                  fontWeight: 600,
-                                  fontSize: "13px",
-                                  color: "#fff",
-                                  backgroundColor: 
-                                    booking.status === 'Đang chờ duyệt' || booking.status === 'Chờ xác nhận' ? '#ff9800' : 
-                                    booking.status === 'Đã duyệt' || booking.status === 'Đã xác nhận' ? '#4caf50' : 
-                                    booking.status === 'Đã kết thúc' || booking.status === 'Đã xong' ? '#2196f3' : 
-                                    booking.status === 'Không được duyệt' ? '#f44336' : '#757575'
-                                }}>
-                                  {booking.status === 'Chờ xác nhận' ? 'Đang chờ duyệt' :
-                                   booking.status === 'Đã xác nhận' ? 'Đã duyệt' :
-                                   booking.status === 'Đã xong' ? 'Đã kết thúc' :
-                                   booking.status}
-                                </span>
+                                {(() => {
+                                  // Chuẩn hóa status từ backend
+                                  let status = booking.status;
+                                  let badgeColor = '#e0e0e0';
+                                  let textColor = '#64748b';
+                                  let label = status;
+                                  if (status === 'Chờ bắt đầu') {
+                                    badgeColor = '#fde68a'; // vàng nhạt
+                                    textColor = '#b45309';
+                                    label = 'Chờ bắt đầu';
+                                  } else if (status === 'Đang diễn ra') {
+                                    badgeColor = '#22d3ee'; // xanh cyan
+                                    textColor = '#fff';
+                                    label = 'Đang diễn ra';
+                                  } else if (status === 'Đã kết thúc') {
+                                    badgeColor = '#cbd5e1'; // xám nhạt
+                                    textColor = '#64748b';
+                                    label = 'Đã kết thúc';
+                                  }
+                                  return (
+                                    <span style={{
+                                      display: "inline-block",
+                                      padding: "6px 12px",
+                                      borderRadius: "20px",
+                                      fontWeight: 600,
+                                      fontSize: "13px",
+                                      color: textColor,
+                                      backgroundColor: badgeColor
+                                    }}>{label}</span>
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                              {(booking.status === 'Chờ xác nhận' || booking.status === 'Đang chờ duyệt') && (
-                                <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
-                                  <button 
-                                    onClick={() => confirmBooking(booking.bookingId)}
-                                    style={{
-                                      background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
-                                      color: '#fff',
-                                      border: 'none',
-                                      borderRadius: "8px",
-                                      padding: '10px 16px',
-                                      fontWeight: 600,
-                                      cursor: 'pointer',
-                                      fontSize: "14px",
-                                      transition: "all 0.2s",
-                                      boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
-                                    }}
-                                    onMouseOver={(e) => {
-                                      e.currentTarget.style.transform = "translateY(-2px)";
-                                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
-                                    }}
-                                    onMouseOut={(e) => {
-                                      e.currentTarget.style.transform = "translateY(0)";
-                                      e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
-                                    }}
-                                  >
-                                    Duyệt
-                                  </button>
-                                  <button 
-                                    onClick={() => rejectBooking(booking.bookingId)}
-                                    style={{
-                                      background: '#fff',
-                                      color: '#e11d48',
-                                      border: '1px solid #e11d48',
-                                      borderRadius: "8px",
-                                      padding: '10px 16px',
-                                      fontWeight: 600,
-                                      cursor: 'pointer',
-                                      fontSize: "14px",
-                                      transition: "all 0.2s"
-                                    }}
-                                    onMouseOver={(e) => {
-                                      e.currentTarget.style.backgroundColor = "#fff1f2";
-                                    }}
-                                    onMouseOut={(e) => {
-                                      e.currentTarget.style.backgroundColor = "#fff";
-                                    }}
-                                  >
-                                    Từ chối
-                                  </button>
-                                </div>
-                              )}
-                              {(booking.status === 'Đã xác nhận' || booking.status === 'Đã duyệt') && (
+                              {booking.status === 'Đang diễn ra' && (
                                 <button
                                   style={{
                                     background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
@@ -1170,15 +1153,10 @@ const ConsultantInterface = () => {
                                   onMouseOut={(e) => {
                                     e.currentTarget.style.transform = "translateY(0)";
                                     e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
-                                  }}                                  
+                                  }}
                                   onClick={() => {
-                                    // Tạo tên kênh từ bookingId
                                     const channelId = booking.bookingId?.toString();
-                                    // Luôn sử dụng format nhất quán booking_ID để dễ trích xuất ID
                                     const channelName = `booking_${channelId}`;
-                                    
-                                    console.log(`Bắt đầu cuộc gọi - Kênh: ${channelName}`);
-                                    
                                     setVideoChannel(channelName);
                                     setShowVideoCall(true);
                                   }}
@@ -1188,10 +1166,39 @@ const ConsultantInterface = () => {
                                   </span>
                                 </button>
                               )}
-                              {(booking.status === 'Đã kết thúc' || booking.status === 'Đã xong' || booking.status === 'Không được duyệt') && (
-                                <span style={{ color: "#475569", fontSize: "14px", fontWeight: "500" }}>
-                                  {booking.status === 'Không được duyệt' ? 'Lịch hẹn bị từ chối' : 'Đã hoàn thành'}
+                              {booking.status === 'Chờ bắt đầu' && (
+                                <span style={{ color: "#b45309", fontSize: "14px", fontWeight: "500" }}>
+                                  Chưa đến giờ tư vấn
                                 </span>
+                              )}
+                              {booking.status === 'Đã kết thúc' && (
+                                <button
+                                  style={{
+                                    background: '#e0f2fe',
+                                    color: '#0891b2',
+                                    border: '1px solid #22d3ee',
+                                    borderRadius: "8px",
+                                    padding: '8px 14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    marginLeft: 4,
+                                    transition: "all 0.2s"
+                                  }}
+                                  onClick={() => {
+                                    setDetailData({
+                                      user: bookingUserDetails[booking.userId]?.fullName || 'N/A',
+                                      content: booking.content || 'Không có',
+                                      date: booking.appointmentDate || 'N/A',
+                                      startTime: booking.startTime || 'N/A',
+                                      endTime: booking.endTime || 'N/A',
+                                      status: booking.status
+                                    });
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  Xem chi tiết cuộc gọi
+                                </button>
                               )}
                             </td>
                           </tr>
@@ -1228,6 +1235,72 @@ const ConsultantInterface = () => {
           </div>
         </div>
       </footer>
+
+      {/* Modal chi tiết cuộc gọi */}
+      {showDetailModal && detailData && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 340,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            position: 'relative'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 18 }}>Chi tiết cuộc gọi</h2>
+            <div style={{ marginBottom: 10 }}><b>Khách hàng:</b> {detailData.user}</div>
+            <div style={{ marginBottom: 10 }}><b>Nội dung:</b> {detailData.content}</div>
+            <div style={{ marginBottom: 10 }}><b>Ngày:</b> {detailData.date}</div>
+            <div style={{ marginBottom: 10 }}><b>Bắt đầu:</b> {detailData.startTime}</div>
+            <div style={{ marginBottom: 10 }}><b>Kết thúc:</b> {detailData.endTime}</div>
+            <div style={{ marginBottom: 18 }}><b>Trạng thái:</b> {detailData.status}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <button
+                style={{
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 32,
+                  padding: '14px 48px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: 18,
+                  boxShadow: '0 4px 24px rgba(34,211,238,0.18)',
+                  letterSpacing: 1,
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                  margin: 0
+                }}
+                onClick={() => setShowDetailModal(false)}
+                onMouseOver={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)';
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(34,211,238,0.28)';
+                }}
+                onMouseOut={e => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(34,211,238,0.18)';
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

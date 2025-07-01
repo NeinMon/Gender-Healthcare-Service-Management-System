@@ -77,27 +77,21 @@ const ConsultationBooking = () => {
     }
   }, [formData.consultantId, formData.date]);
 
-  // Kiểm tra xem thời gian đã qua hay chưa để disable option
+  // Kiểm tra xem thời gian đã qua endTime của slot chưa để disable option
   const isTimeSlotPassed = (timeSlot) => {
-    // Nếu chưa chọn ngày, không disable thời gian
     if (!formData.date) return false;
-    
     const today = new Date();
     const selectedDate = new Date(formData.date);
-    
-    // Nếu ngày được chọn khác với ngày hiện tại, không cần disable
     if (selectedDate.toDateString() !== today.toDateString()) return false;
-    
-    // Lấy giờ hiện tại
-    const currentHour = today.getHours();
-    const currentMinute = today.getMinutes();
-    
-    // Lấy giờ từ chuỗi timeSlot (ví dụ: "08:00 - 09:00" -> 8)
-    const slotStartTime = timeSlot.split(' - ')[0];
-    const [slotHour, slotMinute] = slotStartTime.split(':').map(Number);
-    
-    // Nếu giờ hiện tại lớn hơn giờ bắt đầu slot, hoặc bằng nhau nhưng phút hiện tại lớn hơn
-    return (currentHour > slotHour) || (currentHour === slotHour && currentMinute >= slotMinute);
+    // Lấy giờ bắt đầu và kết thúc từ slot ("08:00 - 09:00")
+    const [slotStartTime, slotEndTime] = timeSlot.split(' - ');
+    const [startHour, startMinute] = slotStartTime.split(':').map(Number);
+    const [endHour, endMinute] = slotEndTime.split(':').map(Number);
+    // Tạo đối tượng Date cho endTime của slot
+    const slotEnd = new Date(selectedDate);
+    slotEnd.setHours(endHour, endMinute, 0, 0);
+    // Nếu thời gian hiện tại đã sau endTime của slot thì disable
+    return today > slotEnd;
   };
 
   const handleChange = (e) => {
@@ -317,24 +311,6 @@ const ConsultationBooking = () => {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={labelStyle}>Thời gian *</label>
-                  <select
-                    name="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                  >
-                    <option value="">-- Chọn thời gian --</option>
-                    {availableTimes.map(time => (
-                      <option key={time} value={time} disabled={isTimeSlotPassed(time)}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={labelStyle}>Chọn tư vấn viên *</label>
                   <select
                     name="consultantId"
@@ -350,6 +326,25 @@ const ConsultationBooking = () => {
                         value={consultant.userID ?? ''}
                       >
                         {consultant.fullName || consultant.name} {consultant.specification ? `- ${consultant.specification}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Đưa optionbox chọn thời gian vào cùng grid */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={labelStyle}>Thời gian *</label>
+                  <select
+                    name="time"
+                    value={formData.time}
+                    onChange={handleChange}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="">-- Chọn thời gian --</option>
+                    {availableTimes.map(time => (
+                      <option key={time} value={time} disabled={isTimeSlotPassed(time)}>
+                        {time}
                       </option>
                     ))}
                   </select>

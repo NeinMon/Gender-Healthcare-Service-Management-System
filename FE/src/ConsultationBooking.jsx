@@ -21,7 +21,7 @@ const ConsultationBooking = () => {
     // Gọi API lấy danh sách tư vấn viên
     const fetchConsultants = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/users/consultants');
+        const res = await fetch('http://192.168.10.48:8080/api/users/consultants');
         if (res.ok) {
           const data = await res.json();
           setConsultants(data);
@@ -51,7 +51,7 @@ const ConsultationBooking = () => {
     
     const fetchUserInfo = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/users/${userId}`);
+        const res = await fetch(`http://192.168.10.48:8080/api/users/${userId}`);
         if (res.ok) {
           const data = await res.json();
           setFormData(prev => ({
@@ -68,7 +68,7 @@ const ConsultationBooking = () => {
   // Lấy khung giờ rảnh từ backend khi chọn ngày và tư vấn viên
   useEffect(() => {
     if (formData.consultantId && formData.date) {
-      fetch(`http://localhost:8080/api/bookings/available-times?consultantId=${formData.consultantId}&date=${formData.date}`)
+      fetch(`http://192.168.10.48:8080/api/bookings/available-times?consultantId=${formData.consultantId}&date=${formData.date}`)
         .then(res => res.json())
         .then(data => setAvailableTimes(data))
         .catch(() => setAvailableTimes([]));
@@ -174,7 +174,7 @@ const ConsultationBooking = () => {
     console.log("Payload gửi booking:", payload);
 
     try {
-      const response = await fetch("http://localhost:8080/api/bookings", {
+      const response = await fetch("http://192.168.10.48:8080/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -544,40 +544,57 @@ const ConsultantInterface = () => {
       {/* Header */}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        paddingBottom: 0,
         position: "relative"
       }}>
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          maxWidth: "1400px",
-          margin: "0 auto",
-          width: "100%",
-          padding: "12px 24px"
+          paddingTop: 12,
+          paddingLeft: 20,
+          paddingRight: 20,
+          paddingBottom: 12,
         }}>
-          <Link to="/">
-            <img
-              src="/Logo.png"
-              alt="Logo"
-              style={{ height: 60, width: 60, objectFit: "contain" }}
-            />
-          </Link>
-          <UserAvatar userName={consultant?.fullName || 'Tư vấn viên'} />
-        </div>
-        <div style={{
-          textAlign: "center",
-          padding: "16px 0 28px"
-        }}>
-          <h1 style={{
-            color: "#fff",
-            margin: 0,
-            fontSize: "28px",
-            fontWeight: 700,
-            letterSpacing: "0.5px"
-          }}>
+          <img
+            src="/Logo.png"
+            alt="Logo"
+            style={{ height: 70, width: 70, objectFit: "contain" }}
+          />
+          
+          <h1
+            style={{
+              color: "#fff",
+              margin: 0,
+              padding: 0,
+              textAlign: "center",
+              fontWeight: 700,
+              letterSpacing: 1,
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "auto",
+              fontSize: "3rem"
+            }}
+          >
             Giao diện tư vấn viên
           </h1>
+          
+          <div style={{ 
+            width: 36, 
+            height: 36, 
+            borderRadius: "50%", 
+            backgroundColor: "#e0f2fe",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#0891b2",
+            fontWeight: "bold",
+            fontSize: "16px",
+            border: "2px solid rgba(255,255,255,0.5)"
+          }}>
+            {consultant?.fullName ? consultant.fullName.charAt(0) : "T"}
+          </div>
         </div>
       </header>
 

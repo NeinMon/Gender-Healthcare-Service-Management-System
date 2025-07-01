@@ -45,6 +45,15 @@ const UserQuestions = () => {
       // Log response status để debug
       console.log('API response status:', response.status);
       
+      // Xử lý đặc biệt cho trường hợp 404 (không có dữ liệu)
+      if (response.status === 404) {
+        console.log('Không tìm thấy câu hỏi nào cho user này (404)');
+        setQuestions([]);
+        setConsultantNames({});
+        setError(null); // Không hiển thị lỗi cho trường hợp này
+        return;
+      }
+      
       if (!response.ok) {
         throw new Error(`Không thể tải danh sách câu hỏi. Status: ${response.status}`);
       }
@@ -52,93 +61,99 @@ const UserQuestions = () => {
       const questions = await response.json();
       console.log('Dữ liệu câu hỏi của người dùng:', questions);
       
+      // Kiểm tra nếu không có dữ liệu hoặc mảng rỗng
+      if (!questions || !Array.isArray(questions) || questions.length === 0) {
+        console.log('Không có câu hỏi nào từ backend');
+        setQuestions([]);
+        setConsultantNames({});
+        setError(null); // Không hiển thị lỗi cho trường hợp này
+        return;
+      }
+      
       // Tạo danh sách câu hỏi với câu trả lời (nếu có)
       const questionsWithAnswers = await Promise.all(
         questions.map(async (question) => {
-          // Format dữ liệu câu hỏi
+          // Kiểm tra question có tồn tại không
+          if (!question) {
+            return null;
+          }
+          
+          // Format dữ liệu câu hỏi với fallback values
           const formattedQuestion = {
-            id: question.id || question.questionID,
-            questionID: question.id || question.questionID,
-            content: question.content || question.question,
-            date: question.date || question.createdAt,
-            status: question.status || 'pending',
-            createdAt: question.createdAt || question.date,
-            title: question.title || '',
+            id: question?.id || question?.questionID || Math.random(),
+            questionID: question?.id || question?.questionID || Math.random(),
+            content: question?.content || question?.question || 'Không có nội dung',
+            date: question?.date || question?.createdAt || new Date().toISOString(),
+            status: question?.status || 'pending',
+            createdAt: question?.createdAt || question?.date || new Date().toISOString(),
+            title: question?.title || 'Câu hỏi tư vấn',
           };
 
           // Map status từ backend sang frontend
           let isResolved = formattedQuestion.status === 'resolved';
           // Nếu câu hỏi đã được giải quyết thì lấy câu trả lời
-          if (isResolved) {
+          if (isResolved && (question?.id || question?.questionID)) {
             try {
               const answerResponse = await fetch(`http://localhost:8080/api/answers/${question.id || question.questionID}`);
               if (answerResponse.ok) {
                 const answerData = await answerResponse.json();
-                formattedQuestion.reply = answerData.content;
-                formattedQuestion.answeredAt = answerData.createdAt;
-                formattedQuestion.status = 'resolved';
-                formattedQuestion.consultantID = answerData.consultantID;
-              } else {
-                // Không tìm thấy câu trả lời
+                if (answerData) {
+                  formattedQuestion.reply = answerData.content || 'Đã có phản hồi';
+                  formattedQuestion.answeredAt = answerData.createdAt || new Date().toISOString();
+                  formattedQuestion.status = 'resolved';
+                  formattedQuestion.consultantID = answerData.consultantID;
+                }
               }
             } catch (error) {
-              // Lỗi khi lấy câu trả lời
+              console.error('Lỗi khi lấy câu trả lời cho câu hỏi:', question?.id || question?.questionID, error);
             }
           }
           return formattedQuestion;
         })
       );
-        console.log('Dữ liệu đã xử lý với câu trả lời:', questionsWithAnswers);
-      setQuestions(questionsWithAnswers);
+      
+      // Lọc bỏ các câu hỏi null
+      const validQuestions = questionsWithAnswers.filter(q => q !== null);
+      console.log('Dữ liệu đã xử lý với câu trả lời:', validQuestions);
+      setQuestions(validQuestions);
       
       // Lấy danh sách consultantId duy nhất từ những câu hỏi đã được trả lời
       const consultantIds = [...new Set(
-        questionsWithAnswers
-          .filter(q => q.consultantID)
+        validQuestions
+          .filter(q => q && q.consultantID)
           .map(q => q.consultantID)
       )];
       
-      // Fetch thông tin tư vấn viên cho từng consultantId
+      // Fetch thông tin tư vấn viên cho từng consultantId nếu có
       const namesObj = {};
-      await Promise.all(
-        consultantIds.map(async (id) => {
-          const name = await fetchConsultantInfo(id);
-          namesObj[id] = name;
-        })
-      );
+      if (consultantIds.length > 0) {
+        await Promise.all(
+          consultantIds.map(async (id) => {
+            try {
+              const name = await fetchConsultantInfo(id);
+              namesObj[id] = name;
+            } catch (error) {
+              console.error('Lỗi khi fetch thông tin tư vấn viên:', id, error);
+              namesObj[id] = `Tư vấn viên #${id}`;
+            }
+          })
+        );
+      }
       setConsultantNames(namesObj);
     } catch (error) {
       console.error('Lỗi khi tải câu hỏi:', error);
-      setError(error.message);
       
-      // Dữ liệu mẫu cho trường hợp API chưa hoàn thiện
-      setQuestions([
-        {
-          id: 1,
-          questionID: 1,
-          title: "Câu hỏi về sức khỏe",
-          content: "Tôi bị đau bụng dưới thường xuyên, có nên đi khám không?",
-          date: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          status: "pending"
-        },
-        {
-          id: 2,
-          questionID: 2,
-          title: "Lo lắng về sức khỏe sinh sản",
-          content: "Làm thế nào để giảm lo lắng về vấn đề sức khỏe sinh sản?",
-          date: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          status: "resolved",
-          reply: "Bạn nên tham khảo ý kiến chuyên gia và thực hành thư giãn. Ngoài ra, việc tìm hiểu kiến thức đúng đắn về sức khỏe sinh sản cũng rất quan trọng để giảm lo lắng không cần thiết.",
-          answeredAt: new Date(Date.now() - 86400000).toISOString(),
-          consultantID: 1
-        }
-      ]);
+      // Chỉ hiển thị lỗi cho những trường hợp thật sự có vấn đề
+      // Không hiển thị lỗi cho 404 hoặc database trống
+      if (error.message.includes('Status: 404')) {
+        setError(null);
+        setQuestions([]);
+      } else {
+        setError(error.message);
+        setQuestions([]);
+      }
       
-      // Fetch tên tư vấn viên cho dữ liệu mẫu
-      const sampleConsultantName = await fetchConsultantInfo(1);
-      setConsultantNames({ 1: sampleConsultantName });
+      setConsultantNames({});
     } finally {
       setLoading(false);
     }
@@ -189,13 +204,14 @@ const UserQuestions = () => {
     }
   };
 
-  // Filter questions based on selected status
-  const filteredQuestions = questions.filter(question => {
+  // Filter questions based on selected status - thêm safety check
+  const filteredQuestions = (questions || []).filter(question => {
+    if (!question) return false;
     if (filterStatus === 'all') return true;
     
     // Map the backend status to our filter status
-    if (filterStatus === 'Đã trả lời' && question.status === 'resolved') return true;
-    if (filterStatus === 'Đang chờ' && question.status === 'pending') return true;
+    if (filterStatus === 'Đã trả lời' && question?.status === 'resolved') return true;
+    if (filterStatus === 'Đang chờ' && question?.status === 'pending') return true;
     
     return false;
   });
@@ -205,6 +221,10 @@ const UserQuestions = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
   const openQuestionDetail = (question) => {
+    if (!question) {
+      console.error('Không thể mở chi tiết: question không tồn tại');
+      return;
+    }
     setSelectedQuestion(question);
     setModalOpen(true);
   };
@@ -438,7 +458,26 @@ const UserQuestions = () => {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
               }}>
                 <div style={{ fontSize: "40px", marginBottom: "10px" }}>⚠️</div>
-                <div>{error}</div>
+                <div style={{ marginBottom: "20px" }}>{error}</div>
+                <button
+                  style={{
+                    backgroundColor: '#0891b2',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    boxShadow: '0 2px 8px rgba(8,145,178,0.3)'
+                  }}
+                  onClick={() => {
+                    setError(null);
+                    fetchUserQuestions();
+                  }}
+                >
+                  🔄 Thử lại
+                </button>
               </div>
             ) : filteredQuestions.length === 0 ? (
               <div style={{ 
@@ -451,7 +490,12 @@ const UserQuestions = () => {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
               }}>
                 <div style={{ fontSize: "40px", marginBottom: "15px" }}>💬</div>
-                <div>Không có câu hỏi nào phù hợp với bộ lọc.</div>
+                <div>
+                  {filterStatus === 'all' 
+                    ? 'Bạn chưa có câu hỏi nào. Hãy đặt câu hỏi đầu tiên!'
+                    : 'Không có câu hỏi nào phù hợp với bộ lọc.'
+                  }
+                </div>
                 <button
                   style={{
                     backgroundColor: '#0891b2',
@@ -492,9 +536,13 @@ const UserQuestions = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredQuestions.map((question) => (
+                      {filteredQuestions.map((question) => {
+                        // Safety check để đảm bảo question tồn tại
+                        if (!question) return null;
+                        
+                        return (
                         <tr 
-                          key={question.id || question.questionID} 
+                          key={question.id || question.questionID || Math.random()} 
                           style={{ 
                             borderBottom: '1px solid #e0f2fe', 
                             transition: "all 0.2s"
@@ -509,11 +557,11 @@ const UserQuestions = () => {
                               whiteSpace: "nowrap", 
                               maxWidth: "100%"
                             }}>
-                              {question.title || 'Câu hỏi tư vấn'}
+                              {question?.title || 'Câu hỏi tư vấn'}
                             </div>
                           </td>
                           <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
-                            {formatDate(question.date || question.createdAt)}
+                            {formatDate(question?.date || question?.createdAt)}
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
                             <div style={{ display: "flex", justifyContent: "center" }}>
@@ -524,9 +572,9 @@ const UserQuestions = () => {
                                 fontWeight: 600,
                                 fontSize: "13px",
                                 color: "#fff",
-                                backgroundColor: getStatusColor(question.status)
+                                backgroundColor: getStatusColor(question?.status)
                               }}>
-                                {formatStatus(question.status)}
+                                {formatStatus(question?.status)}
                               </span>
                             </div>
                           </td>
@@ -560,7 +608,8 @@ const UserQuestions = () => {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -595,7 +644,7 @@ const UserQuestions = () => {
             boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-              <h2 style={{ color: "#0891b2", margin: 0 }}>{selectedQuestion.title || "Câu hỏi tư vấn"}</h2>
+              <h2 style={{ color: "#0891b2", margin: 0 }}>{selectedQuestion?.title || "Câu hỏi tư vấn"}</h2>
               <button
                 style={{
                   background: "transparent",
@@ -615,7 +664,7 @@ const UserQuestions = () => {
               padding: '1.5rem', 
               backgroundColor: '#f8fafc', 
               borderRadius: '12px',
-              marginBottom: selectedQuestion.status === 'resolved' ? '1.5rem' : '0',
+              marginBottom: selectedQuestion?.status === 'resolved' ? '1.5rem' : '0',
               border: '1px solid #e2e8f0'
             }}>
               <div style={{ 
@@ -639,7 +688,7 @@ const UserQuestions = () => {
                 <div>
                   <p style={{ margin: '0', fontWeight: 700, color: '#0891b2', fontSize: '1.1rem' }}>Bạn</p>
                   <span style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                    {formatDate(selectedQuestion.date || selectedQuestion.createdAt)}
+                    {formatDate(selectedQuestion?.date || selectedQuestion?.createdAt)}
                   </span>
                 </div>
               </div>
@@ -651,12 +700,12 @@ const UserQuestions = () => {
                 lineHeight: '1.6',
                 color: '#334155'
               }}>
-                {selectedQuestion.content || selectedQuestion.question}
+                {selectedQuestion?.content || selectedQuestion?.question || 'Không có nội dung'}
               </div>
             </div>
 
             {/* Câu trả lời từ tư vấn viên */}
-            {selectedQuestion.status === 'resolved' && (
+            {selectedQuestion?.status === 'resolved' && (
               <div style={{ 
                 padding: '1.5rem', 
                 backgroundColor: '#f0f9ff', 
@@ -683,10 +732,10 @@ const UserQuestions = () => {
                   </div>
                   <div>
                     <p style={{ margin: '0', fontWeight: 700, color: '#22c55e', fontSize: '1.1rem' }}>
-                      {consultantNames[selectedQuestion.consultantID] || 'Tư vấn viên'}
+                      {consultantNames[selectedQuestion?.consultantID] || 'Tư vấn viên'}
                     </p>
                     <span style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                      {formatDate(selectedQuestion.answeredAt || selectedQuestion.replyDate)}
+                      {formatDate(selectedQuestion?.answeredAt || selectedQuestion?.replyDate)}
                     </span>
                   </div>
                 </div>
@@ -698,7 +747,7 @@ const UserQuestions = () => {
                   lineHeight: '1.6',
                   color: '#334155'
                 }}>
-                  {selectedQuestion.reply || selectedQuestion.answer || (
+                  {selectedQuestion?.reply || selectedQuestion?.answer || (
                     <p style={{ margin: '0', fontStyle: 'italic', color: '#94a3b8' }}>
                       Câu hỏi đã được trả lời nhưng không thể hiển thị nội dung. Vui lòng làm mới trang.
                     </p>
@@ -708,7 +757,7 @@ const UserQuestions = () => {
             )}
             
             {/* Nút hành động cho câu hỏi chưa được trả lời */}
-            {selectedQuestion.status !== 'resolved' && (
+            {selectedQuestion?.status !== 'resolved' && (
               <div style={{ 
                 marginTop: '1.5rem', 
                 padding: '1rem',

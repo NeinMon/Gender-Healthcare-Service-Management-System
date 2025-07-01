@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -80,7 +81,39 @@ public class BookingService {
         return bookingRepository.findByServiceIdAndStatus(serviceId, status);
     }
 
+    // Kiểm tra trùng lịch tư vấn viên theo khung giờ chính xác
+    public boolean hasConflictingBooking(Integer consultantId, LocalDate appointmentDate, LocalTime startTime, LocalTime endTime) {
+        if (consultantId == null || appointmentDate == null || startTime == null || endTime == null) {
+            return false;
+        }
+        
+        // Lấy tất cả booking của consultant trong ngày
+        List<Booking> bookingsInDay = bookingRepository.findByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
+        
+        // Kiểm tra từng booking xem có trùng khung giờ không
+        for (Booking booking : bookingsInDay) {
+            // Chỉ kiểm tra booking chưa kết thúc
+            if (!"Đã kết thúc".equals(booking.getStatus())) {
+                LocalTime bookingStart = booking.getStartTime();
+                LocalTime bookingEnd = booking.getEndTime();
+                
+                // Nếu booking chưa có endTime, mặc định là +1 giờ
+                if (bookingEnd == null) {
+                    bookingEnd = bookingStart.plusHours(1);
+                }
+                
+                // Kiểm tra overlap: hai khoảng thời gian có giao nhau không
+                if (startTime.isBefore(bookingEnd) && endTime.isAfter(bookingStart)) {
+                    return true; // Có trùng lịch
+                }
+            }
+        }
+        
+        return false; // Không có trùng lịch
+    }
+
     // Kiểm tra trùng lịch tư vấn viên theo khung giờ
+    @Deprecated
     public boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, LocalDate appointmentDate) {
         return bookingRepository.existsByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
     }

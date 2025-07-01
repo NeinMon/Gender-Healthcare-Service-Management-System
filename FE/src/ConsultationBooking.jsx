@@ -16,6 +16,7 @@ const ConsultationBooking = () => {
   const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
   const [availableTimes, setAvailableTimes] = useState([]);
   const [error, setError] = useState('');
+  const [loadingTimes, setLoadingTimes] = useState(false); // Thêm state loading cho khung giờ
 
   useEffect(() => {
     // Gọi API lấy danh sách tư vấn viên
@@ -68,12 +69,20 @@ const ConsultationBooking = () => {
   // Lấy khung giờ rảnh từ backend khi chọn ngày và tư vấn viên
   useEffect(() => {
     if (formData.consultantId && formData.date) {
+      setLoadingTimes(true);
       fetch(`http://localhost:8080/api/bookings/available-times?consultantId=${formData.consultantId}&date=${formData.date}`)
         .then(res => res.json())
-        .then(data => setAvailableTimes(data))
-        .catch(() => setAvailableTimes([]));
+        .then(data => {
+          setAvailableTimes(data);
+          setLoadingTimes(false);
+        })
+        .catch(() => {
+          setAvailableTimes([]);
+          setLoadingTimes(false);
+        });
     } else {
       setAvailableTimes([]);
+      setLoadingTimes(false);
     }
   }, [formData.consultantId, formData.date]);
 
@@ -154,6 +163,18 @@ const ConsultationBooking = () => {
       return;
     }
 
+    // Kiểm tra thời gian đã qua chưa
+    if (isTimeSlotPassed(formData.time)) {
+      alert("Khung giờ đã chọn đã qua! Vui lòng chọn khung giờ khác.");
+      return;
+    }
+
+    // Kiểm tra khung giờ có trong danh sách available không
+    if (!availableTimes.includes(formData.time)) {
+      alert("Khung giờ đã chọn không còn trống! Vui lòng chọn lại.");
+      return;
+    }
+
     // Chuẩn bị payload đúng với backend
     const payload = {
       userId: Number(userId),
@@ -177,11 +198,18 @@ const ConsultationBooking = () => {
         setIsSubmitted(true);
       } else {
         const errorText = await response.text();
-        alert("Đặt lịch thất bại. Lý do: " + errorText);
+        
+        // Hiển thị thông báo lỗi cụ thể
+        if (response.status === 409) { // Conflict - trùng lịch
+          alert("⚠️ " + errorText);
+        } else {
+          alert("Đặt lịch thất bại. Lý do: " + errorText);
+        }
         console.error("Lỗi booking:", errorText);
       }
     } catch (error) {
-      alert("Có lỗi xảy ra. Vui lòng thử lại!");
+      alert("Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
+      console.error("Network error:", error);
     }
   };
 
@@ -340,13 +368,24 @@ const ConsultationBooking = () => {
                     onChange={handleChange}
                     required
                     style={inputStyle}
+                    disabled={loadingTimes || !formData.consultantId || !formData.date}
                   >
-                    <option value="">-- Chọn thời gian --</option>
-                    {availableTimes.map(time => (
-                      <option key={time} value={time} disabled={isTimeSlotPassed(time)}>
-                        {time}
-                      </option>
-                    ))}
+                    {loadingTimes ? (
+                      <option value="">⏳ Đang tải khung giờ...</option>
+                    ) : !formData.consultantId || !formData.date ? (
+                      <option value="">-- Vui lòng chọn tư vấn viên và ngày trước --</option>
+                    ) : availableTimes.length === 0 ? (
+                      <option value="">-- Không có khung giờ nào còn trống --</option>
+                    ) : (
+                      <>
+                        <option value="">-- Chọn thời gian --</option>
+                        {availableTimes.map(time => (
+                          <option key={time} value={time} disabled={isTimeSlotPassed(time)}>
+                            {time}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -452,9 +491,11 @@ const ConsultationBooking = () => {
         }}>
           <h3 style={{ color: "#0891b2", marginBottom: "10px" }}>Lưu ý quan trọng:</h3>
           <ul style={{ color: "#0891b2", paddingLeft: "20px" }}>
-            <li style={{ marginBottom: "8px" }}>Vui lòng đến trước giờ hẹn 15 phút để hoàn thành thủ tục.</li>
-            <li style={{ marginBottom: "8px" }}>Mang theo CMND/CCCD và các giấy tờ y tế liên quan.</li>
-            <li style={{ marginBottom: "8px" }}>Chuẩn bị danh sách các triệu chứng và câu hỏi muốn tư vấn.</li>
+            <li style={{ marginBottom: "8px" }}>Khung giờ làm việc: 08:00-12:00 và 13:30-17:30</li>
+            <li style={{ marginBottom: "8px" }}>Mỗi buổi tư vấn kéo dài 1 giờ</li>
+            <li style={{ marginBottom: "8px" }}>Vui lòng đến trước giờ hẹn 15 phút để hoàn thành thủ tục</li>
+            <li style={{ marginBottom: "8px" }}>Mang theo CMND/CCCD và các giấy tờ y tế liên quan</li>
+            <li style={{ marginBottom: "8px" }}>Chuẩn bị danh sách các triệu chứng và câu hỏi muốn tư vấn</li>
           </ul>
         </div>
       </main>

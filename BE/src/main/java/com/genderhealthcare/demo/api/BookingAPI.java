@@ -1,7 +1,6 @@
 package com.genderhealthcare.demo.api;
 
 import com.genderhealthcare.demo.entity.Booking;
-import com.genderhealthcare.demo.repository.BookingRepository;
 import com.genderhealthcare.demo.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -32,22 +31,33 @@ public class BookingAPI {
             if (booking.getServiceId() == null) {
                 booking.setServiceId(1);
             }
-        // Kiểm tra trùng lịch tư vấn viên
-        if (booking.getConsultantId() != null && booking.getAppointmentDate() != null) {
-            boolean exists = bookingService.existsByConsultantIdAndAppointmentDate(
-                booking.getConsultantId(),
-                booking.getAppointmentDate()
-            );
-            if (exists) {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Tư vấn viên đã có lịch trong khung giờ này!");
+            
+            // Kiểm tra trùng lịch tư vấn viên theo khung giờ chính xác
+            if (booking.getConsultantId() != null && booking.getAppointmentDate() != null && booking.getStartTime() != null) {
+                // Tự động tính endTime nếu chưa có (mặc định 1 giờ)
+                LocalTime endTime = booking.getEndTime();
+                if (endTime == null) {
+                    endTime = booking.getStartTime().plusHours(1);
+                }
+                
+                boolean hasConflict = bookingService.hasConflictingBooking(
+                    booking.getConsultantId(),
+                    booking.getAppointmentDate(),
+                    booking.getStartTime(),
+                    endTime
+                );
+                
+                if (hasConflict) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Tư vấn viên đã có lịch trùng trong khung giờ này! Vui lòng chọn giờ khác.");
+                }
             }
-        }
-        // Luôn chỉ nhận startTime, endTime để null khi tạo mới
-        booking.setEndTime(null);
-        // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
-        Booking saved = bookingService.createBooking(booking);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+            
+            // Luôn chỉ nhận startTime, endTime để null khi tạo mới
+            booking.setEndTime(null);
+            // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
+            Booking saved = bookingService.createBooking(booking);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     } catch (IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
@@ -182,32 +192,51 @@ public class BookingAPI {
     @GetMapping("/available-times")
     public ResponseEntity<?> getAvailableTimes(@RequestParam("consultantId") Integer consultantId,
                                                @RequestParam("date") String date) {
-        // Danh sách khung giờ chuẩn (cố định)
-        String[] allSlots = {
-            "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
-            "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
-        };
-        // Lấy tất cả booking của consultant trong ngày
-        LocalDate localDate = LocalDate.parse(date); // Chuyển String sang LocalDate
-        List<Booking> bookings = bookingService.getBookingsByConsultantIdAndDate(consultantId, localDate);
-        java.util.Set<String> bookedSlots = new java.util.HashSet<>();
-        for (Booking b : bookings) {
-            // Lấy giờ và phút từ LocalTime (startTime)
-            int hour = b.getStartTime().getHour();
-            int minute = b.getStartTime().getMinute();
-            String time = String.format("%02d:%02d", hour, minute); // lấy HH:mm
-            for (String slot : allSlots) {
-                if (slot.startsWith(time)) {
-                    bookedSlots.add(slot);
+        try {
+            // Danh sách khung giờ chuẩn (cố định)
+            String[] allSlots = {
+                "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+                "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
+            };
+            
+            // Lấy tất cả booking của consultant trong ngày
+            LocalDate localDate = LocalDate.parse(date); // Chuyển String sang LocalDate
+            List<Booking> bookings = bookingService.getBookingsByConsultantIdAndDate(consultantId, localDate);
+            
+            // Tạo set các slot đã được đặt (chỉ tính booking chưa kết thúc)
+            java.util.Set<String> bookedSlots = new java.util.HashSet<>();
+            for (Booking b : bookings) {
+                // Chỉ tính các booking chưa kết thúc
+                if (!"Đã kết thúc".equals(b.getStatus())) {
+                    LocalTime startTime = b.getStartTime();
+                    LocalTime endTime = b.getEndTime() != null ? b.getEndTime() : startTime.plusHours(1);
+                    
+                    // Kiểm tra slot nào bị trùng với booking này
+                    for (String slot : allSlots) {
+                        String[] timeParts = slot.split(" - ");
+                        LocalTime slotStart = LocalTime.parse(timeParts[0]);
+                        LocalTime slotEnd = LocalTime.parse(timeParts[1]);
+                        
+                        // Kiểm tra overlap: booking và slot có giao nhau không
+                        if (startTime.isBefore(slotEnd) && endTime.isAfter(slotStart)) {
+                            bookedSlots.add(slot);
+                        }
+                    }
                 }
             }
-        }
-        java.util.List<String> available = new java.util.ArrayList<>();
-        for (String slot : allSlots) {
-            if (!bookedSlots.contains(slot)) {
-                available.add(slot);
+            
+            // Lọc ra các slot còn trống
+            java.util.List<String> available = new java.util.ArrayList<>();
+            for (String slot : allSlots) {
+                if (!bookedSlots.contains(slot)) {
+                    available.add(slot);
+                }
             }
+            
+            return ResponseEntity.ok(available);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Lỗi khi lấy khung giờ rảnh: " + e.getMessage());
         }
-        return ResponseEntity.ok(available);
     }
 }

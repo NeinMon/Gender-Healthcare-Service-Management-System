@@ -141,12 +141,37 @@ const TestBooking = () => {
     return testTypes.find(service => service.serviceId === parseInt(serviceId));
   };
 
+  // Kiểm tra xem thời gian đã qua chưa để disable option
+  const isTimeSlotPassed = (timeSlot) => {
+    if (!formData.preferredDate) return false;
+    const today = new Date();
+    const selectedDate = new Date(formData.preferredDate);
+    if (selectedDate.toDateString() !== today.toDateString()) return false;
+    // Lấy giờ bắt đầu và kết thúc từ slot ("08:00 - 09:00")
+    const [slotStartTime, slotEndTime] = timeSlot.split(' - ');
+    const [startHour, startMinute] = slotStartTime.split(':').map(Number);
+    const [endHour, endMinute] = slotEndTime.split(':').map(Number);
+    // Tạo đối tượng Date cho endTime của slot
+    const slotEnd = new Date(selectedDate);
+    slotEnd.setHours(endHour, endMinute, 0, 0);
+    // Nếu thời gian hiện tại đã sau endTime của slot thì disable
+    return today > slotEnd;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value
     });
+    
+    // Reset thời gian đã chọn nếu thay đổi ngày và thời gian đó đã qua
+    if (name === 'preferredDate' && formData.preferredTime && isTimeSlotPassed(`${formData.preferredTime}:00 - ${(parseInt(formData.preferredTime.split(':')[0]) + 1).toString().padStart(2, '0')}:00`)) {
+      setFormData(prev => ({
+        ...prev,
+        preferredTime: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -188,11 +213,48 @@ const TestBooking = () => {
       return;
     }
     
+    // Validate date and time format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const timeRegex = /^\d{2}:\d{2}$/;
+    
+    if (!dateRegex.test(formData.preferredDate)) {
+      alert('Định dạng ngày không hợp lệ! (YYYY-MM-DD)');
+      return;
+    }
+    
+    if (!timeRegex.test(formData.preferredTime)) {
+      alert('Định dạng giờ không hợp lệ! (HH:mm)');
+      return;
+    }
+    
+    // Validate future date
+    const selectedDate = new Date(formData.preferredDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      alert('Không thể đặt lịch cho ngày đã qua!');
+      return;
+    }
+    
+    // Kiểm tra thời gian đã qua chưa
+    const timeSlot = `${formData.preferredTime}:00 - ${(parseInt(formData.preferredTime.split(':')[0]) + 1).toString().padStart(2, '0')}:00`;
+    if (isTimeSlotPassed(timeSlot)) {
+      alert("Khung giờ đã chọn đã qua! Vui lòng chọn khung giờ khác.");
+      return;
+    }
+    
     setIsSubmitting(true); // Bắt đầu loading
     
     // Chuẩn bị dữ liệu để gửi về backend
     const serviceId = parseInt(formData.testType);
     const selectedService = getServiceById(serviceId);
+    
+    if (!serviceId || serviceId <= 0) {
+      alert('Vui lòng chọn loại dịch vụ hợp lệ!');
+      setIsSubmitting(false);
+      return;
+    }
     
     // Lấy userId từ localStorage
     let userId = 1; // Giá trị mặc định
@@ -212,15 +274,17 @@ const TestBooking = () => {
       userId: userId, // Backend expect userId, not userID
       serviceId: serviceId, // Backend expect serviceId, not serviceID
       content: formData.notes || `Đặt lịch xét nghiệm: ${selectedService?.serviceName || ''}`, // Sử dụng ghi chú làm content
-      appointmentDate: `${formData.preferredDate} ${formData.preferredTime}:00`, // Combine date and time
-      status: "Đang chờ duyệt" // Default status
+      appointmentDate: formData.preferredDate, // Chỉ gửi ngày (YYYY-MM-DD)
+      startTime: formData.preferredTime, // Giờ riêng biệt (HH:mm)
+      // Không set consultantId cho test booking, chỉ có consultation mới cần
+      // Không set status, backend sẽ tự động set dựa vào thời gian
     };
     
     console.log('Booking data to be sent to backend:', bookingData);
     
     try {
-      // Gửi dữ liệu về backend - sử dụng endpoint mặc định với consultantId
-      const response = await fetch('http://localhost:8080/api/bookings', {
+      // Gửi dữ liệu về backend - sử dụng endpoint with-service để bắt buộc serviceId
+      const response = await fetch('http://localhost:8080/api/bookings/with-service', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -234,15 +298,31 @@ const TestBooking = () => {
         setIsSubmitted(true);
       } else {
         const errorText = await response.text();
-        console.error('Failed to submit booking:', errorText);
+        console.error('Failed to submit booking:', response.status, errorText);
         
-        // Try to parse error message
-        try {
-          const errorObj = JSON.parse(errorText);
-          const errorMessage = errorObj.message || 'Có lỗi xảy ra khi đặt lịch';
-          alert(`Lỗi: ${errorMessage}`);
-        } catch (e) {
-          alert('Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại!');
+        // Handle different error types based on status code
+        if (response.status === 400) {
+          // Bad Request - validation errors
+          try {
+            const errorObj = JSON.parse(errorText);
+            const errorMessage = errorObj.message || errorText || 'Dữ liệu không hợp lệ';
+            alert(`Lỗi validation: ${errorMessage}`);
+          } catch (e) {
+            alert(`Dữ liệu gửi lên không hợp lệ: ${errorText}`);
+          }
+        } else if (response.status === 404) {
+          alert('Không tìm thấy dịch vụ hoặc API endpoint. Vui lòng liên hệ quản trị viên!');
+        } else if (response.status === 500) {
+          alert('Lỗi server nội bộ. Vui lòng thử lại sau hoặc liên hệ quản trị viên!');
+        } else {
+          // Other errors
+          try {
+            const errorObj = JSON.parse(errorText);
+            const errorMessage = errorObj.message || 'Có lỗi xảy ra khi đặt lịch';
+            alert(`Lỗi (${response.status}): ${errorMessage}`);
+          } catch (e) {
+            alert(`Có lỗi xảy ra khi đặt lịch (${response.status}). Vui lòng thử lại!`);
+          }
         }
       }
     } catch (error) {
@@ -421,12 +501,12 @@ const TestBooking = () => {
                     style={inputStyle}
                   >
                     <option value="">-- Chọn thời gian --</option>
-                    <option value="08:00">08:00 - 09:00</option>
-                    <option value="09:00">09:00 - 10:00</option>
-                    <option value="10:00">10:00 - 11:00</option>
-                    <option value="13:00">13:00 - 14:00</option>
-                    <option value="14:00">14:00 - 15:00</option>
-                    <option value="15:00">15:00 - 16:00</option>
+                    <option value="08:00" disabled={isTimeSlotPassed("08:00 - 09:00")}>08:00 - 09:00</option>
+                    <option value="09:00" disabled={isTimeSlotPassed("09:00 - 10:00")}>09:00 - 10:00</option>
+                    <option value="10:00" disabled={isTimeSlotPassed("10:00 - 11:00")}>10:00 - 11:00</option>
+                    <option value="13:00" disabled={isTimeSlotPassed("13:00 - 14:00")}>13:00 - 14:00</option>
+                    <option value="14:00" disabled={isTimeSlotPassed("14:00 - 15:00")}>14:00 - 15:00</option>
+                    <option value="15:00" disabled={isTimeSlotPassed("15:00 - 16:00")}>15:00 - 16:00</option>
                   </select>
                 </div>
               </div>
@@ -479,9 +559,6 @@ const TestBooking = () => {
               ✅
             </div>
             <h2 style={{ color: "#2c3e50", marginBottom: "20px" }}>Đặt lịch xét nghiệm thành công!</h2>
-            <p style={{ fontSize: "16px", color: "#7f8c8d", marginBottom: "30px" }}>
-              Cảm ơn bạn đã đặt lịch. Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận lịch hẹn.
-            </p>
             
             {/* Hiển thị thông tin đã đặt */}
             <div style={{ 
@@ -500,8 +577,30 @@ const TestBooking = () => {
               <p><strong>Loại xét nghiệm:</strong> {getServiceById(formData.testType)?.serviceName || 'N/A'}</p>
               <p><strong>Giá tiền:</strong> {getServiceById(formData.testType)?.price || 'N/A'}</p>
               <p><strong>Ngày giờ hẹn:</strong> {formData.preferredDate} {formData.preferredTime}:00</p>
-              <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Đang chờ duyệt</span></p>
+              <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Chờ bắt đầu</span></p>
               {formData.notes && <p><strong>Ghi chú:</strong> {formData.notes}</p>}
+              
+              {/* Nút xem lịch đặt */}
+              <div style={{ textAlign: "center", marginTop: "20px" }}>
+                <Link
+                  to="/my-test-bookings"
+                  style={{
+                    display: "inline-block",
+                    background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                    color: "#fff",
+                    textDecoration: "none",
+                    padding: "12px 25px",
+                    borderRadius: "25px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    transition: "all 0.3s ease"
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                >
+                  📋 Xem lịch xét nghiệm của tôi
+                </Link>
+              </div>
             </div>
           </div>
         )}        {/* Thông tin thêm */}        <div style={{ 

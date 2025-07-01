@@ -455,27 +455,47 @@ const ConsultationBooking = () => {
                 Đặt lịch thành công!
               </h2>
               
-              
-              <Link 
-                to="/my-appointments"
-                style={{
-                  display: "inline-block",
-                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                  color: "#fff",
-                  textDecoration: "none",
-                  padding: "12px 30px",
-                  borderRadius: "30px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  marginTop: "20px",
-                  boxShadow: "0 4px 10px rgba(8, 145, 178, 0.2)",
-                  transition: "all 0.3s ease"
-                }}
-                onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-              >
-                Xem lịch hẹn của tôi
-              </Link>
+              {/* Hiển thị thông tin đã đặt */}
+              <div style={{ 
+                backgroundColor: "#f8f9fa", 
+                padding: "20px", 
+                borderRadius: "10px", 
+                marginBottom: "30px",
+                textAlign: "left",
+                maxWidth: "500px",
+                margin: "20px auto"
+              }}>
+                <h3 style={{ color: "#2c3e50", marginBottom: "15px", textAlign: "center" }}>Thông tin đặt lịch</h3>
+                <p><strong>Họ tên:</strong> {formData.fullName}</p>
+                <p><strong>Điện thoại:</strong> {formData.phone}</p>
+                <p><strong>Tư vấn viên:</strong> {consultants.find(c => c.userID == formData.consultantId)?.fullName || consultants.find(c => c.userID == formData.consultantId)?.name || 'N/A'}</p>
+                <p><strong>Chuyên khoa:</strong> {consultants.find(c => c.userID == formData.consultantId)?.specification || 'Tư vấn sức khỏe'}</p>
+                <p><strong>Ngày giờ hẹn:</strong> {formData.date} {formData.time}</p>
+                <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Chờ bắt đầu</span></p>
+                {formData.symptoms && <p><strong>Triệu chứng:</strong> {formData.symptoms}</p>}
+                
+                {/* Nút xem lịch đặt */}
+                <div style={{ textAlign: "center", marginTop: "20px" }}>
+                  <Link
+                    to="/my-appointments"
+                    style={{
+                      display: "inline-block",
+                      background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                      color: "#fff",
+                      textDecoration: "none",
+                      padding: "12px 25px",
+                      borderRadius: "25px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+                    onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                  >
+                    📋 Xem lịch hẹn của tôi
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         )}

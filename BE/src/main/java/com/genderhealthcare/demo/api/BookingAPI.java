@@ -239,4 +239,47 @@ public class BookingAPI {
                 .body("Lỗi khi lấy khung giờ rảnh: " + e.getMessage());
         }
     }
+    
+    // === Test Booking Endpoints ===
+    
+    @GetMapping("/test-bookings")
+    public ResponseEntity<List<Booking>> getAllTestBookings() {
+        List<Booking> testBookings = bookingService.getTestBookings();
+        testBookings.forEach(Booking::updateStatus);
+        return ResponseEntity.ok(testBookings);
+    }
+    
+    @GetMapping("/test-bookings/status/{status}")
+    public ResponseEntity<List<Booking>> getTestBookingsByStatus(@PathVariable("status") String status) {
+        List<Booking> testBookings = bookingService.getTestBookingsByStatus(status);
+        testBookings.forEach(Booking::updateStatus);
+        return ResponseEntity.ok(testBookings);
+    }
+    
+    @GetMapping("/user/{userId}/status/{status}")
+    public ResponseEntity<List<Booking>> getBookingsByUserIdAndStatus(
+            @PathVariable("userId") Integer userId,
+            @PathVariable("status") String status) {
+        List<Booking> bookings = bookingService.getBookingsByUserIdAndStatus(userId, status);
+        bookings.forEach(Booking::updateStatus);
+        return ResponseEntity.ok(bookings);
+    }
+    
+    @PutMapping("/{id}/update-status")
+    public ResponseEntity<?> updateBookingStatusOnly(@PathVariable("id") Integer id,
+                                                     @RequestParam("status") String status) {
+        try {
+            Booking updated = bookingService.updateBookingStatus(id, status);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/{userId}/test-bookings")
+    public ResponseEntity<List<Booking>> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
+        List<Booking> testBookings = bookingService.getTestBookingsByUserId(userId);
+        testBookings.forEach(Booking::updateStatus);
+        return ResponseEntity.ok(testBookings);
+    }
 }

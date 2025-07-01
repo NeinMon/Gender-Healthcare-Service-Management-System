@@ -133,4 +133,36 @@ public class BookingService {
                         !b.getServiceId().equals(1))
                 .toList();
     }
+    
+    // === Methods for Test Bookings ===
+    
+    public List<Booking> getTestBookings() {
+        return bookingRepository.findTestBookings();
+    }
+    
+    public List<Booking> getTestBookingsByStatus(String status) {
+        return bookingRepository.findTestBookingsByStatus(status);
+    }
+    
+    public List<Booking> getBookingsByUserIdAndStatus(Integer userId, String status) {
+        return bookingRepository.findByUserIdAndStatus(userId, status);
+    }
+    
+    // Cập nhật status cho booking xét nghiệm
+    public Booking updateBookingStatus(Integer bookingId, String newStatus) {
+        Booking booking = bookingRepository.findById(bookingId).orElse(null);
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found with ID: " + bookingId);
+        }
+        
+        booking.setStatus(newStatus);
+        return bookingRepository.save(booking);
+    }
+
+    public List<Booking> getTestBookingsByUserId(Integer userId) {
+        if (userId == null) return List.of();
+        return bookingRepository.findAll().stream()
+                .filter(b -> userId.equals(b.getUserId()) && b.getServiceId() != null && b.getServiceId() != 1)
+                .toList();
+    }
 }

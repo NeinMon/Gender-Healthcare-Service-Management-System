@@ -14,6 +14,17 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     List<Booking> findByServiceIdAndStatus(Integer serviceId, String status);
+    
+    // Tìm booking theo userId và status
+    List<Booking> findByUserIdAndStatus(Integer userId, String status);
+    
+    // Tìm booking xét nghiệm (serviceId != 1)
+    @Query("SELECT b FROM Booking b WHERE b.serviceId != 1")
+    List<Booking> findTestBookings();
+    
+    // Tìm booking xét nghiệm theo trạng thái
+    @Query("SELECT b FROM Booking b WHERE b.serviceId != 1 AND b.status = :status")
+    List<Booking> findTestBookingsByStatus(@Param("status") String status);
 
     // Lấy tất cả booking của 1 tư vấn viên trong 1 ngày (để kiểm tra khung giờ rảnh)
     List<Booking> findByConsultantIdAndAppointmentDate(Integer consultantId, LocalDate appointmentDate);

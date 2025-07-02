@@ -13,15 +13,14 @@ export const RedirectToStaffTestBookings = () => {
 };
 
 const STATUS_OPTIONS = [
-  "Chờ xác nhận",
-  "Đã xác nhận",
+  "Chờ bắt đầu",
   "Đã check-in",
-  "Đã xong"
+  "Đã check-out"
 ];
 
 const StaffTestBookingManager = () => {
   const [bookings, setBookings] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("Chờ xác nhận");
+  const [statusFilter, setStatusFilter] = useState("Chờ bắt đầu");
   const [loading, setLoading] = useState(false);
   const [staff, setStaff] = useState({ fullName: "Nhân viên" });
   const [showAccount, setShowAccount] = useState(false);
@@ -46,12 +45,12 @@ const StaffTestBookingManager = () => {
     }
   }, [navigate]);
 
-  // Lấy danh sách booking theo trạng thái và bookingType=test
+  // Lấy danh sách booking theo trạng thái (dùng API detail để có đủ thông tin user)
   const fetchBookings = async () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:8080/api/bookings?bookingType=test&status=${encodeURIComponent(statusFilter)}`
+        `http://localhost:8080/api/test-bookings/status/${encodeURIComponent(statusFilter)}/detail`
       );
       if (res.ok) {
         const data = await res.json();
@@ -70,10 +69,10 @@ const StaffTestBookingManager = () => {
     // eslint-disable-next-line
   }, [statusFilter]);
 
-  // Đổi trạng thái booking
+  // Đổi trạng thái booking (test booking)
   const updateStatus = async (id, newStatus) => {
     const res = await fetch(
-      `http://localhost:8080/api/bookings/${id}/status?status=${encodeURIComponent(newStatus)}`,
+      `http://localhost:8080/api/test-bookings/${id}/status?status=${encodeURIComponent(newStatus)}`,
       { method: "PUT" }
     );
     if (res.ok) {
@@ -147,22 +146,19 @@ const StaffTestBookingManager = () => {
             ) : (
               bookings.map(b => (
                 <tr key={b.bookingId}>
-                  <td>{b.fullName || b.userName || "N/A"}</td>
+                  <td>{b.fullName || "N/A"}</td>
                   <td>{b.phone || "N/A"}</td>
-                  <td>{b.testType || b.content || "N/A"}</td>
-                  <td>{b.preferredDate || b.appointmentDate || "N/A"}</td>
-                  <td>{b.preferredTime || "N/A"}</td>
+                  <td>{b.content || "N/A"}</td>
+                  <td>{b.appointmentDate ? b.appointmentDate.split('T')[0] : "N/A"}</td>
+                  <td>{b.startTime || "N/A"}</td>
                   <td>{b.notes || "N/A"}</td>
-                  <td>{b.status}</td>
+                  <td>{b.testStatus}</td>
                   <td>
-                    {b.status === "Chờ xác nhận" && (
-                      <button onClick={() => updateStatus(b.bookingId, "Đã xác nhận")}>Xác nhận</button>
+                    {b.testStatus === "Chờ bắt đầu" && (
+                      <button onClick={() => updateStatus(b.id, "Đã check-in")}>Check-in</button>
                     )}
-                    {b.status === "Đã xác nhận" && (
-                      <button onClick={() => updateStatus(b.bookingId, "Đã check-in")}>Check-in</button>
-                    )}
-                    {b.status === "Đã check-in" && (
-                      <button onClick={() => updateStatus(b.bookingId, "Đã xong")}>Check-out</button>
+                    {b.testStatus === "Đã check-in" && (
+                      <button onClick={() => updateStatus(b.id, "Đã check-out")}>Check-out</button>
                     )}
                   </td>
                 </tr>

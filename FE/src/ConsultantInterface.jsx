@@ -116,16 +116,13 @@ const ConsultantInterface = () => {
       display: 'inline-block'
     };
 
-    // Map status values to match the backend values
+    // Map status values to show only two states: Đã trả lời and Chờ trả lời
     switch(status?.toLowerCase()) {
       case 'resolved':
         return <span key={`status-${id || 'resolved'}`} style={{...badgeStyle, backgroundColor: '#d0f7ea', color: '#0f766e'}}>Đã trả lời</span>;
       case 'pending':
-        return <span key={`status-${id || 'pending'}`} style={{...badgeStyle, backgroundColor: '#fef9c3', color: '#ca8a04'}}>Chờ trả lời</span>;
-      case 'closed':
-        return <span key={`status-${id || 'closed'}`} style={{...badgeStyle, backgroundColor: '#fee2e2', color: '#b91c1c'}}>Đã đóng</span>;
       default:
-        return <span key={`status-${id || 'unknown'}`} style={{...badgeStyle, backgroundColor: '#e0f2fe', color: '#0369a1'}}>Khác</span>;
+        return <span key={`status-${id || 'pending'}`} style={{...badgeStyle, backgroundColor: '#fef9c3', color: '#ca8a04'}}>Chờ trả lời</span>;
     }
   };
 
@@ -194,25 +191,21 @@ const ConsultantInterface = () => {
   const handleFilterChange = (e) => {
     setFilterStatus(e.target.value);
   };
-  // Đúng mapping status backend
+  // Status options with only 'Đã trả lời' and 'Chờ trả lời'
   const statusOptions = [
     { value: 'all', label: 'Tất cả' },
-    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
-    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
-    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
+    { value: 'pending', label: 'Chờ trả lời' },
+    { value: 'resolved', label: 'Đã trả lời' }
   ];
 
   const filteredQuestions = questions.filter(question => {
     if (filterStatus === 'all') return true;
     
-    // Map frontend filter values to backend status values
+    // Filter based on the two states: 'resolved' (Đã trả lời) and 'pending' (Chờ trả lời)
     if (filterStatus === 'pending' && (!question.status || question.status.toLowerCase() === 'pending')) {
       return true;
     }
-    if (filterStatus === 'answered' && question.status?.toLowerCase() === 'resolved') {
-      return true;
-    }
-    if (filterStatus === 'closed' && question.status?.toLowerCase() === 'closed') {
+    if (filterStatus === 'resolved' && question.status?.toLowerCase() === 'resolved') {
       return true;
     }
     

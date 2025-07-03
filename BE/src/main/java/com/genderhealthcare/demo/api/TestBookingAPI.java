@@ -98,9 +98,15 @@ public class TestBookingAPI {
     // Chỉ còn 1 endpoint cập nhật trạng thái (3 trạng thái hợp lệ)
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable("id") Integer id,
-                                          @RequestParam("status") String status) {
+                                          @RequestParam("status") String status,
+                                          @RequestParam(value = "testResult", required = false) String testResult) {
         try {
-            TestBookingInfo updated = testBookingInfoService.updateTestStatus(id, status);
+            TestBookingInfo updated;
+            if ("Đã check-out".equals(status) && testResult != null) {
+                updated = testBookingInfoService.updateTestStatusWithResult(id, status, testResult);
+            } else {
+                updated = testBookingInfoService.updateTestStatus(id, status);
+            }
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

@@ -24,6 +24,9 @@ const StaffTestBookingManager = () => {
   const [loading, setLoading] = useState(false);
   const [staff, setStaff] = useState({ fullName: "Nhân viên" });
   const [showAccount, setShowAccount] = useState(false);
+  const [showResultPopup, setShowResultPopup] = useState(false);
+  const [pendingCheckoutId, setPendingCheckoutId] = useState(null);
+  const [selectedResult, setSelectedResult] = useState("");
   const navigate = useNavigate();
 
   // Lấy thông tin staff từ localStorage/sessionStorage
@@ -45,7 +48,7 @@ const StaffTestBookingManager = () => {
     }
   }, [navigate]);
 
-  // Lấy danh sách booking theo trạng thái (dùng API detail để có đủ thông tin user)
+  // Lấy danh sách test booking từ API detail (có id TestBookingInfo)
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -54,7 +57,17 @@ const StaffTestBookingManager = () => {
       );
       if (res.ok) {
         const data = await res.json();
-        setBookings(data);
+        setBookings(data.map(b => ({
+          id: b.id, // id của TestBookingInfo để thao tác check-in/check-out
+          bookingId: b.bookingId,
+          fullName: b.fullName || "N/A",
+          phone: b.phone || "N/A",
+          content: b.serviceName || b.bookingContent || "N/A",
+          appointmentDate: b.appointmentDate ? (typeof b.appointmentDate === 'string' ? b.appointmentDate.split('T')[0] : (b.appointmentDate?.toString?.().split('T')[0] || "")) : "",
+          startTime: b.appointmentTime || "",
+          notes: b.notes || "",
+          testStatus: b.testStatus || "",
+        })));
       } else {
         setBookings([]);
       }
@@ -71,10 +84,35 @@ const StaffTestBookingManager = () => {
 
   // Đổi trạng thái booking (test booking)
   const updateStatus = async (id, newStatus) => {
+    if (newStatus === "Đã check-out") {
+      setPendingCheckoutId(id);
+      setShowResultPopup(true);
+      return;
+    }
     const res = await fetch(
       `http://localhost:8080/api/test-bookings/${id}/status?status=${encodeURIComponent(newStatus)}`,
       { method: "PUT" }
     );
+    if (res.ok) {
+      fetchBookings();
+    } else {
+      alert("Cập nhật trạng thái thất bại!");
+    }
+  };
+
+  // Xác nhận kết quả xét nghiệm và gửi lên backend khi check-out
+  const handleConfirmResult = async () => {
+    if (!selectedResult) {
+      alert("Vui lòng chọn kết quả xét nghiệm!");
+      return;
+    }
+    const res = await fetch(
+      `http://localhost:8080/api/test-bookings/${pendingCheckoutId}/status?status=Đã check-out&testResult=${encodeURIComponent(selectedResult)}`,
+      { method: "PUT" }
+    );
+    setShowResultPopup(false);
+    setPendingCheckoutId(null);
+    setSelectedResult("");
     if (res.ok) {
       fetchBookings();
     } else {
@@ -145,11 +183,11 @@ const StaffTestBookingManager = () => {
               </tr>
             ) : (
               bookings.map(b => (
-                <tr key={b.bookingId}>
-                  <td>{b.fullName || "N/A"}</td>
-                  <td>{b.phone || "N/A"}</td>
-                  <td>{b.content || "N/A"}</td>
-                  <td>{b.appointmentDate ? b.appointmentDate.split('T')[0] : "N/A"}</td>
+                <tr key={b.id}>
+                  <td>{b.fullName}</td>
+                  <td>{b.phone}</td>
+                  <td>{b.content}</td>
+                  <td>{b.appointmentDate || "N/A"}</td>
                   <td>{b.startTime || "N/A"}</td>
                   <td>{b.notes || "N/A"}</td>
                   <td>{b.testStatus}</td>
@@ -166,6 +204,26 @@ const StaffTestBookingManager = () => {
             )}
           </tbody>
         </table>
+      )}
+      {/* Popup nhập kết quả xét nghiệm khi check-out */}
+      {showResultPopup && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+        }}>
+          <div style={{ background: "#fff", padding: 32, borderRadius: 12, minWidth: 320, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
+            <h3 style={{ marginBottom: 16 }}>Nhập kết quả xét nghiệm</h3>
+            <select value={selectedResult} onChange={e => setSelectedResult(e.target.value)} style={{ width: "100%", padding: 8, marginBottom: 16 }}>
+              <option value="">-- Chọn kết quả --</option>
+              <option value="Âm tính">Âm tính</option>
+              <option value="Dương tính">Dương tính</option>
+            </select>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button onClick={() => { setShowResultPopup(false); setPendingCheckoutId(null); setSelectedResult(""); }}>Hủy</button>
+              <button onClick={handleConfirmResult} style={{ background: "#0891b2", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6 }}>Xác nhận</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

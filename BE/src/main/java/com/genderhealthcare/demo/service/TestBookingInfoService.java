@@ -100,6 +100,21 @@ public class TestBookingInfoService {
         return testBookingInfoRepository.save(testBookingInfo);
     }
     
+    // Cập nhật trạng thái (cho phép truyền testResult khi check-out)
+    public TestBookingInfo updateTestStatusWithResult(Integer id, String newStatus, String testResult) {
+        TestBookingInfo testBookingInfo = testBookingInfoRepository.findById(id).orElse(null);
+        if (testBookingInfo == null) {
+            throw new IllegalArgumentException("Test booking info not found with ID: " + id);
+        }
+        if (!newStatus.equals("Đã check-out")) {
+            throw new IllegalArgumentException("This method only supports status 'Đã check-out'");
+        }
+        testBookingInfo.setTestStatus(newStatus);
+        testBookingInfo.setCheckoutTime(java.time.LocalDateTime.now());
+        testBookingInfo.setTestResults(testResult);
+        return testBookingInfoRepository.save(testBookingInfo);
+    }
+    
     // Lấy thông tin chi tiết kết hợp từ TestBookingInfo, Users và Booking
     public com.genderhealthcare.demo.model.TestBookingDetailDTO getTestBookingDetailById(Integer id) {
         TestBookingInfo testBookingInfo = testBookingInfoRepository.findById(id).orElse(null);

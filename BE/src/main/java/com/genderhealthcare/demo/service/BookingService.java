@@ -1,6 +1,7 @@
 package com.genderhealthcare.demo.service;
 
 import com.genderhealthcare.demo.entity.Booking;
+import com.genderhealthcare.demo.entity.TestBookingInfo;
 import com.genderhealthcare.demo.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,9 @@ import java.util.List;
 public class BookingService {
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private TestBookingInfoService testBookingInfoService;
 
     public Booking createBooking(Booking booking) {
         // Đặt trạng thái mặc định nếu chưa có
@@ -31,7 +35,20 @@ public class BookingService {
         }
         
         // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Tự động tạo TestBookingInfo nếu là booking xét nghiệm (serviceId != 1)
+        if (saved.getServiceId() != null && !saved.getServiceId().equals(1)) {
+            // Kiểm tra đã có TestBookingInfo chưa (tránh tạo trùng)
+            if (testBookingInfoService.getTestBookingInfoByBookingId(saved.getBookingId()) == null) {
+                TestBookingInfo testBookingInfo = new TestBookingInfo();
+                testBookingInfo.setBookingId(saved.getBookingId());
+                testBookingInfo.setUserId(saved.getUserId());
+                testBookingInfo.setTestStatus("Chờ bắt đầu");
+                testBookingInfoService.createTestBookingInfo(testBookingInfo);
+            }
+        }
+        return saved;
     }
 
     public List<Booking> getAllBookings() {

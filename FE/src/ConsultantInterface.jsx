@@ -1271,7 +1271,19 @@ const ConsultantInterface = () => {
           }}>
             <h2 style={{ color: '#0891b2', marginBottom: 18 }}>Chi tiết cuộc gọi</h2>
             <div style={{ marginBottom: 10 }}><b>Khách hàng:</b> {detailData.user}</div>
-            <div style={{ marginBottom: 10 }}><b>Nội dung:</b> {detailData.content}</div>
+            <div style={{ marginBottom: 10 }}>
+              <div><b>Nội dung</b></div> 
+              <div style={{ 
+                wordWrap: 'break-word', 
+                wordBreak: 'break-word',
+                maxWidth: '400px',
+                marginLeft: '8px',
+                marginTop: '4px',
+                lineHeight: '1.5'
+              }}>
+                {detailData.content}
+              </div>
+            </div>
             <div style={{ marginBottom: 10 }}><b>Ngày:</b> {detailData.date}</div>
             <div style={{ marginBottom: 10 }}><b>Bắt đầu:</b> {detailData.startTime}</div>
             <div style={{ marginBottom: 10 }}><b>Kết thúc:</b> {detailData.endTime}</div>

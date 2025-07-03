@@ -32,6 +32,7 @@ const StaffTestBookingManager = () => {
   const [dateFilter, setDateFilter] = useState("");
   const [testTypeFilter, setTestTypeFilter] = useState("");
   const [serviceNames, setServiceNames] = useState({});
+  const [serviceNamesLoaded, setServiceNamesLoaded] = useState(false);
   const navigate = useNavigate();
 
   // Lấy thông tin staff từ localStorage/sessionStorage
@@ -53,227 +54,77 @@ const StaffTestBookingManager = () => {
     }
   }, [navigate]);
 
-  // Hàm lấy thông tin các dịch vụ từ API - tương tự MyTestBookings
+  // Lấy thông tin các dịch vụ từ API
   const fetchServiceNames = async (serviceIds) => {
     if (!serviceIds || serviceIds.length === 0) {
       return {};
     }
-    
-    console.log("Fetching service names for IDs:", serviceIds);
-    
     try {
       const servicesResponse = await fetch('http://localhost:8080/api/services');
       if (servicesResponse.ok) {
         const allServices = await servicesResponse.json();
-        console.log("API returned services:", allServices);
-        
-        // Lấy tất cả dịch vụ
         const namesObj = {};
         allServices.forEach(service => {
-          namesObj[service.serviceId] = service.serviceName;
-          // Log ra các mapping để dễ debug
-          if (serviceIds.includes(service.serviceId)) {
-            console.log(`Found service ${service.serviceId}: ${service.serviceName}`);
-          }
+          const id = typeof service.serviceId === 'string' 
+            ? parseInt(service.serviceId, 10) 
+            : service.serviceId;
+          namesObj[id] = service.serviceName;
         });
-        
-        // Kiểm tra xem có service ID nào không tìm thấy không
-        serviceIds.forEach(id => {
-          if (!namesObj[id]) {
-            console.warn(`Service ID ${id} not found in API response`);
-          }
-        });
-        
-        // Cập nhật serviceNames state - lưu ý không ghi đè toàn bộ state
-        setServiceNames(prevNames => {
-          const merged = {...prevNames, ...namesObj};
-          console.log("Updated serviceNames:", merged);
-          return merged;
-        });
+        setServiceNames(prevNames => ({...prevNames, ...namesObj}));
         return namesObj;
       }
-    } catch (err) {
-      console.warn("Không thể lấy thông tin dịch vụ:", err);
-    }
+    } catch (err) {}
     return {};
   };
 
-  // Hàm lấy serviceId từ booking
+  // Lấy serviceId từ booking (chỉ lấy trực tiếp từ serviceId, backend đã chuẩn hóa)
   const getServiceId = (booking) => {
-    // Khi gọi API detail, backend sẽ bao gồm booking.serviceId từ relationship
-    // Hoặc cũng có thể gửi lên từ góc Booking entity
-    
-    // Nếu booking.bookingId tồn tại, thì đây là booking detail từ API endpoint /test-bookings/{status}/detail
-    if (booking.bookingId !== undefined) {
-      // Từ BookingAPI, khi gọi BookingService.getBookingById() nó sẽ trả về serviceId từ Booking entity
-      return booking.serviceId;
+    if (booking.serviceId !== undefined && booking.serviceId !== null) {
+      return typeof booking.serviceId === 'string' ? parseInt(booking.serviceId, 10) : booking.serviceId;
     }
-    
-    // Fallback
-    const id = booking.serviceId || null;
-    if (id === null) return null;
-    
-    // Chuyển về số nếu là chuỗi
-    return typeof id === 'string' ? parseInt(id, 10) : id;
+    return null;
   };
-  
-  // Hàm lấy tên dịch vụ xét nghiệm từ booking
-  // Đơn giản hóa theo cách của MyTestBooking
+
+  // Lấy tên dịch vụ xét nghiệm từ booking
   const getServiceName = (booking) => {
-    // Ưu tiên lấy serviceName trực tiếp từ API - backend đã mapped sẵn
     if (booking.serviceName) {
       return booking.serviceName;
     }
-    
-    // Fallback 1: Sử dụng serviceId để lấy tên dịch vụ từ serviceNames mapping
     const serviceId = getServiceId(booking);
-    if (serviceId && serviceNames[serviceId]) {
+    if (serviceId !== null && serviceNames[serviceId]) {
       return serviceNames[serviceId];
     }
-    
-    // Fallback cuối cùng nếu không có thông tin
     return "Xét nghiệm chưa xác định";
   };
 
-  // Lấy danh sách test booking từ API detail (có id TestBookingInfo)
+  // Lấy danh sách test booking từ API detail
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      // Xử lý trường hợp "Tất cả"
       const endpoint = statusFilter 
         ? `http://localhost:8080/api/test-bookings/status/${encodeURIComponent(statusFilter)}/detail`
         : `http://localhost:8080/api/test-bookings/all/detail`;
-      
       const res = await fetch(endpoint);
       if (res.ok) {
         const data = await res.json();
-        
-        // Lấy danh sách serviceId và gọi API lấy thông tin service
+        let serviceIds = [];
         if (data.length > 0) {
-          const serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
-          
-          if (serviceIds.length > 0) {
-            await fetchServiceNames(serviceIds);
-          }
+          serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
         }
-        
-        // Enhanced Debug logs
-        console.log("Sample booking data:", data[0]);
-        
-        // Find any booking with serviceName or serviceId to identify structure
-        const bookingWithServiceName = data.find(b => b.serviceName);
-        const bookingWithServiceId = data.find(b => b.serviceId);
-        
-        console.log("Found booking with serviceName:", bookingWithServiceName);
-        console.log("Found booking with serviceId:", bookingWithServiceId);
-        console.log("TestBookingDetailDTO expected fields:", Object.keys(data[0] || {}).join(", "));
-        
-        // Check if data[0] has any service information in nested properties
-        if (data[0]) {
-          const flatObject = {};
-          const findServiceInfo = (obj, prefix = "") => {
-            for (const key in obj) {
-              if (typeof obj[key] === 'object' && obj[key] !== null) {
-                findServiceInfo(obj[key], `${prefix}${key}.`);
-              } else {
-                flatObject[`${prefix}${key}`] = obj[key];
-                // Log any keys that might contain service info
-                if (key.toLowerCase().includes('service')) {
-                  console.log(`Found potential service field: ${prefix}${key} = ${obj[key]}`);
-                }
-              }
-            }
-          };
-          findServiceInfo(data[0]);
-        }
-        
-        // Trước khi mapping, log các trường trong một item để xem cấu trúc dữ liệu
-        if (data.length > 0) {
-          console.log("TestBookingDetailDTO FULL STRUCTURE:", JSON.stringify(data[0], null, 2));
-        }
-        
+        await fetchServiceNames(serviceIds);
         setBookings(data.map(b => {
-          // Lấy serviceId từ API response - khác với field serviceId của TestBookingInfo
-          // Trên backend, đây là thông tin từ Booking entity
-          const serviceId = b.serviceId;
-          
-          console.log(`Booking ID: ${b.id}, Service ID: ${serviceId}, ServiceName: ${b.serviceName}`);
-          
-          // CRITICAL FIX: lấy thông tin dịch vụ từ service mapping trước
-          // Mặc định là "Xét nghiệm máu cơ bản" thay vì "Không xác định"
-          let displayServiceName = "Xét nghiệm máu cơ bản";
-          
-          console.log("Raw booking data:", {
-            id: b.id,
-            serviceId: b.serviceId,
-            serviceName: b.serviceName,
-            bookingId: b.bookingId,
-            bookingContent: b.bookingContent
-          });
-          
-          // Trích xuất thông tin service từ response
-          if (b.bookingId !== undefined) {
-            // Tìm trong booking entity
-            console.log(`Booking ${b.id} has bookingId=${b.bookingId}, checking for service info`);
-            
-            // Kết quả từ TestBookingDetailDTO sẽ bao gồm cả service name
-            if (b.serviceName) {
-              console.log(`Found serviceName in API response: ${b.serviceName}`);
-              displayServiceName = b.serviceName;
-            }
-            // Nếu có serviceId, dùng để lookup
-            else if (serviceId) {
-              console.log(`No serviceName in API, using serviceId=${serviceId} to lookup`);
-              
-              // Kiểm tra dữ liệu serviceNames
-              console.log("Current serviceNames mapping:", JSON.stringify(serviceNames));
-              
-              // Áp dụng hardcoded mapping theo ID để đảm bảo hiển thị đúng
-              const hardcodedNames = {
-                1: "Tư vấn sức khỏe",
-                2: "Khám tổng quát",
-                3: "Theo dõi vòng kinh",
-                4: "Xét nghiệm máu cơ bản", 
-                5: "Siêu âm tử cung",
-                6: "Kiểm tra HPV",
-                7: "Xét nghiệm nội tiết tố", 
-                8: "Khám sức khỏe tổng quát",
-                9: "Kiểm tra thai kỳ",
-                10: "Khám phụ khoa"
-              };
-              
-              if (serviceId in hardcodedNames) {
-                displayServiceName = hardcodedNames[serviceId];
-                console.log(`Using hardcoded name for service ID ${serviceId}: ${displayServiceName}`);
-              } else if (serviceNames[serviceId]) {
-                displayServiceName = serviceNames[serviceId];
-                console.log(`Found service name in local mapping: ${displayServiceName}`);
-              } else {
-                displayServiceName = `Xét nghiệm ID: ${serviceId}`;
-                console.log(`Service ID ${serviceId} not found in any mapping, using fallback ID`);
-              }
-            } else {
-              console.log("No service information found in API response");
-            }
-          } else {
-            console.log(`Booking ${b.id} has no bookingId, likely incomplete data`);
-          }
-          
-          console.log(`Final service name for booking ${b.id}: ${displayServiceName}`);
-          
-          // Lưu cả serviceName từ API và serviceId để hiển thị
+          const serviceId = getServiceId(b);
+          const displayServiceName = getServiceName(b);
           return {
-            id: b.id, // id của TestBookingInfo để thao tác check-in/check-out
+            id: b.id,
             bookingId: b.bookingId,
             fullName: b.fullName || "N/A",
             phone: b.phone || "N/A",
-            serviceId: serviceId, // Lưu serviceId để tra cứu tên dịch vụ
-            serviceName: displayServiceName, // Lưu serviceName đã resolved
-            // Lưu content gốc từ booking
+            serviceId: serviceId,
+            serviceName: displayServiceName,
             content: b.bookingContent || "",
             appointmentDate: b.appointmentDate ? (typeof b.appointmentDate === 'string' ? b.appointmentDate.split('T')[0] : (b.appointmentDate?.toString?.().split('T')[0] || "")) : "",
             startTime: b.appointmentTime || "",
-            // Ghi chú là nội dung booking từ Booking entity
             notes: b.bookingContent || "N/A",
             testStatus: b.testStatus || "",
           };
@@ -287,103 +138,40 @@ const StaffTestBookingManager = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchBookings();
-    // eslint-disable-next-line
-  }, [statusFilter]);
-  
-  // Khởi tạo serviceNames từ API - đơn giản hóa như MyTestBooking
+  // Khởi tạo serviceNames từ API ngay khi component mount
   useEffect(() => {
     // Fetch danh sách dịch vụ từ API ngay khi component mount
-    console.log("Fetching initial services data...");
     fetch('http://localhost:8080/api/services')
       .then(response => {
         if (response.ok) return response.json();
         throw new Error('Failed to fetch services');
       })
       .then(services => {
-        console.log("Fetched services:", services);
         const servicesMap = {};
         services.forEach(service => {
-          // Lưu ý service.serviceId phải khớp với service_id trong database
-          servicesMap[service.serviceId] = service.serviceName;
-          console.log(`Mapped service ID ${service.serviceId} to name "${service.serviceName}"`);
+          const id = typeof service.serviceId === 'string' 
+            ? parseInt(service.serviceId, 10) 
+            : service.serviceId;
+          servicesMap[id] = service.serviceName;
         });
-        // Lưu mapping vào state
         setServiceNames(servicesMap);
+        setServiceNamesLoaded(true);
       })
-      .catch(err => {
-        console.warn("Could not fetch services:", err);
-        // Fallback với các giá trị mặc định khi không thể gọi API
-        const defaultServiceNames = {
-          1: "Tư vấn sức khỏe",
-          2: "Khám tổng quát",
-          3: "Theo dõi vòng kinh",
-          4: "Xét nghiệm máu cơ bản", 
-          5: "Siêu âm tử cung",
-          6: "Kiểm tra HPV",
-          7: "Xét nghiệm nội tiết tố", 
-          8: "Khám sức khỏe tổng quát",
-          9: "Kiểm tra thai kỳ",
-          10: "Khám phụ khoa"
-        };
-        setServiceNames(defaultServiceNames);
+      .catch(() => {
+        setServiceNames({});
+        setServiceNamesLoaded(true);
       });
   }, []);
 
-  // Thêm useEffect để log ra dữ liệu sau khi đã fetch để debug
+  // Chỉ fetch bookings khi serviceNames đã sẵn sàng hoặc khi đổi trạng thái
   useEffect(() => {
-    if (bookings.length > 0) {
-      console.log("Bookings data after mapping:", bookings);
-      
-      // Kiểm tra có serviceName từ API không
-      const hasApiServiceNames = bookings.some(b => b.serviceName);
-      console.log("API returned serviceNames directly:", hasApiServiceNames);
-      if (hasApiServiceNames) {
-        const serviceNamesFromApi = bookings
-          .filter(b => b.serviceName)
-          .map(b => ({id: b.serviceId, name: b.serviceName}));
-        console.log("Service names from API:", serviceNamesFromApi);
-      }
-      
-      // Kiểm tra service IDs và service names
-      console.log("Current serviceNames mapping:", serviceNames);
-      
-      // Kiểm tra service IDs trong bookings
-      const bookingServiceIds = bookings.map(b => b.serviceId).filter(Boolean);
-      console.log("Service IDs in bookings:", bookingServiceIds);
-      
-      // Kiểm tra xem có bao nhiêu bookings có serviceId nhưng không có serviceName
-      const missingNames = bookings.filter(b => b.serviceId && !b.serviceName);
-      if (missingNames.length > 0) {
-        console.log(`WARNING: ${missingNames.length} bookings have serviceId but no serviceName`);
-        console.log("First booking with missing serviceName:", missingNames[0]);
-      }
-      
-      // Kiểm tra service names trong serviceNames mapping
-      const mappedNames = bookingServiceIds.map(id => ({
-        id,
-        name: serviceNames[id] || "Not found in mapping"
-      }));
-      console.log("Service names from mapping:", mappedNames);
-      
-      // Kiểm tra "Loại xét nghiệm" hiển thị cuối cùng
-      const displayedServiceNames = bookings.map(b => {
-        const displayed = b.serviceName || (b.serviceId && serviceNames[b.serviceId]) || "Không xác định";
-        return {id: b.serviceId, displayed};
-      });
-      console.log("Service names to be displayed:", displayedServiceNames);
-      
-      // Kiểm tra "Ghi chú" (bookingContent)
-      const hasNotes = bookings.some(b => b.notes && b.notes !== "N/A");
-      console.log("Some bookings have notes:", hasNotes);
-      if (!hasNotes) {
-        console.log("WARNING: No booking content found in any booking");
-      }
+    if (serviceNamesLoaded) {
+      fetchBookings();
     }
-  }, [bookings, serviceNames]);
+    // eslint-disable-next-line
+  }, [statusFilter, serviceNamesLoaded]);
 
-  // Đổi trạng thái booking (test booking)
+  // Hàm đổi trạng thái booking (test booking)
   const updateStatus = async (id, newStatus) => {
     if (newStatus === "Đã check-out") {
       setPendingCheckoutId(id);
@@ -410,11 +198,8 @@ const StaffTestBookingManager = () => {
     }
     
     try {
-      console.log("Sending test result for booking ID:", pendingCheckoutId);
-      
       if (resultFile) {
         // Nếu có file, sử dụng FormData và endpoint result
-        console.log("Using FormData to send result with file");
         const formData = new FormData();
         formData.append("testStatus", "Đã check-out");
         formData.append("testResult", selectedResult);
@@ -435,10 +220,8 @@ const StaffTestBookingManager = () => {
           throw new Error(`Không thể gửi kết quả. Mã lỗi: ${res.status}`);
         }
         
-        console.log("Result with file uploaded successfully");
       } else {
         // Không có file, sử dụng endpoint status với query params
-        console.log("Using status endpoint with query params (no file)");
         const queryParams = new URLSearchParams({
           status: "Đã check-out",
           testResult: selectedResult,
@@ -457,8 +240,6 @@ const StaffTestBookingManager = () => {
           console.error("Error response:", await res.text());
           throw new Error(`Không thể cập nhật trạng thái. Mã lỗi: ${res.status}`);
         }
-        
-        console.log("Status updated successfully using query params");
       }
       
       setShowResultPopup(false);
@@ -745,13 +526,9 @@ const StaffTestBookingManager = () => {
                             // Sử dụng trực tiếp serviceName đã resolved lúc fetch
                             const serviceName = b.serviceName || "Không xác định";
                             
-                            console.log(`Filter: Comparing '${serviceName}' with '${testTypeFilter}'`);
-                            
                             if (!serviceName.toLowerCase().includes(testTypeFilter.toLowerCase())) {
-                              console.log(`Filter: Excluded booking ${b.id}`);
                               return false;
                             }
-                            console.log(`Filter: Included booking ${b.id}`);
                           }
                           return true;
                         })
@@ -792,8 +569,8 @@ const StaffTestBookingManager = () => {
                                 fontWeight: 600, 
                                 color: '#0891b2' 
                               }}>
-                                {/* Hiển thị serviceName đã được resolved từ trước trong fetchBookings */}
-                                {b.serviceName || "Xét nghiệm máu cơ bản"}
+                                {/* Hiển thị serviceName đã được resolved từ mapping */}
+                                {b.serviceName || "Xét nghiệm chưa xác định"}
                               </span>
                             </div>
                           </td>
@@ -895,7 +672,7 @@ const StaffTestBookingManager = () => {
               <div style={{ marginBottom: 16 }}>
                 <div style={{ marginBottom: 10 }}><b>Khách hàng:</b> {bookings.find(b => b.id === pendingCheckoutId)?.fullName}</div>
                 <div style={{ marginBottom: 10 }}>
-                  <b>Loại xét nghiệm:</b> {bookings.find(b => b.id === pendingCheckoutId)?.content || "N/A"}
+                  <b>Loại xét nghiệm:</b> {bookings.find(b => b.id === pendingCheckoutId)?.serviceName || "N/A"}
                 </div>
                 <div style={{ marginBottom: 10 }}><b>Ngày khám:</b> {bookings.find(b => b.id === pendingCheckoutId)?.appointmentDate}</div>
               </div>

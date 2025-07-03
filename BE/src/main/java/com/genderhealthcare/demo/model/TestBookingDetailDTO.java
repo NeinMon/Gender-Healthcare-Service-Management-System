@@ -40,6 +40,7 @@ public class TestBookingDetailDTO {
     private String address;
     
     // Thông tin từ Booking
+    private Integer serviceId; 
     private String serviceName;
     private LocalDateTime appointmentDate;
     private String appointmentTime;

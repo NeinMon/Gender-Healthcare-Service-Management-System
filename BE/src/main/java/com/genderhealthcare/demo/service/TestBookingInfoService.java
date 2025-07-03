@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
+@Transactional  
 public class TestBookingInfoService {
     
     @Autowired
@@ -162,6 +162,8 @@ public class TestBookingInfoService {
             if (booking.getStartTime() != null) {
                 dto.setAppointmentTime(booking.getStartTime().toString());
             }
+            // Set serviceId from Booking entity
+            dto.setServiceId(booking.getServiceId());
         }
         
         return dto;

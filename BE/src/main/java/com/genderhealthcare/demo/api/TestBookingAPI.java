@@ -136,6 +136,53 @@ public class TestBookingAPI {
         }
     }
 
+    // === Test Result Endpoint ===
+    @PutMapping("/{id}/result")
+    public ResponseEntity<?> updateTestResult(
+            @PathVariable("id") Integer id,
+            @RequestParam("testStatus") String testStatus,
+            @RequestParam("testResult") String testResult,
+            @RequestParam(value = "resultNote", required = false) String resultNote,
+            @RequestParam(value = "staffName", required = false) String staffName) {
+        try {
+            if (!"Đã check-out".equals(testStatus)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Trạng thái phải là 'Đã check-out' để cập nhật kết quả");
+            }
+            
+            // Kiểm tra xem đối tượng có tồn tại không
+            TestBookingInfo existing = testBookingInfoService.getTestBookingInfoById(id);
+            if (existing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy thông tin đặt xét nghiệm với ID: " + id);
+            }
+            
+            // Sử dụng phương thức hiện có để cập nhật trạng thái và kết quả
+            TestBookingInfo updated = testBookingInfoService.updateTestStatusWithResult(id, testStatus, testResult);
+            
+            // Cập nhật các thông tin bổ sung nếu cần
+            if (resultNote != null && !resultNote.trim().isEmpty() || staffName != null && !staffName.trim().isEmpty()) {
+                TestBookingInfo additionalInfo = testBookingInfoService.getTestBookingInfoById(id);
+                
+                if (resultNote != null && !resultNote.trim().isEmpty()) {
+                    additionalInfo.setNotes(resultNote);
+                }
+                
+                if (staffName != null && !staffName.trim().isEmpty()) {
+                    additionalInfo.setStaffName(staffName);
+                }
+                
+                updated = testBookingInfoService.updateTestBookingInfo(id, additionalInfo);
+            }
+            
+            return ResponseEntity.ok(updated);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật kết quả xét nghiệm: " + e.getMessage());
+        }
+    }
+
     // === Detailed Information Endpoints ===
     @GetMapping("/{id}/detail")
     public ResponseEntity<?> getTestBookingDetailById(@PathVariable("id") Integer id) {
@@ -155,6 +202,23 @@ public class TestBookingAPI {
     @GetMapping("/user/{userId}/detail")
     public ResponseEntity<List<com.genderhealthcare.demo.model.TestBookingDetailDTO>> getTestBookingDetailsByUserId(@PathVariable("userId") Integer userId) {
         List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getTestBookingDetailsByUserId(userId);
+        return ResponseEntity.ok(details);
+    }
+    
+    @GetMapping("/all/detail")
+    public ResponseEntity<List<com.genderhealthcare.demo.model.TestBookingDetailDTO>> getAllTestBookingDetails() {
+        // Get all test bookings first
+        List<TestBookingInfo> allBookings = testBookingInfoService.getAllTestBookingInfos();
+        
+        // Then manually convert each one to detail DTO
+        List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = new java.util.ArrayList<>();
+        for (TestBookingInfo booking : allBookings) {
+            com.genderhealthcare.demo.model.TestBookingDetailDTO detail = testBookingInfoService.getTestBookingDetailById(booking.getId());
+            if (detail != null) {
+                details.add(detail);
+            }
+        }
+        
         return ResponseEntity.ok(details);
     }
 }

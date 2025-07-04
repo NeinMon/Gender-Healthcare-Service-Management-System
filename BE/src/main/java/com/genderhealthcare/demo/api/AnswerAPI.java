@@ -22,7 +22,7 @@ import java.util.Optional;
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RestController
 @RequestMapping("/api/answers")
-public class AnswerController {
+public class AnswerAPI {
     @Autowired
     private AnswerRepository answerRepository;
     @Autowired

@@ -23,18 +23,25 @@ Hệ thống quản lý dịch vụ chăm sóc sức khỏe giới tính - Giao 
 - **Hỏi đáp**: Tính năng đặt câu hỏi cho chuyên gia
 
 ### 💬 Giao diện tư vấn
-- Chat interface với consultant
-- Quản lý cuộc hội thoại real-time
+- Video call interface với consultant
+- Quản lý cuộc gọi video real-time
 - Lịch sử tư vấn và theo dõi
 
 ## 🚀 Công nghệ sử dụng
 
 ### Frontend Framework
-- **React**: 18.3.1 - Thư viện JavaScript để xây dựng giao diện người dùng
-- **Vite**: Build tool hiện đại cho development và production
+- **React**: 19.1.0 - Thư viện JavaScript để xây dựng giao diện người dùng
+- **Vite**: 6.3.5 - Build tool hiện đại cho development và production
 
 ### Routing & Navigation  
 - **React Router DOM**: 7.6.0 - Single Page Application routing
+
+### Video Communication
+- **Agora RTC SDK**: 4.23.4 - Real-time video calling và audio communication  
+- **WebRTC**: Peer-to-peer video/audio streaming technology
+- **HD Video Calling**: Cuộc gọi video chất lượng cao 720p/1080p
+- **Audio Controls**: Bật/tắt microphone trong cuộc gọi
+- **Multi-device Support**: Tương thích với desktop và mobile browsers
 
 ### Styling & UI
 - **CSS Modules**: Inline styling với design system nhất quán
@@ -42,14 +49,15 @@ Hệ thống quản lý dịch vụ chăm sóc sức khỏe giới tính - Giao 
 - **Gradient Design**: Linear gradients với color scheme chuyên nghiệp
 
 ### Development Tools
-- **ESLint**: Code linting với các rules hiện đại
+- **ESLint**: 9.25.0 - Code linting với các rules hiện đại
+- **Vite Plugin React**: 4.4.1 - React support cho Vite
 - **Hot Module Replacement**: Development experience tối ưu
 
 ## 📦 Cài đặt và chạy dự án
 
 ### Yêu cầu hệ thống
-- **Node.js**: 16.0.0 hoặc cao hơn
-- **npm**: 8.0.0 hoặc cao hơn (hoặc yarn)
+- **Node.js**: 18.0.0 hoặc cao hơn (khuyến nghị 20.x LTS)
+- **npm**: 9.0.0 hoặc cao hơn (hoặc yarn 3.x)
 - **Git**: Để clone repository
 
 ### Cài đặt
@@ -89,21 +97,25 @@ FE/
 │   └── ...                        # Các hình ảnh khác
 ├── src/
 │   ├── components/                 # Reusable components
-│   │   └── CustomerAvatar.jsx     # Avatar component
+│   │   ├── CustomerAvatar.jsx     # Avatar component
+│   │   └── VideoCall.jsx          # Video calling component
 │   ├── App.jsx                    # Homepage với form đăng ký/đăng nhập
 │   ├── Services.jsx               # Trang dịch vụ chính
 │   ├── Login.jsx                  # Trang đăng nhập
 │   ├── Register.jsx               # Trang đăng ký
 │   ├── UserAccount.jsx            # Quản lý tài khoản người dùng
 │   ├── UserAvatar.jsx             # Avatar người dùng
-│   ├── ConsultantInterface.jsx    # Giao diện chat với chuyên gia
+│   ├── ConsultantInterface.jsx    # Giao diện video call với chuyên gia
 │   ├── ConsultationBooking.jsx    # Đặt lịch tư vấn
 │   ├── PeriodTracking.jsx         # Theo dõi chu kỳ
 │   ├── TestBooking.jsx            # Đặt lịch xét nghiệm
 │   ├── AskQuestion.jsx            # Hỏi đáp chuyên gia
+│   ├── MyAppointments.jsx         # Quản lý lịch hẹn của người dùng
 │   ├── main.jsx                   # Entry point & routing
 │   ├── App.css                    # Component-specific styles
-│   └── index.css                  # Global styles
+│   ├── index.css                  # Global styles
+│   └── config/
+│       └── agora.config.js        # Agora SDK configuration
 ├── package.json                   # Dependencies và scripts
 ├── vite.config.js                # Vite configuration
 ├── eslint.config.js              # ESLint configuration
@@ -149,10 +161,28 @@ FE/
 - **Local Storage**: Persistent user data
 - **Form Validation**: Real-time validation với feedback
 
-### API Integration Ready
-- **Fetch API**: Sẵn sàng integrate với backend
+### Video Call Technology
+- **Agora SDK**: 4.23.4 - Real-time video communication cho tư vấn online
+- **WebRTC**: Peer-to-peer connection với chất lượng cao
+- **Multi-device Support**: Tương thích với desktop và mobile browsers
+
+### Communication Features
+- **HD Video Calling**: Cuộc gọi video chất lượng cao 720p/1080p
+- **Audio Controls**: Bật/tắt microphone trong cuộc gọi
+- **Screen Sharing**: Chia sẻ màn hình cho demo và hướng dẫn (planned)
+- **Call Recording**: Ghi lại cuộc tư vấn để review sau (planned)
+
+### API Integration
+- **REST API**: Sẵn sàng integrate với backend
+- **Agora Token Service**: Secure video call authentication
 - **Error Handling**: Comprehensive error boundaries
 - **Loading States**: User-friendly loading indicators
+
+### Advanced Video Features (Planned)
+- **Screen Sharing**: Chia sẻ màn hình cho demo và hướng dẫn
+- **Call Recording**: Ghi lại cuộc tư vấn để review sau
+- **Multi-participant Calls**: Hỗ trợ nhiều người tham gia
+- **Call Quality Monitoring**: Theo dõi chất lượng cuộc gọi
 
 ## 📱 Responsive Design
 
@@ -188,11 +218,12 @@ FE/
 - [x] User registration/login system  
 - [x] Service pages (consultation, testing, period tracking)
 - [x] Basic routing và navigation
+- [x] Video call integration với Agora SDK
 
 ### Phase 2: Backend Integration (🔄 In Progress)
 - [ ] REST API integration cho user management
 - [ ] Database connectivity cho user data
-- [ ] Real-time chat với WebSocket
+- [ ] Video call real-time với WebRTC
 - [ ] File upload cho test results
 
 ### Phase 3: Advanced Features (📋 Planned)
@@ -258,12 +289,13 @@ FE/
 
 ## 📊 Project Stats
 
-- **Components**: 12+ React components
-- **Routes**: 8+ navigable pages
+- **Components**: 15+ React components
+- **Routes**: 8+ navigable pages  
 - **Assets**: 15+ optimized images
-- **Dependencies**: Modern React ecosystem
-- **Bundle Size**: Optimized với Vite
+- **Dependencies**: Modern React 19.x ecosystem + Agora SDK v4.x
+- **Bundle Size**: Optimized với Vite 6.x
 - **Performance**: 90+ Lighthouse score target
+- **Video Technology**: Agora RTC SDK v4.23.4 integration
 
 ## 📄 License
 
@@ -279,7 +311,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Development Team
 - **Frontend Lead**: [NeinMon](https://github.com/NeinMon)
 - **UI/UX Design**: Modern healthcare-focused design
-- **Tech Stack**: React + Vite ecosystem
+- **Tech Stack**: React 19.x + Vite 6.x + Agora SDK 4.x ecosystem
 
 ### Support Channels
 - **Issues**: [GitHub Issues](https://github.com/NeinMon/Gender-Healthcare-Service-Management-System/issues)
@@ -307,4 +339,4 @@ npm install && npm run dev
 
 ⭐ **Nếu project này hữu ích cho bạn, hãy star repository để support team!** ⭐
 
-**Made with ❤️ for better healthcare accessibility**
+**Made with ❤️ for better healthcare accessibility in 2025**

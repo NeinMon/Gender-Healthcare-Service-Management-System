@@ -89,19 +89,80 @@ const MyTestBookings = () => {
     }
   };
 
-  // Hàm mở modal và lấy kết quả xét nghiệm
-  const handleShowResult = (booking) => {
+  // Hàm mở modal và lấy kết quả xét nghiệm từ API
+  const handleShowResult = async (booking) => {
     setShowResultModal(true);
-    setResultLoading(false);
+    setResultLoading(true);
     setResultError('');
     setResultData(null);
-    // Trực tiếp lấy từ booking đã có
-    setResultData({
-      bookingId: booking.bookingId,
-      result: booking.testResults,
-      resultDate: booking.checkoutTime ? new Date(booking.checkoutTime).toLocaleString() : 'N/A',
-      notes: booking.notes
-    });
+    
+    try {
+      // Lấy thông tin chi tiết booking từ API
+      const bookingDetailResponse = await fetch(`http://localhost:8080/api/test-bookings/${booking.bookingId}/detail`);
+      if (!bookingDetailResponse.ok) {
+        throw new Error('Không thể lấy thông tin chi tiết booking');
+      }
+      const bookingDetail = await bookingDetailResponse.json();
+      
+      // Lấy thông tin user để có họ tên và số điện thoại
+      const userResponse = await fetch(`http://localhost:8080/api/users/${booking.userId || bookingDetail.userId}`);
+      let userName = 'Không có dữ liệu';
+      let userPhone = 'Không có dữ liệu';
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        userName = userData.fullName || userData.name || 'Không có dữ liệu';
+        userPhone = userData.phoneNumber || userData.phone || 'Không có dữ liệu';
+      }
+      
+      // Lấy thông tin service để có giá tiền
+      const serviceResponse = await fetch(`http://localhost:8080/api/services/${booking.serviceId || bookingDetail.serviceId}`);
+      let servicePrice = 'Không có dữ liệu';
+      let serviceType = 'Không có dữ liệu';
+      if (serviceResponse.ok) {
+        const serviceData = await serviceResponse.json();
+        servicePrice = serviceData.price;
+        serviceType = serviceData.serviceName || serviceData.name;
+      }
+      
+      // Cập nhật dữ liệu modal với thông tin từ API
+      setResultData({
+        customerName: userName,
+        phoneNumber: userPhone,
+        testType: serviceType || bookingDetail.serviceType || booking.serviceType || booking.serviceName || 'Không có dữ liệu',
+        price: servicePrice || bookingDetail.price || booking.price,
+        appointmentDateTime: (() => {
+          // Gộp ngày và giờ hẹn từ backend
+          let dateTimeString = 'Không có dữ liệu';
+          
+          if (bookingDetail.appointmentDate) {
+            const appointmentDate = new Date(bookingDetail.appointmentDate);
+            const formattedDate = appointmentDate.toLocaleDateString('vi-VN');
+            
+            if (bookingDetail.appointmentTime) {
+              dateTimeString = `${formattedDate} lúc ${bookingDetail.appointmentTime}`;
+            } else {
+              dateTimeString = formattedDate;
+            }
+          } else if (booking.appointmentDate) {
+            const appointmentDate = new Date(booking.appointmentDate);
+            dateTimeString = appointmentDate.toLocaleDateString('vi-VN');
+            
+            if (booking.appointmentTime) {
+              dateTimeString += ` lúc ${booking.appointmentTime}`;
+            }
+          }
+          
+          return dateTimeString;
+        })(),
+        testResult: bookingDetail.testResults || booking.testResults || 'Chưa có kết quả',
+        notes: bookingDetail.notes || booking.notes
+      });
+      
+      setResultLoading(false);
+    } catch (err) {
+      setResultError('Không thể tải thông tin chi tiết: ' + err.message);
+      setResultLoading(false);
+    }
   };
 
   return (
@@ -151,9 +212,17 @@ const MyTestBookings = () => {
               <div style={{ color: '#f44336', fontWeight: 600 }}>{resultError}</div>
             ) : resultData ? (
               <div>
-                <div style={{ marginBottom: 10 }}><b>Mã booking:</b> {resultData.bookingId}</div>
-                <div style={{ marginBottom: 10 }}><b>Kết quả:</b> {resultData.result || 'Không có dữ liệu'}</div>
-                <div style={{ marginBottom: 10 }}><b>Ngày trả kết quả:</b> {resultData.resultDate || 'N/A'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Họ tên:</strong> {resultData.customerName || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Số điện thoại:</strong> {resultData.phoneNumber || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Loại xét nghiệm:</strong> {resultData.testType || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Giá tiền:</strong> {resultData.price ? resultData.price.toLocaleString() + ' VNĐ' : 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Ngày giờ hẹn:</strong> {resultData.appointmentDateTime || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Kết quả xét nghiệm:</strong> {resultData.testResult || 'Chưa có kết quả'}</div>
+                {resultData.notes && (
+                  <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 6 }}>
+                    <strong>Ghi chú:</strong> {resultData.notes}
+                  </div>
+                )}
               </div>
             ) : (
               <div style={{ color: '#757575' }}>Không có dữ liệu kết quả.</div>

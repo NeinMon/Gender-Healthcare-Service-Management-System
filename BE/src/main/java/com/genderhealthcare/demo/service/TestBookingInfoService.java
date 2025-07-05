@@ -24,6 +24,9 @@ public class TestBookingInfoService {
     @Autowired
     private com.genderhealthcare.demo.repository.UserRepository userRepository;
     
+    @Autowired
+    private com.genderhealthcare.demo.service.ServiceService serviceService;
+    
     // Tạo thông tin đặt lịch xét nghiệm
     public TestBookingInfo createTestBookingInfo(TestBookingInfo testBookingInfo) {
         // Kiểm tra booking tồn tại
@@ -161,6 +164,15 @@ public class TestBookingInfoService {
             }
             // Set serviceId from Booking entity
             dto.setServiceId(booking.getServiceId());
+            // Lấy serviceName từ serviceId
+            String serviceName = null;
+            if (booking.getServiceId() != null) {
+                com.genderhealthcare.demo.entity.Service service = serviceService.getServiceById(booking.getServiceId());
+                if (service != null) {
+                    serviceName = service.getServiceName();
+                }
+            }
+            dto.setServiceName(serviceName);
         }
         
         return dto;

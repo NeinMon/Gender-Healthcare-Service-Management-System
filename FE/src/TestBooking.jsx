@@ -203,12 +203,8 @@ const TestBooking = () => {
       return;
     }
     
-    if (!formData.notes.trim()) {
-      alert('Vui lòng nhập ghi chú hoặc mô tả lý do khám!');
-      return;
-    }
-    
-    if (formData.notes.length > 500) {
+    // Ghi chú không bắt buộc, nhưng nếu có thì phải <= 500 ký tự
+    if (formData.notes && formData.notes.length > 500) {
       alert('Ghi chú quá dài. Vui lòng rút gọn (tối đa 500 ký tự)!');
       return;
     }
@@ -273,7 +269,9 @@ const TestBooking = () => {
     const bookingData = {
       userId: userId, // Backend expect userId, not userID
       serviceId: serviceId, // Backend expect serviceId, not serviceID
-      content: formData.notes || `Đặt lịch xét nghiệm: ${selectedService?.serviceName || ''}`, // Sử dụng ghi chú làm content
+      content: formData.notes && formData.notes.trim() 
+        ? formData.notes.trim() 
+        : `Đặt lịch xét nghiệm: ${selectedService?.serviceName || 'Dịch vụ xét nghiệm'}`, // Sử dụng ghi chú nếu có, không thì dùng tên dịch vụ
       appointmentDate: formData.preferredDate, // Chỉ gửi ngày (YYYY-MM-DD)
       startTime: formData.preferredTime, // Giờ riêng biệt (HH:mm)
       // Không set consultantId cho test booking, chỉ có consultation mới cần
@@ -512,13 +510,12 @@ const TestBooking = () => {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", marginTop: "25px", width: "100%" }}>
-                <label style={labelStyle}>Ghi chú / Mô tả lý do khám *</label>                <textarea
+                <label style={labelStyle}>Ghi chú / Mô tả lý do khám</label>                <textarea
                   name="notes"
                   value={formData.notes}
                   onChange={handleChange}
-                  required
                   style={{ ...inputStyle, height: "120px" }}
-                  placeholder="Nhập lý do khám, triệu chứng hoặc mô tả tình trạng sức khỏe (bắt buộc, tối đa 500 ký tự)"
+                  placeholder="Nhập lý do khám, triệu chứng hoặc mô tả tình trạng sức khỏe (tùy chọn, tối đa 500 ký tự)"
                 ></textarea>
               </div>              <div style={{ marginTop: "35px", textAlign: "center" }}>                <button
                   type="submit"
@@ -578,7 +575,7 @@ const TestBooking = () => {
               <p><strong>Giá tiền:</strong> {getServiceById(formData.testType)?.price || 'N/A'}</p>
               <p><strong>Ngày giờ hẹn:</strong> {formData.preferredDate} {formData.preferredTime}:00</p>
               <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Chờ bắt đầu</span></p>
-              {formData.notes && <p><strong>Ghi chú:</strong> {formData.notes}</p>}
+              {formData.notes && formData.notes.trim() && <p><strong>Ghi chú:</strong> {formData.notes}</p>}
               
               {/* Nút xem lịch đặt */}
               <div style={{ textAlign: "center", marginTop: "20px" }}>

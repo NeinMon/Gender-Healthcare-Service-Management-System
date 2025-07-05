@@ -125,7 +125,6 @@ public class TestBookingAPI {
             TestBookingInfo testBookingInfo = new TestBookingInfo();
             testBookingInfo.setBookingId(createdBooking.getBookingId());
             testBookingInfo.setUserId(createdBooking.getUserId());
-            testBookingInfo.setNotes((String) request.get("notes"));
             TestBookingInfo createdTestBooking = testBookingInfoService.createTestBookingInfo(testBookingInfo);
             Map<String, Object> response = new HashMap<>();
             response.put("booking", createdBooking);
@@ -163,15 +162,6 @@ public class TestBookingAPI {
             // Cập nhật các thông tin bổ sung nếu cần
             if (resultNote != null && !resultNote.trim().isEmpty() || staffName != null && !staffName.trim().isEmpty()) {
                 TestBookingInfo additionalInfo = testBookingInfoService.getTestBookingInfoById(id);
-                
-                if (resultNote != null && !resultNote.trim().isEmpty()) {
-                    additionalInfo.setNotes(resultNote);
-                }
-                
-                if (staffName != null && !staffName.trim().isEmpty()) {
-                    additionalInfo.setStaffName(staffName);
-                }
-                
                 updated = testBookingInfoService.updateTestBookingInfo(id, additionalInfo);
             }
             

@@ -112,7 +112,7 @@ const StaffTestBookingManager = () => {
           serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
         }
         await fetchServiceNames(serviceIds);
-        setBookings(data.map(b => {
+        const mappedData = data.map(b => {
           const serviceId = getServiceId(b);
           const displayServiceName = getServiceName(b);
           return {
@@ -127,8 +127,18 @@ const StaffTestBookingManager = () => {
             startTime: b.appointmentTime || "",
             notes: b.bookingContent || "N/A",
             testStatus: b.testStatus || "",
+            createdAt: b.createdAt || null,
           };
-        }));
+        });
+        
+        // Sort by createdAt in descending order (newest first)
+        mappedData.sort((a, b) => {
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        
+        setBookings(mappedData);
       } else {
         setBookings([]);
       }
@@ -503,6 +513,7 @@ const StaffTestBookingManager = () => {
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Loại xét nghiệm</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Giờ</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thời gian tạo</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
@@ -576,6 +587,9 @@ const StaffTestBookingManager = () => {
                           </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>{b.appointmentDate || "N/A"}</td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>{b.startTime || "N/A"}</td>
+                            <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                              {b.createdAt ? new Date(b.createdAt).toLocaleString('vi-VN') : "N/A"}
+                            </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
                               <div style={{ 
                                 maxWidth: '200px',

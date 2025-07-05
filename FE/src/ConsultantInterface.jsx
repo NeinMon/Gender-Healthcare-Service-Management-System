@@ -64,7 +64,15 @@ const ConsultantInterface = () => {
         }
 
         const data = await response.json();
-        setQuestions(data);
+        
+        // Sắp xếp câu hỏi theo thứ tự thời gian tạo mới nhất lên đầu
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+          const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+          return dateB - dateA; // Sắp xếp giảm dần (mới nhất lên đầu)
+        });
+        
+        setQuestions(sortedData);
         
         // Fetch user details for each question
         const uniqueUserIds = [...new Set(data.map(question => question.userID))];
@@ -375,7 +383,15 @@ const ConsultantInterface = () => {
         const res = await fetch(`http://localhost:8080/api/bookings/consultant/${consultantId}`);
         if (res.ok) {
           const data = await res.json();
-          setBookings(data);
+          
+          // Sắp xếp lịch hẹn theo thứ tự thời gian tạo mới nhất lên đầu
+          const sortedData = [...data].sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+            const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+            return dateB - dateA; // Sắp xếp giảm dần (mới nhất lên đầu)
+          });
+          
+          setBookings(sortedData);
           // Fetch user info for each booking
           const uniqueUserIds = [...new Set(data.map(b => b.userId))];
           const userMap = {};
@@ -1048,7 +1064,8 @@ const ConsultantInterface = () => {
                         }}>
                           <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Khách hàng</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
-                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày hẹn</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thời gian tạo</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
                         </tr>
@@ -1105,6 +1122,18 @@ const ConsultantInterface = () => {
                             </td>
                             <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
                               {booking.appointmentDate || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.createdAt 
+                                ? new Date(booking.createdAt).toLocaleString('vi-VN', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })
+                                : 'N/A'
+                              }
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
                               <div style={{ display: "flex", justifyContent: "center" }}>

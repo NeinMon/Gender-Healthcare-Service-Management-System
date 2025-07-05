@@ -50,7 +50,15 @@ const MyTestBookings = () => {
         throw new Error('Lỗi khi lấy danh sách lịch xét nghiệm');
       }
       const testBookingsData = await response.json();
-      setTestBookings(testBookingsData);
+      
+      // Sắp xếp lịch xét nghiệm theo thứ tự thời gian tạo mới nhất lên đầu
+      const sortedData = [...testBookingsData].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        return dateB - dateA; // Sắp xếp giảm dần (mới nhất lên đầu)
+      });
+      
+      setTestBookings(sortedData);
       setLoading(false);
     } catch (err) {
       setError('Không thể tải danh sách lịch xét nghiệm. Vui lòng thử lại sau: ' + err.message);
@@ -402,7 +410,8 @@ const MyTestBookings = () => {
                     }}>
                       <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Loại xét nghiệm</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
-                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày hẹn</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thời gian tạo</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
                     </tr>
@@ -459,6 +468,18 @@ const MyTestBookings = () => {
                         </td>
                         <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
                           {booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                          {booking.createdAt 
+                            ? new Date(booking.createdAt).toLocaleString('vi-VN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            : 'N/A'
+                          }
                         </td>
                         <td style={{ padding: '16px 20px', textAlign: "center" }}>
                           <div style={{ display: "flex", justifyContent: "center" }}>

@@ -216,6 +216,9 @@ const ConsultantInterface = () => {
     ? bookings
     : bookings.filter(b => b.status === filterStatus);
 
+  // Lọc booking chỉ hiển thị các lịch đã PAID
+  const paidBookings = bookings.filter(b => b.paymentStatus === 'PAID');
+
   // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
   const submitAnswer = async () => {
     if (!answerText.trim()) {
@@ -1018,7 +1021,7 @@ const ConsultantInterface = () => {
                   }}></div>
                   <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách lịch hẹn...</p>
                 </div>
-              ) : bookings.length === 0 ? (
+              ) : paidBookings.length === 0 ? (
                 <div style={{ 
                   textAlign: 'center', 
                   padding: "60px 20px",
@@ -1029,7 +1032,7 @@ const ConsultantInterface = () => {
                   boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
                 }}>
                   <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
-                  <div>Không có lịch hẹn nào.</div>
+                  <div>Không có lịch hẹn nào đã thanh toán.</div>
                 </div>
               ) : (
                 <div style={{ 
@@ -1049,12 +1052,13 @@ const ConsultantInterface = () => {
                           <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Khách hàng</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Giờ bắt đầu</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                           <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredBookings.map((booking, idx) => (
+                        {paidBookings.map((booking, idx) => (
                           <tr 
                             key={booking.bookingId || idx} 
                             style={{ 
@@ -1083,7 +1087,8 @@ const ConsultantInterface = () => {
                                   fontWeight: "bold",
                                   fontSize: "16px"
                                 }}>
-                                  {(bookingUserDetails[booking.userId]?.fullName || '?').charAt(0).toUpperCase()}
+                                  {(bookingUserDetails[booking.userId]?.fullName || '?').charAt(0).toUpperCase()
+                                  }
                                 </div>
                                 <span style={{ 
                                   fontWeight: 600, 
@@ -1105,6 +1110,9 @@ const ConsultantInterface = () => {
                             </td>
                             <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
                               {booking.appointmentDate || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.startTime || 'N/A'}
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
                               <div style={{ display: "flex", justifyContent: "center" }}>

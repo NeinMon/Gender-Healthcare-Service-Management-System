@@ -5,6 +5,7 @@ import com.genderhealthcare.demo.entity.TestBookingInfo;
 import com.genderhealthcare.demo.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,6 +19,7 @@ public class BookingService {
     @Autowired
     private TestBookingInfoService testBookingInfoService;
 
+    @Transactional
     public Booking createBooking(Booking booking) {
         // Đặt trạng thái mặc định nếu chưa có
         if (booking.getStatus() == null || booking.getStatus().isBlank()) {
@@ -103,30 +105,24 @@ public class BookingService {
         if (consultantId == null || appointmentDate == null || startTime == null || endTime == null) {
             return false;
         }
-        
         // Lấy tất cả booking của consultant trong ngày
         List<Booking> bookingsInDay = bookingRepository.findByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
-        
-        // Kiểm tra từng booking xem có trùng khung giờ không
         for (Booking booking : bookingsInDay) {
-            // Chỉ kiểm tra booking chưa kết thúc
-            if (!"Đã kết thúc".equals(booking.getStatus())) {
+            // Kiểm tra booking có paymentStatus là PAID hoặc PROCESSING
+            String status = booking.getPaymentStatus();
+            if ("PAID".equalsIgnoreCase(status) || "PROCESSING".equalsIgnoreCase(status)) {
                 LocalTime bookingStart = booking.getStartTime();
                 LocalTime bookingEnd = booking.getEndTime();
-                
-                // Nếu booking chưa có endTime, mặc định là +1 giờ
                 if (bookingEnd == null) {
                     bookingEnd = bookingStart.plusHours(1);
                 }
-                
                 // Kiểm tra overlap: hai khoảng thời gian có giao nhau không
                 if (startTime.isBefore(bookingEnd) && endTime.isAfter(bookingStart)) {
-                    return true; // Có trùng lịch
+                    return true; // Có trùng lịch đã PAID hoặc PROCESSING
                 }
             }
         }
-        
-        return false; // Không có trùng lịch
+        return false; // Không có trùng lịch đã PAID hoặc PROCESSING
     }
 
     // Kiểm tra trùng lịch tư vấn viên theo khung giờ
@@ -181,5 +177,15 @@ public class BookingService {
         return bookingRepository.findAll().stream()
                 .filter(b -> userId.equals(b.getUserId()) && b.getServiceId() != null && b.getServiceId() != 1)
                 .toList();
+    }
+
+    @Transactional
+    public Booking updateBookingPaymentStatus(Integer bookingId, String newPaymentStatus) {
+        Booking booking = bookingRepository.findById(bookingId).orElse(null);
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found with ID: " + bookingId);
+        }
+        booking.setPaymentStatus(newPaymentStatus);
+        return bookingRepository.save(booking);
     }
 }

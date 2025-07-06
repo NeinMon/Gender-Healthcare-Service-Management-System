@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 
 const ConsultationBooking = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -17,6 +18,12 @@ const ConsultationBooking = () => {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [error, setError] = useState('');
   const [loadingTimes, setLoadingTimes] = useState(false); // Thêm state loading cho khung giờ
+  
+  // New states for payment flow
+  const [bookingStep, setBookingStep] = useState('form'); // 'form', 'processing', 'payment', 'success', 'error'
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [paymentUrl, setPaymentUrl] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
 
   useEffect(() => {
     // Gọi API lấy danh sách tư vấn viên
@@ -121,6 +128,7 @@ const ConsultationBooking = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setBookingStep('processing');
 
     // Lấy userId từ localStorage (đảm bảo phù hợp với cách lưu trong MyAppointments.jsx)
     const userJson = localStorage.getItem('loggedInUser');
@@ -160,18 +168,21 @@ const ConsultationBooking = () => {
       !startTime
     ) {
       alert("Vui lòng điền đầy đủ thông tin hợp lệ!");
+      setBookingStep('form');
       return;
     }
 
     // Kiểm tra thời gian đã qua chưa
     if (isTimeSlotPassed(formData.time)) {
       alert("Khung giờ đã chọn đã qua! Vui lòng chọn khung giờ khác.");
+      setBookingStep('form');
       return;
     }
 
     // Kiểm tra khung giờ có trong danh sách available không
     if (!availableTimes.includes(formData.time)) {
       alert("Khung giờ đã chọn không còn trống! Vui lòng chọn lại.");
+      setBookingStep('form');
       return;
     }
 
@@ -181,35 +192,295 @@ const ConsultationBooking = () => {
       consultantId: Number(formData.consultantId),
       content: formData.symptoms,
       appointmentDate: appointmentDate, // yyyy-MM-dd
-      startTime: startTime // HH:mm
-      // Không gửi endTime
+      startTime: startTime, // HH:mm
+      // Default service ID for consultation is 1
+      serviceId: 1,
+      // Set a default amount for consultation - this should be set by the backend based on the service
+      amount: 10000
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
     console.log("Payload gửi booking:", payload);
 
     try {
-      const response = await fetch("http://localhost:8080/api/bookings", {
+      // Step 1: Create a booking with PENDING payment status
+      const bookingResponse = await fetch("http://localhost:8080/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (response.ok) {
-        setIsSubmitted(true);
-      } else {
-        const errorText = await response.text();
+      
+      if (bookingResponse.ok) {
+        // Get booking details from response
+        const bookingData = await bookingResponse.json();
+        setBookingDetails(bookingData);
         
-        // Hiển thị thông báo lỗi cụ thể
-        if (response.status === 409) { // Conflict - trùng lịch
-          alert("⚠️ " + errorText);
+        // Step 2: Create payment URL with PayOS
+        try {
+          const baseUrl = window.location.origin; // Get the base URL of the current page
+          const returnUrl = `${baseUrl}/ConsultationBooking?bookingId=${bookingData.bookingId}&status=success`;
+          const cancelUrl = `${baseUrl}/ConsultationBooking?bookingId=${bookingData.bookingId}&status=cancel`;
+          
+          const paymentPayload = {
+            bookingId: bookingData.bookingId,
+            amount: 10000, // Test 10k
+            description: `Thanh toán dịch vụ tư vấn #${bookingData.bookingId}`,
+            returnUrl: returnUrl,
+            cancelUrl: cancelUrl
+          };
+          
+          console.log("Gửi yêu cầu thanh toán:", paymentPayload);
+          
+          const paymentResponse = await fetch("http://localhost:8080/api/payment/payos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(paymentPayload),
+          });
+          
+          console.log("Kết quả trả về từ payment API:", paymentResponse.status);
+          
+          if (paymentResponse.ok) {
+            const paymentData = await paymentResponse.json();
+            console.log("Payment data:", paymentData);
+            
+            if (paymentData && paymentData.payUrl) {
+              setPaymentUrl(paymentData.payUrl);
+              setBookingStep('payment');
+              // window.location.href = paymentData.payUrl; // Không redirect nữa
+            } else {
+              throw new Error("PayOS không trả về URL thanh toán hợp lệ");
+            }
+          } else {
+            let errorText = "";
+            try {
+              // Cố gắng lấy phản hồi dạng JSON
+              const errorJson = await paymentResponse.json();
+              errorText = errorJson.message || JSON.stringify(errorJson);
+            } catch (e) {
+              // Nếu không phải JSON, lấy dạng text
+              errorText = await paymentResponse.text();
+            }
+            
+            console.error("Lỗi từ API thanh toán:", errorText);
+            setError(`Không thể tạo liên kết thanh toán: ${errorText}`);
+            setBookingStep('error');
+          }
+        } catch (paymentError) {
+          console.error("Lỗi khi tạo URL thanh toán:", paymentError);
+          setError(`Lỗi khi tạo liên kết thanh toán: ${paymentError.message || "Vui lòng thử lại sau."}`);
+          setBookingStep('error');
+        }
+      } else {
+        const errorText = await bookingResponse.text();
+        // BỎ lỗi trùng lịch vì FE đã ẩn giờ trùng, chỉ hiển thị lỗi khác
+        if (bookingResponse.status === 409) { // Conflict - trùng lịch
+          setBookingStep('form'); // Quay lại form, KHÔNG hiển thị lỗi
+          return;
         } else {
-          alert("Đặt lịch thất bại. Lý do: " + errorText);
+          setError("Đặt lịch thất bại. Lý do: " + errorText);
         }
         console.error("Lỗi booking:", errorText);
+        setBookingStep('error');
       }
     } catch (error) {
-      alert("Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
+      setError("Có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
       console.error("Network error:", error);
+      setBookingStep('error');
+    }
+  };
+
+  // Check if the URL contains success or cancel params from PayOS redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    // PayOS có thể trả về orderCode hoặc bookingId
+    const bookingIdParam = urlParams.get('bookingId') || urlParams.get('orderCode');
+    const statusParam = urlParams.get('status');
+    const cancelParam = urlParams.get('cancel');
+
+    // Ưu tiên xử lý trạng thái CANCELLED/EXPIRED/cancel=true từ query param nếu có
+    if (
+      (statusParam && (statusParam.toUpperCase() === 'CANCELLED' || statusParam.toUpperCase() === 'EXPIRED' || statusParam.toLowerCase() === 'cancel')) ||
+      (cancelParam && cancelParam === 'true')
+    ) {
+      setBookingStep('error');
+      setError('Bạn đã hủy thanh toán hoặc thanh toán đã hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+      return;
+    }
+
+    // Nếu có bookingId/orderCode và status=success hoặc status=PROCESSING thì kiểm tra trạng thái thanh toán
+    if (bookingIdParam && (statusParam === 'success' || statusParam?.toUpperCase() === 'PROCESSING')) {
+      checkPaymentStatus(bookingIdParam);
+      return;
+    }
+
+    // Nếu có bookingId/orderCode mà không có status, vẫn kiểm tra trạng thái (trường hợp PayOS chỉ trả về orderCode)
+    if (bookingIdParam && !statusParam) {
+      checkPaymentStatus(bookingIdParam);
+      return;
+    }
+
+    // Nếu có status nhưng không có bookingId/orderCode, chỉ hiển thị lỗi chung
+    if (statusParam && (statusParam.toUpperCase() === 'CANCELLED' || statusParam.toUpperCase() === 'EXPIRED' || statusParam.toLowerCase() === 'cancel')) {
+      setBookingStep('error');
+      setError('Bạn đã hủy thanh toán hoặc thanh toán đã hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+      return;
+    }
+  }, []);
+
+  // Function to check payment status after redirect
+  const checkPaymentStatus = async (bookingId) => {
+    try {
+      setBookingStep('processing');
+      const response = await fetch(`http://localhost:8080/api/payment/status/${bookingId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBookingDetails(data);
+        setPaymentStatus(data.paymentStatus);
+        // Sử dụng statusMessage từ backend nếu có
+        if (data.paymentStatus === 'PAID') {
+          setBookingStep('success');
+          setError('');
+        } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+          setBookingStep('error');
+          setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+        } else if (data.paymentStatus === 'PROCESSING') {
+          setBookingStep('processing');
+          setError('');
+        } else {
+          setBookingStep('payment');
+          setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+        }
+      } else {
+        setBookingStep('error');
+        setError('Không thể kiểm tra trạng thái thanh toán. Vui lòng liên hệ hỗ trợ.');
+      }
+    } catch (error) {
+      setBookingStep('error');
+      setError('Lỗi kết nối khi kiểm tra thanh toán.');
+      console.error('Error checking payment status:', error);
+    }
+  };
+
+  // Function to retry payment if it failed
+  const retryPayment = async () => {
+    if (!bookingDetails?.bookingId) {
+      setError("Không tìm thấy thông tin đặt lịch.");
+      return;
+    }
+
+    setBookingStep('processing');
+    try {
+      const baseUrl = window.location.origin;
+      const returnUrl = `${baseUrl}/ConsultationBooking?bookingId=${bookingDetails.bookingId}&status=success`;
+      const cancelUrl = `${baseUrl}/ConsultationBooking?bookingId=${bookingDetails.bookingId}&status=cancel`;
+      
+      const paymentPayload = {
+        bookingId: bookingDetails.bookingId,
+        amount: 10000, // Test 10k
+        description: `Thanh toán dịch vụ tư vấn #${bookingDetails.bookingId}`,
+        returnUrl: returnUrl,
+        cancelUrl: cancelUrl
+      };
+      
+      const paymentResponse = await fetch("http://localhost:8080/api/payment/payos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentPayload),
+      });
+      
+      if (paymentResponse.ok) {
+        const paymentData = await paymentResponse.json();
+        setPaymentUrl(paymentData.payUrl);
+        setBookingStep('payment');
+        
+        // Redirect to PayOS payment page
+        window.location.href = paymentData.payUrl;
+      } else {
+        const errorText = await paymentResponse.text();
+        setError(`Không thể tạo liên kết thanh toán: ${errorText}`);
+        setBookingStep('error');
+      }
+    } catch (error) {
+      setError("Có lỗi xảy ra khi tạo liên kết thanh toán. Vui lòng thử lại sau.");
+      setBookingStep('error');
+    }
+  };
+
+  // Polling payment status when in 'payment' step
+  useEffect(() => {
+    let intervalId;
+    if (bookingStep === 'payment' && bookingDetails?.bookingId) {
+      intervalId = setInterval(async () => {
+        try {
+          const response = await fetch(`http://localhost:8080/api/payment/status/${bookingDetails.bookingId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setPaymentStatus(data.paymentStatus);
+            setBookingDetails(data);
+            // Sử dụng statusMessage từ backend nếu có
+            if (data.paymentStatus === 'PROCESSING') {
+              setBookingStep('processing');
+              setError('');
+              clearInterval(intervalId);
+            } else if (data.paymentStatus === 'PAID') {
+              setBookingStep('success');
+              setError('');
+              clearInterval(intervalId);
+            } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+              setBookingStep('error');
+              setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+              clearInterval(intervalId);
+            } else {
+              setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+            }
+          }
+        } catch (err) {
+          // Không làm gì, thử lại ở lần sau
+        }
+      }, 3000); // 3 giây/lần
+    }
+    return () => intervalId && clearInterval(intervalId);
+  }, [bookingStep, bookingDetails]);
+
+  // Render different content based on the booking step
+  const renderContent = () => {
+    switch(bookingStep) {
+      case 'processing':
+      case 'payment':
+      case 'success':
+      case 'error':
+        return null; // Đã render trực tiếp ở dưới, không render lại ở đây
+      case 'form':
+      default:
+        return null;
+    }
+  };
+
+  // Hủy thanh toán PayOS
+  const cancelPayment = async () => {
+    if (!bookingDetails?.bookingId) {
+      setError("Không tìm thấy thông tin đặt lịch để hủy thanh toán.");
+      return;
+    }
+    if (!window.confirm("Bạn chắc chắn muốn hủy thanh toán này?")) return;
+    setBookingStep('processing');
+    try {
+      const response = await fetch(`http://localhost:8080/api/payment/cancel/${bookingDetails.bookingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancellationReason: "Khách hàng chủ động hủy thanh toán" })
+      });
+      if (response.ok) {
+        setBookingStep('error');
+        setError('Bạn đã hủy thanh toán. Đơn đặt lịch sẽ không được xác nhận.');
+      } else {
+        const errorText = await response.text();
+        setError('Không thể hủy thanh toán: ' + errorText);
+        setBookingStep('payment');
+      }
+    } catch (err) {
+      setError('Có lỗi khi hủy thanh toán.');
+      setBookingStep('payment');
     }
   };
 
@@ -220,7 +491,7 @@ const ConsultationBooking = () => {
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         position: "relative",
         width: "100%",
-        height: "160px",
+        height: "100px",
         display: "flex"
       }}>
         <div style={{ 
@@ -238,7 +509,7 @@ const ConsultationBooking = () => {
             <img
               src="/Logo.png"
               alt="Logo"
-              style={{ height: 100, width: 100, objectFit: "contain" }}
+              style={{ height: 70, width: 70, objectFit: "contain" }}
             />
           </Link>
           <UserAvatar userName="Nguyễn Thị A" />
@@ -274,23 +545,27 @@ const ConsultationBooking = () => {
         marginTop: "-20px",
         boxSizing: "border-box"
       }}>
-        <div style={{ marginBottom: "20px" }}>
-          <Link 
-            to="/" 
-            style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#0891b2",
-              textDecoration: "none",
-              fontWeight: 500
-            }}
-          >
-            ← Quay lại trang chủ
-          </Link>
-        </div>
+        {/* Back link only shown in form mode */}
+        {bookingStep === 'form' && (
+          <div style={{ marginBottom: "20px" }}>
+            <Link 
+              to="/" 
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: "#0891b2",
+                textDecoration: "none",
+                fontWeight: 500
+              }}
+            >
+              ← Quay lại trang chủ
+            </Link>
+          </div>
+        )}
 
-        {!isSubmitted ? (
-          <>
+        {/* Render content by step */}
+        {bookingStep === 'form' && (
+          <div>
             <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
               Đặt lịch tư vấn y tế
             </h2>
@@ -429,31 +704,64 @@ const ConsultationBooking = () => {
                 </button>
               </div>
             </form>
-          </>
-        ) : (
+          </div>
+        )}
+        {bookingStep === 'processing' && (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ 
-              background: "rgba(232, 245, 233, 0.9)",
-              borderRadius: "16px",
-              padding: "30px",
-              border: "2px solid rgba(67, 160, 71, 0.2)",
-              boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)"
-            }}>
-              <div style={{ 
-                fontSize: "64px", 
-                marginBottom: "20px",
-                color: "#43a047"
-              }}>
-                ✅
-              </div>
-              <h2 style={{ 
-                fontSize: "28px", 
-                fontWeight: "600", 
-                marginBottom: "15px",
-                color: "#43a047"
-              }}>
-                Đặt lịch thành công!
-              </h2>
+            <div style={{ fontSize: "24px", marginBottom: "20px", color: "#333" }}>⏳ Đang xử lý thanh toán...</div>
+            <div style={{ color: "#666", marginBottom: "20px" }}>
+              Yêu cầu của bạn đang được xử lý. Vui lòng kiểm tra lại lịch hẹn sau 5-10 phút.
+              Nếu giao dịch chưa được xác nhận, bạn có thể thử lại hoặc liên hệ hỗ trợ.
+            </div>
+            <Link
+              to="/"
+              style={{
+                display: "inline-block",
+                background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                color: "#fff",
+                textDecoration: "none",
+                padding: "12px 25px",
+                borderRadius: "25px",
+                fontSize: "14px",
+                fontWeight: "600",
+                transition: "all 0.3s ease"
+              }}
+            >
+              ⏪ Quay lại trang chủ
+            </Link>
+          </div>
+        )}
+        {bookingStep === 'payment' && paymentUrl && (
+          <iframe
+            src={paymentUrl}
+            title="PayOS Payment"
+            style={{
+              position: 'fixed',
+              top: 100, // giảm top từ 160 xuống 110 để iframe lên cao hơn
+              left: 0,
+              width: '100vw',
+              height: 'calc(100vh - 110px)', // cập nhật chiều cao tương ứng
+              border: 'none',
+              borderRadius: 0,
+              margin: 0,
+              padding: 0,
+              zIndex: 1000,
+              background: '#fff',
+              display: 'block',
+              overflow: 'hidden',
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE/Edge
+            }}
+            allow="payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            scrolling="no"
+          />
+        )}
+        {bookingStep === 'success' && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ background: "rgba(232, 245, 233, 0.9)", borderRadius: "16px", padding: "30px", border: "2px solid rgba(67, 160, 71, 0.2)", boxShadow: "0 8px 16px rgba(67, 160, 71, 0.1)" }}>
+              <div style={{ fontSize: "64px", marginBottom: "20px", color: "#43a047" }}>✅</div>
+              <h2 style={{ fontSize: "28px", fontWeight: "600", marginBottom: "15px", color: "#43a047" }}>Đặt lịch thành công!</h2>
               
               {/* Hiển thị thông tin đã đặt */}
               <div style={{ 
@@ -471,7 +779,7 @@ const ConsultationBooking = () => {
                 <p><strong>Tư vấn viên:</strong> {consultants.find(c => c.userID == formData.consultantId)?.fullName || consultants.find(c => c.userID == formData.consultantId)?.name || 'N/A'}</p>
                 <p><strong>Chuyên khoa:</strong> {consultants.find(c => c.userID == formData.consultantId)?.specification || 'Tư vấn sức khỏe'}</p>
                 <p><strong>Ngày giờ hẹn:</strong> {formData.date} {formData.time}</p>
-                <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Chờ bắt đầu</span></p>
+                <p><strong>Trạng thái:</strong> <span style={{color: "#43a047"}}>Đã thanh toán</span></p>
                 {formData.symptoms && <p><strong>Triệu chứng:</strong> {formData.symptoms}</p>}
                 
                 {/* Nút xem lịch đặt */}
@@ -489,8 +797,6 @@ const ConsultationBooking = () => {
                       fontWeight: "600",
                       transition: "all 0.3s ease"
                     }}
-                    onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                    onMouseOut={(e) => e.target.style.transform = "scale(1)"}
                   >
                     📋 Xem lịch hẹn của tôi
                   </Link>
@@ -499,16 +805,41 @@ const ConsultationBooking = () => {
             </div>
           </div>
         )}
+        {bookingStep === 'error' && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: "24px", marginBottom: "20px", color: "red" }}>❌</div>
+            <div style={{ color: "#666", marginBottom: "30px" }}>{error || "Bạn đã hủy thanh toán hoặc giao dịch không thành công. Đơn đặt lịch sẽ không được xác nhận. Nếu cần hỗ trợ, vui lòng liên hệ tổng đài hoặc đặt lại lịch."}</div>
+            <div style={{ textAlign: "center", marginTop: "20px" }}>
+              <Link
+                to="/"
+                style={{
+                  display: "inline-block",
+                  background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                  color: "#fff",
+                  textDecoration: "none",
+                  padding: "12px 25px",
+                  borderRadius: "25px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                ⏪ Quay lại trang chủ
+              </Link>
+            </div>
+          </div>
+        )}
 
-        {/* Thông tin thêm */}
-        <div style={{ 
-          marginTop: "40px", 
-          padding: "20px", 
-          backgroundColor: "#e0f2fe", 
-          borderRadius: "10px",
-          border: "1px solid #0891b2",
-          width: "100%"
-        }}>
+        {/* Thông tin thêm - only shown in form step */}
+        {bookingStep === 'form' && (
+          <div style={{ 
+            marginTop: "40px", 
+            padding: "20px", 
+            backgroundColor: "#e0f2fe", 
+            borderRadius: "10px",
+            border: "1px solid #0891b2",
+            width: "100%"
+          }}>
           <h3 style={{ color: "#0891b2", marginBottom: "10px" }}>Lưu ý quan trọng:</h3>
           <ul style={{ color: "#0891b2", paddingLeft: "20px" }}>
             <li style={{ marginBottom: "8px" }}>Khung giờ làm việc: 08:00-12:00 và 13:30-17:30</li>
@@ -518,6 +849,7 @@ const ConsultationBooking = () => {
             <li style={{ marginBottom: "8px" }}>Chuẩn bị danh sách các triệu chứng và câu hỏi muốn tư vấn</li>
           </ul>
         </div>
+        )}
       </main>
 
       {/* Footer */}

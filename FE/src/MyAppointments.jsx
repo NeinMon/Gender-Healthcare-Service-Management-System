@@ -92,10 +92,10 @@ const MyAppointments = () => {
     }
   };
 
+  // Lọc chỉ các lịch đã thanh toán thành công (paymentStatus === 'PAID')
   const filteredAppointments = appointments.filter(app => {
-    if (filterStatus === 'all') return true;
-    // So sánh đúng với status backend
-    return app.status === filterStatus;
+    if (filterStatus === 'all') return app.paymentStatus === 'PAID';
+    return app.status === filterStatus && app.paymentStatus === 'PAID';
   });
   // Chức năng hủy lịch hẹn đã được gỡ bỏ
   // Chức năng kiểm tra điều kiện hủy lịch hẹn đã được gỡ bỏ
@@ -372,6 +372,7 @@ const MyAppointments = () => {
                       <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                      <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Giờ bắt đầu</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
                       <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
                     </tr>
@@ -430,6 +431,9 @@ const MyAppointments = () => {
                           </td>
                           <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
                             {app.appointmentDate || 'N/A'}
+                          </td>
+                          <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                            {app.startTime || 'N/A'}
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
                             <div style={{ display: "flex", justifyContent: "center" }}>

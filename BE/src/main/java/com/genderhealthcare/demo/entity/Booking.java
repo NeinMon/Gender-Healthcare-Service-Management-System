@@ -66,6 +66,19 @@ public class Booking {
     @Column(name = "status", columnDefinition = "NVARCHAR(50)")
     private String status;
 
+    @Pattern(
+        regexp = "PENDING|PROCESSING|PAID|FAILED|CANCELLED|EXPIRED",
+        message = "Payment status must be one of: PENDING, PROCESSING, PAID, FAILED, CANCELLED, EXPIRED"
+    )
+    @Column(name = "payment_status", columnDefinition = "VARCHAR(20)") // Removed DEFAULT 'PENDING'
+    private String paymentStatus = "PENDING";
+
+    @Column(name = "amount")
+    private Double amount;
+
+    @Column(name = "payment_id")
+    private String paymentId;
+
     private String createdAt; // Timestamp of when the booking was created
 
     @Column(name = "testresults", columnDefinition = "NVARCHAR(1000)")
@@ -79,6 +92,10 @@ public class Booking {
         // Không tự động set endTime khi tạo mới, chỉ set khi kết thúc thủ công
         // Cập nhật status ban đầu
         updateStatus();
+        // Set payment status to PENDING if not set
+        if (this.paymentStatus == null) {
+            this.paymentStatus = "PENDING";
+        }
     }
 
     @PreUpdate

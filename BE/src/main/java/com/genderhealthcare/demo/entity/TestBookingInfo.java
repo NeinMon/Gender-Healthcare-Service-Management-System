@@ -34,9 +34,7 @@ public class TestBookingInfo {
     @NotNull(message = "User ID is required")
     @Column(name = "user_id")
     private Integer userId; // Foreign key to Users - lấy thông tin cá nhân từ bảng users
-    
-    @Column(name = "notes", columnDefinition = "NVARCHAR(500)")
-    private String notes;
+
     
     // Trạng thái checkin/checkout
     @Pattern(
@@ -56,9 +54,7 @@ public class TestBookingInfo {
     // Nhân viên thực hiện checkin/checkout
     @Column(name = "staff_id")
     private Integer staffId;
-    
-    @Column(name = "staff_name", columnDefinition = "NVARCHAR(100)")
-    private String staffName;
+
     
     // Kết quả xét nghiệm
     @Column(name = "test_results", columnDefinition = "NTEXT")
@@ -67,29 +63,20 @@ public class TestBookingInfo {
     // Thời gian tạo và cập nhật
     @Column(name = "created_at")
     private String createdAt;
-    
-    @Column(name = "updated_at")
-    private String updatedAt;
+
     
     @PrePersist
     protected void onCreate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = LocalDateTime.now().format(formatter);
-        this.updatedAt = this.createdAt;
     }
-    
-    @PreUpdate
-    protected void onUpdate() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        this.updatedAt = LocalDateTime.now().format(formatter);
-    }
+
     
     // Helper methods
     public void performCheckin(Integer staffId, String staffName) {
         this.testStatus = "Đã check-in";
         this.checkinTime = LocalDateTime.now();
         this.staffId = staffId;
-        this.staffName = staffName;
     }
 
     public void performCheckout(String testResults) {

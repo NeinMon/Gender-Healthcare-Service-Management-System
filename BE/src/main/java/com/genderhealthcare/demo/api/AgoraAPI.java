@@ -9,7 +9,7 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/agora")
-public class AgoraController {
+public class AgoraAPI {
     @Autowired
     private AgoraService agoraService;
 

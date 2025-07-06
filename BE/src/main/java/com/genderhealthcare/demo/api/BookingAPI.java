@@ -193,19 +193,6 @@ public class BookingAPI {
         return ResponseEntity.ok(bookings);
     }
 
-    @PutMapping("/{id}/test-results")
-    public ResponseEntity<?> updateTestResults(
-            @PathVariable("id") Integer id,
-            @RequestBody String testResults) {
-        Booking booking = bookingService.getBookingById(id);
-        if (booking == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
-        }
-        booking.setTestResults(testResults);
-        Booking updated = bookingService.createBooking(booking);
-        return ResponseEntity.ok(updated);
-    }
-
     @GetMapping("/available-times")
     public ResponseEntity<?> getAvailableTimes(@RequestParam("consultantId") Integer consultantId,
                                                @RequestParam("date") String date) {

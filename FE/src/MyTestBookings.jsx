@@ -8,7 +8,10 @@ const MyTestBookings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [serviceNames, setServiceNames] = useState({});
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [resultData, setResultData] = useState(null);
+  const [resultLoading, setResultLoading] = useState(false);
+  const [resultError, setResultError] = useState('');
     
   useEffect(() => {
     // Kiểm tra login
@@ -17,7 +20,6 @@ const MyTestBookings = () => {
       navigate('/login', { state: { from: '/my-test-bookings' } });
       return;
     }
-    
     try {
       // Xác nhận là user object hợp lệ
       const user = JSON.parse(userJson);
@@ -29,7 +31,6 @@ const MyTestBookings = () => {
       navigate('/login', { state: { from: '/my-test-bookings' } });
       return;
     }
-    
     // Tải danh sách lịch xét nghiệm
     fetchTestBookings();
   }, [navigate]);
@@ -40,60 +41,16 @@ const MyTestBookings = () => {
       const userJson = localStorage.getItem('loggedInUser');
       const user = JSON.parse(userJson);
       const userId = user?.userID;
-      
       if (!userId) {
         throw new Error('Không tìm thấy thông tin người dùng');
       }
-      
-      // Lấy danh sách booking xét nghiệm của user - sử dụng endpoint other-services
-      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}/other-services`);
+      // Lấy danh sách test booking detail của user
+      const response = await fetch(`http://localhost:8080/api/test-bookings/user/${userId}/detail`);
       if (!response.ok) {
         throw new Error('Lỗi khi lấy danh sách lịch xét nghiệm');
       }
-      
       const testBookingsData = await response.json();
-      
-      console.log(`🔄 [MyTestBookings] Làm mới dữ liệu: ${testBookingsData.length} lịch xét nghiệm`);
       setTestBookings(testBookingsData);
-      
-      // Lấy danh sách serviceId duy nhất và lấy thông tin service
-      const serviceIds = [...new Set(testBookingsData.map(item => item.serviceId).filter(Boolean))];
-      
-      // Gọi API lấy tất cả services một lần
-      try {
-        const servicesResponse = await fetch('http://localhost:8080/api/services');
-        if (servicesResponse.ok) {
-          const allServices = await servicesResponse.json();
-          const namesObj = {};
-          allServices.forEach(service => {
-            if (serviceIds.includes(service.serviceId)) {
-              namesObj[service.serviceId] = service.serviceName;
-            }
-          });
-          // Thêm fallback cho các service không tìm thấy
-          serviceIds.forEach(id => {
-            if (!namesObj[id]) {
-              namesObj[id] = `Xét nghiệm #${id}`;
-            }
-          });
-          setServiceNames(namesObj);
-        } else {
-          // Fallback nếu không lấy được danh sách services
-          const namesObj = {};
-          serviceIds.forEach(id => {
-            namesObj[id] = `Xét nghiệm #${id}`;
-          });
-          setServiceNames(namesObj);
-        }
-      } catch (err) {
-        console.warn('Không thể lấy thông tin services:', err);
-        // Fallback nếu có lỗi
-        const namesObj = {};
-        serviceIds.forEach(id => {
-          namesObj[id] = `Xét nghiệm #${id}`;
-        });
-        setServiceNames(namesObj);
-      }
       setLoading(false);
     } catch (err) {
       setError('Không thể tải danh sách lịch xét nghiệm. Vui lòng thử lại sau: ' + err.message);
@@ -103,42 +60,108 @@ const MyTestBookings = () => {
 
   const filteredTestBookings = testBookings.filter(booking => {
     if (filterStatus === 'all') return true;
-    return booking.status === filterStatus;
+    return booking.testStatus === filterStatus;
   });
-  
+
   const formatStatus = (status) => {
     switch (status) {
-      case 'Đã xác nhận':
-      case 'Đã duyệt':
-        return 'Đã duyệt';
-      case 'Chờ xác nhận':
-      case 'Đang chờ duyệt':
-        return 'Đang chờ duyệt';
-      case 'Đã xong':
-      case 'Đã kết thúc':
-        return 'Đã kết thúc';
-      case 'Không được duyệt':
-        return 'Không được duyệt';
+      case 'Chờ bắt đầu':
+        return 'Chờ bắt đầu';
+      case 'Đã check-in':
+        return 'Đã check-in';
+      case 'Đã check-out':
+        return 'Đã check-out';
       default:
         return status || 'Không xác định';
     }
   };
-  
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Đã xác nhận':
-      case 'Đã duyệt':
-        return '#4caf50';
-      case 'Chờ xác nhận':
-      case 'Đang chờ duyệt':
+      case 'Chờ bắt đầu':
         return '#ff9800';
-      case 'Đã xong':
-      case 'Đã kết thúc':
+      case 'Đã check-in':
+        return '#4caf50';
+      case 'Đã check-out':
         return '#2196f3';
-      case 'Không được duyệt':
-        return '#f44336';
       default:
         return '#757575';
+    }
+  };
+
+  // Hàm mở modal và lấy kết quả xét nghiệm từ API
+  const handleShowResult = async (booking) => {
+    setShowResultModal(true);
+    setResultLoading(true);
+    setResultError('');
+    setResultData(null);
+    
+    try {
+      // Lấy thông tin chi tiết booking từ API
+      const bookingDetailResponse = await fetch(`http://localhost:8080/api/test-bookings/${booking.bookingId}/detail`);
+      if (!bookingDetailResponse.ok) {
+        throw new Error('Không thể lấy thông tin chi tiết booking');
+      }
+      const bookingDetail = await bookingDetailResponse.json();
+      
+      // Lấy thông tin user để có họ tên và số điện thoại
+      const userResponse = await fetch(`http://localhost:8080/api/users/${booking.userId || bookingDetail.userId}`);
+      let userName = 'Không có dữ liệu';
+      let userPhone = 'Không có dữ liệu';
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        userName = userData.fullName || userData.name || 'Không có dữ liệu';
+        userPhone = userData.phoneNumber || userData.phone || 'Không có dữ liệu';
+      }
+      
+      // Lấy thông tin service để có giá tiền
+      const serviceResponse = await fetch(`http://localhost:8080/api/services/${booking.serviceId || bookingDetail.serviceId}`);
+      let servicePrice = 'Không có dữ liệu';
+      let serviceType = 'Không có dữ liệu';
+      if (serviceResponse.ok) {
+        const serviceData = await serviceResponse.json();
+        servicePrice = serviceData.price;
+        serviceType = serviceData.serviceName || serviceData.name;
+      }
+      
+      // Cập nhật dữ liệu modal với thông tin từ API
+      setResultData({
+        customerName: userName,
+        phoneNumber: userPhone,
+        testType: serviceType || bookingDetail.serviceType || booking.serviceType || booking.serviceName || 'Không có dữ liệu',
+        price: servicePrice || bookingDetail.price || booking.price,
+        appointmentDateTime: (() => {
+          // Gộp ngày và giờ hẹn từ backend
+          let dateTimeString = 'Không có dữ liệu';
+          
+          if (bookingDetail.appointmentDate) {
+            const appointmentDate = new Date(bookingDetail.appointmentDate);
+            const formattedDate = appointmentDate.toLocaleDateString('vi-VN');
+            
+            if (bookingDetail.appointmentTime) {
+              dateTimeString = `${formattedDate} lúc ${bookingDetail.appointmentTime}`;
+            } else {
+              dateTimeString = formattedDate;
+            }
+          } else if (booking.appointmentDate) {
+            const appointmentDate = new Date(booking.appointmentDate);
+            dateTimeString = appointmentDate.toLocaleDateString('vi-VN');
+            
+            if (booking.appointmentTime) {
+              dateTimeString += ` lúc ${booking.appointmentTime}`;
+            }
+          }
+          
+          return dateTimeString;
+        })(),
+        testResult: bookingDetail.testResults || booking.testResults || 'Chưa có kết quả',
+        notes: bookingDetail.notes || booking.notes
+      });
+      
+      setResultLoading(false);
+    } catch (err) {
+      setResultError('Không thể tải thông tin chi tiết: ' + err.message);
+      setResultLoading(false);
     }
   };
 
@@ -151,6 +174,62 @@ const MyTestBookings = () => {
       display: "flex",
       flexDirection: "column"
     }}>
+      {/* Modal hiển thị kết quả xét nghiệm */}
+      {showResultModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            minWidth: 350,
+            maxWidth: 500,
+            padding: 32,
+            boxShadow: '0 4px 24px rgba(8,145,178,0.15)',
+            position: 'relative',
+            textAlign: 'left',
+          }}>
+            <button onClick={() => setShowResultModal(false)} style={{
+              position: 'absolute',
+              top: 12, right: 16,
+              background: 'none',
+              border: 'none',
+              fontSize: 22,
+              color: '#0891b2',
+              cursor: 'pointer',
+              fontWeight: 700
+            }} title="Đóng">×</button>
+            <h2 style={{ color: '#0891b2', marginTop: 0, marginBottom: 18, fontWeight: 700, fontSize: 22 }}>Kết quả xét nghiệm</h2>
+            {resultLoading ? (
+              <div style={{ color: '#0891b2', fontWeight: 600 }}>Đang tải kết quả...</div>
+            ) : resultError ? (
+              <div style={{ color: '#f44336', fontWeight: 600 }}>{resultError}</div>
+            ) : resultData ? (
+              <div>
+                <div style={{ marginBottom: 12 }}><strong>Họ tên:</strong> {resultData.customerName || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Số điện thoại:</strong> {resultData.phoneNumber || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Loại xét nghiệm:</strong> {resultData.testType || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Giá tiền:</strong> {resultData.price ? resultData.price.toLocaleString() + ' VNĐ' : 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Ngày giờ hẹn:</strong> {resultData.appointmentDateTime || 'Không có dữ liệu'}</div>
+                <div style={{ marginBottom: 12 }}><strong>Kết quả xét nghiệm:</strong> {resultData.testResult || 'Chưa có kết quả'}</div>
+                {resultData.notes && (
+                  <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 6 }}>
+                    <strong>Ghi chú:</strong> {resultData.notes}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ color: '#757575' }}>Không có dữ liệu kết quả.</div>
+            )}
+          </div>
+        </div>
+      )}
       <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
@@ -267,10 +346,9 @@ const MyTestBookings = () => {
                 }}
               >
                 <option value="all">Tất cả</option>
-                <option value="Đã duyệt">Đã duyệt</option>
-                <option value="Đang chờ duyệt">Đang chờ duyệt</option>
-                <option value="Đã kết thúc">Đã kết thúc</option>
-                <option value="Không được duyệt">Không được duyệt</option>
+                <option value="Chờ bắt đầu">Chờ bắt đầu</option>
+                <option value="Đã check-in">Đã check-in</option>
+                <option value="Đã check-out">Đã check-out</option>
               </select>
             </div>
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -399,116 +477,113 @@ const MyTestBookings = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredTestBookings.map((booking, idx) => {
-                      const serviceId = booking.serviceId;
-                      return (
-                        <tr 
-                          key={booking.bookingId || idx} 
-                          style={{ 
-                            borderBottom: '1px solid #e0f2fe', 
-                            transition: "all 0.2s"
-                          }}
-                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
-                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
-                        >
-                          <td style={{ padding: '16px 24px', textAlign: "center" }}>
+                    {filteredTestBookings.map((booking, idx) => (
+                      <tr 
+                        key={booking.bookingId || idx} 
+                        style={{ 
+                          borderBottom: '1px solid #e0f2fe', 
+                          transition: "all 0.2s"
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
+                        <td style={{ padding: '16px 24px', textAlign: "center" }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 10,
+                            justifyContent: "center"
+                          }}>
                             <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: 10,
-                              justifyContent: "center"
+                              width: "36px", 
+                              height: "36px", 
+                              borderRadius: "50%", 
+                              backgroundColor: "#0891b2", 
+                              color: "white", 
+                              display: "flex", 
+                              alignItems: "center", 
+                              justifyContent: "center", 
+                              fontWeight: "bold",
+                              fontSize: "16px"
                             }}>
-                              <div style={{ 
-                                width: "36px", 
-                                height: "36px", 
-                                borderRadius: "50%", 
-                                backgroundColor: "#0891b2", 
-                                color: "white", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                fontWeight: "bold",
-                                fontSize: "16px"
-                              }}>
-                                🧪
-                              </div>
-                              <span style={{ 
-                                fontWeight: 600, 
-                                color: '#0891b2' 
-                              }}>
-                                {serviceNames[serviceId] || 'Đang tải...'}
-                              </span>
+                              🧪
                             </div>
-                          </td>
-                          <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
-                            <div style={{ 
-                              overflow: "hidden", 
-                              textOverflow: "ellipsis", 
-                              whiteSpace: "nowrap", 
-                              maxWidth: "100%"
+                            <span style={{ 
+                              fontWeight: 600, 
+                              color: '#0891b2' 
                             }}>
-                              {booking.content || 'Không có ghi chú'}
-                            </div>
-                          </td>
-                          <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
-                            {booking.appointmentDate || 'N/A'}
-                          </td>
-                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                            <div style={{ display: "flex", justifyContent: "center" }}>
-                              <span style={{ 
-                                display: "inline-block",
-                                padding: "6px 12px",
-                                borderRadius: "20px",
+                              {booking.serviceName || 'Không xác định'}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
+                          <div style={{ 
+                            overflow: "hidden", 
+                            textOverflow: "ellipsis", 
+                            whiteSpace: "nowrap", 
+                            maxWidth: "100%"
+                          }}>
+                            {booking.bookingContent || 'Không có ghi chú'}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                          {booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                          <div style={{ display: "flex", justifyContent: "center" }}>
+                            <span style={{ 
+                              display: "inline-block",
+                              padding: "6px 12px",
+                              borderRadius: "20px",
+                              fontWeight: 600,
+                              fontSize: "13px",
+                              color: "#fff",
+                              backgroundColor: getStatusColor(booking.testStatus)
+                            }}>
+                              {formatStatus(booking.testStatus)}
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                          {booking.testStatus === 'Đã check-out' && (
+                            <button
+                              onClick={() => handleShowResult(booking)}
+                              style={{
+                                backgroundColor: "#0891b2",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "8px",
+                                padding: "8px 16px",
                                 fontWeight: 600,
-                                fontSize: "13px",
-                                color: "#fff",
-                                backgroundColor: getStatusColor(booking.status)
-                              }}>
-                                {formatStatus(booking.status)}
-                              </span>
-                            </div>
-                          </td>
-                          <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                            {(booking.status === 'Đã xác nhận' || booking.status === 'Đã duyệt') && (
-                              <span style={{ 
-                                color: "#4caf50", 
-                                fontSize: "14px", 
-                                fontWeight: 600,
+                                fontSize: "14px",
+                                cursor: "pointer",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                gap: "6px"
-                              }}>
-                                <span style={{ fontSize: "16px" }}>✅</span> Sẵn sàng làm xét nghiệm
-                              </span>
-                            )}
-                            {(booking.status === 'Chờ xác nhận' || booking.status === 'Đang chờ duyệt') && (
-                              <span style={{ color: "#ff9800", fontSize: "14px" }}>
-                                Đang chờ xác nhận...
-                              </span>
-                            )}
-                            {(booking.status === 'Đã xong' || booking.status === 'Đã kết thúc') && (
-                              <span style={{ 
-                                color: "#2196f3", 
-                                fontSize: "14px", 
-                                fontWeight: 600,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "6px"
-                              }}>
-                                <span style={{ fontSize: "16px" }}>🏁</span> Đã hoàn thành
-                              </span>
-                            )}
-                            {booking.status === 'Không được duyệt' && (
-                              <span style={{ color: "#f44336", fontSize: "14px" }}>
-                                Bị từ chối
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                gap: "6px",
+                                margin: "0 auto",
+                                transition: "all 0.2s"
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = "#22d3ee";
+                                e.currentTarget.style.transform = "translateY(-2px)";
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = "#0891b2";
+                                e.currentTarget.style.transform = "translateY(0)";
+                              }}
+                            >
+                              <span style={{ fontSize: "16px" }}>📋</span> Xem kết quả
+                            </button>
+                          )}
+                          {booking.testStatus !== 'Đã check-out' && (
+                            <span style={{ color: '#757575', fontSize: '14px' }}>
+                              {booking.testStatus === 'Đã check-in' ? 'Đang thực hiện' : 'Chưa thực hiện'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -516,7 +591,6 @@ const MyTestBookings = () => {
           )}
         </div>
       </main>
-      
       <footer style={{ 
         backgroundColor: "#e0f2fe",
         color: "#0891b2", 

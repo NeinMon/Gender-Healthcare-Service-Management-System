@@ -698,24 +698,6 @@ const StaffTestBookingManager = () => {
               </select>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Ghi chú chi tiết:</label>
-              <textarea 
-                value={resultNote} 
-                onChange={e => setResultNote(e.target.value)}
-                placeholder="Nhập chi tiết kết quả xét nghiệm nếu cần..."
-                style={{ 
-                  width: "100%", 
-                  padding: "10px 12px", 
-                  minHeight: 100, 
-                  resize: "vertical",
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: '16px' 
-                }}
-              />
-            </div>
-            
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>File kết quả (nếu có):</label>
               <input 

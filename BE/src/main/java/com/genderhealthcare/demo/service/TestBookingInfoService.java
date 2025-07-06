@@ -24,6 +24,9 @@ public class TestBookingInfoService {
     @Autowired
     private com.genderhealthcare.demo.repository.UserRepository userRepository;
     
+    @Autowired
+    private com.genderhealthcare.demo.service.ServiceService serviceService;
+    
     // Tạo thông tin đặt lịch xét nghiệm
     public TestBookingInfo createTestBookingInfo(TestBookingInfo testBookingInfo) {
         // Kiểm tra booking tồn tại
@@ -135,16 +138,13 @@ public class TestBookingInfoService {
         dto.setId(testBookingInfo.getId());
         dto.setBookingId(testBookingInfo.getBookingId());
         dto.setUserId(testBookingInfo.getUserId());
-        dto.setNotes(testBookingInfo.getNotes());
         dto.setTestStatus(testBookingInfo.getTestStatus());
         dto.setCheckinTime(testBookingInfo.getCheckinTime());
         dto.setCheckoutTime(testBookingInfo.getCheckoutTime());
         dto.setStaffId(testBookingInfo.getStaffId());
-        dto.setStaffName(testBookingInfo.getStaffName());
         dto.setTestResults(testBookingInfo.getTestResults());
         dto.setCreatedAt(testBookingInfo.getCreatedAt());
-        dto.setUpdatedAt(testBookingInfo.getUpdatedAt());
-        
+
         // Set thông tin từ Users
         if (user != null) {
             dto.setFullName(user.getFullName());
@@ -164,6 +164,15 @@ public class TestBookingInfoService {
             }
             // Set serviceId from Booking entity
             dto.setServiceId(booking.getServiceId());
+            // Lấy serviceName từ serviceId
+            String serviceName = null;
+            if (booking.getServiceId() != null) {
+                com.genderhealthcare.demo.entity.Service service = serviceService.getServiceById(booking.getServiceId());
+                if (service != null) {
+                    serviceName = service.getServiceName();
+                }
+            }
+            dto.setServiceName(serviceName);
         }
         
         return dto;
@@ -194,14 +203,8 @@ public class TestBookingInfoService {
             throw new IllegalArgumentException("Test booking info not found with ID: " + id);
         }
         // Cập nhật các field được phép thay đổi
-        if (updatedInfo.getNotes() != null) {
-            existingInfo.setNotes(updatedInfo.getNotes());
-        }
         if (updatedInfo.getStaffId() != null) {
             existingInfo.setStaffId(updatedInfo.getStaffId());
-        }
-        if (updatedInfo.getStaffName() != null) {
-            existingInfo.setStaffName(updatedInfo.getStaffName());
         }
         if (updatedInfo.getTestResults() != null) {
             existingInfo.setTestResults(updatedInfo.getTestResults());

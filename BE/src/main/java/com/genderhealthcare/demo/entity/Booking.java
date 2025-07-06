@@ -43,7 +43,6 @@ public class Booking {
 
     private Integer serviceId; // Service ID - có thể được set tự động hoặc từ frontend
 
-    @NotBlank(message = "Content is required")
     @Size(max = 500, message = "Content must be less than 500 characters")
     @Column(name = "content", columnDefinition = "NVARCHAR(500)")
     private String content;
@@ -80,9 +79,6 @@ public class Booking {
     private String paymentId;
 
     private String createdAt; // Timestamp of when the booking was created
-
-    @Column(name = "testresults", columnDefinition = "NVARCHAR(1000)")
-    private String testResults; // Kết quả xét nghiệm (nếu là lịch xét nghiệm)9908fb
 
     // Tự động thiết lập thời gian tạo trước khi lưu vào database
     @PrePersist

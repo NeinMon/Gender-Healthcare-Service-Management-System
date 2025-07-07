@@ -188,4 +188,8 @@ public class BookingService {
         booking.setPaymentStatus(newPaymentStatus);
         return bookingRepository.save(booking);
     }
+
+    public Booking getBookingByOrderCode(Long orderCode) {
+        return bookingRepository.findByOrderCode(orderCode);
+    }
 }

@@ -79,35 +79,53 @@ public class PaymentService {
      */
     public String createPaymentUrl(PaymentRequest paymentRequest) {
         try {
-            // Update booking with payment info
             Booking booking = bookingService.getBookingById(paymentRequest.getBookingId());
             booking.setAmount(paymentRequest.getAmount());
-            bookingService.createBooking(booking);
-
-            // Prepare request headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("x-client-id", payosClientId);
-            headers.set("x-api-key", payosApiKey);
-
-            // === PayOS v2: orderCode là số nguyên, signature là bắt buộc ===
-            int orderCode = paymentRequest.getBookingId();
+            // Nếu booking chưa có orderCode, sinh số nguyên dương duy nhất và lưu lại
+            if (booking.getOrderCode() == null || booking.getOrderCode() == 0L) {
+                long orderCode = System.currentTimeMillis();
+                booking.setOrderCode(orderCode);
+                bookingService.createBooking(booking);
+            }
+            // Nếu đã có orderCode và trạng thái payment là PENDING, trả về link cũ nếu có
+            if ("PENDING".equals(booking.getPaymentStatus()) && booking.getPaymentId() != null) {
+                // Lấy lại link thanh toán từ PayOS nếu paymentId còn hiệu lực
+                try {
+                    String url = payosApiUrl + "/v2/payment-requests/" + booking.getPaymentId();
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("x-client-id", payosClientId);
+                    headers.set("x-api-key", payosApiKey);
+                    HttpEntity<Void> entity = new HttpEntity<>(headers);
+                    ResponseEntity<Map> response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class);
+                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                        Map<String, Object> body = (Map<String, Object>) response.getBody();
+                        if (body.containsKey("code") && "00".equals(body.get("code").toString()) && body.containsKey("data")) {
+                            Map<String, Object> data = (Map<String, Object>) body.get("data");
+                            if (data != null && data.containsKey("checkoutUrl")) {
+                                return data.get("checkoutUrl").toString();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Nếu lỗi, tiếp tục tạo mới
+                }
+            }
+            // Nếu đã thanh toán, không cho tạo lại link
+            if ("PAID".equals(booking.getPaymentStatus())) {
+                throw new RuntimeException("Booking đã được thanh toán");
+            }
+            // orderCode là số nguyên dương
+            Long orderCode = booking.getOrderCode();
             int amount = paymentRequest.getAmount().intValue();
-            // Always use a short, safe description for PayOS
             String serviceName = "DichVu";
             try {
-                // Lấy tên dịch vụ từ booking nếu có
                 if (booking.getServiceId() != null) {
-                    // Giả sử BookingService có hàm getServiceNameById
                     serviceName = booking.getServiceId() == 1 ? "Tuvan" : "DichVu" + booking.getServiceId();
                 }
-            } catch (Exception e) {
-                // Nếu lỗi, giữ nguyên serviceName mặc định
-            }
+            } catch (Exception e) {}
             String description = serviceName + "#" + paymentRequest.getBookingId();
             String returnUrl = paymentRequest.getReturnUrl() != null ? paymentRequest.getReturnUrl() : "http://localhost:5173/consultation-booking?status=success&bookingId=" + paymentRequest.getBookingId();
             String cancelUrl = paymentRequest.getCancelUrl() != null ? paymentRequest.getCancelUrl() : "http://localhost:5173/consultation-booking?status=cancel&bookingId=" + paymentRequest.getBookingId();
-
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("orderCode", orderCode);
             requestBody.put("amount", amount);
@@ -136,7 +154,7 @@ public class PaymentService {
             }
 
             // Tạo signature
-            String data = String.format("amount=%d&cancelUrl=%s&description=%s&orderCode=%d&returnUrl=%s",
+            String data = String.format("amount=%d&cancelUrl=%s&description=%s&orderCode=%s&returnUrl=%s",
                     amount, 
                     encodeURIComponent(cancelUrl), 
                     encodeURIComponent(description), 
@@ -146,6 +164,10 @@ public class PaymentService {
             requestBody.put("signature", signature);
 
             // Create HTTP entity with headers and body
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("x-client-id", payosClientId);
+            headers.set("x-api-key", payosApiKey);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
             // Log request for debugging
@@ -330,7 +352,8 @@ public class PaymentService {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
             ResponseEntity<Map> response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = response.getBody();
+                @SuppressWarnings("unchecked")
+                Map<String, Object> body = (Map<String, Object>) response.getBody();
                 if (body.containsKey("code") && "00".equals(body.get("code").toString()) && body.containsKey("data")) {
                     Map<String, Object> data = (Map<String, Object>) body.get("data");
                     String payosStatus = data.get("status") != null ? data.get("status").toString() : null;
@@ -356,7 +379,8 @@ public class PaymentService {
                 HttpEntity<Void> entity = new HttpEntity<>(headers);
                 ResponseEntity<Map> response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, Map.class);
                 if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                    Map<String, Object> body = response.getBody();
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> body = (Map<String, Object>) response.getBody();
                     if (body.containsKey("code") && "00".equals(body.get("code").toString()) && body.containsKey("data")) {
                         Map<String, Object> data = (Map<String, Object>) body.get("data");
                         String payosStatus = data.get("status") != null ? data.get("status").toString() : null;

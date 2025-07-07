@@ -109,6 +109,30 @@ public class PaymentAPI {
         }
     }
 
+    // API lấy trạng thái/thanh toán qua orderCode (PayOS)
+    @GetMapping("/status/order/{orderCode}")
+    public ResponseEntity<?> getPaymentStatusByOrderCode(@PathVariable Long orderCode) {
+        try {
+            Booking booking = bookingService.getBookingByOrderCode(orderCode);
+            if (booking == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Booking not found with orderCode: " + orderCode);
+            }
+            paymentService.syncBookingStatusWithPayOS(booking);
+            booking = bookingService.getBookingByOrderCode(orderCode);
+            Map<String, Object> response = new HashMap<>();
+            response.put("bookingId", booking.getBookingId());
+            response.put("orderCode", booking.getOrderCode());
+            response.put("paymentStatus", booking.getPaymentStatus());
+            response.put("amount", booking.getAmount());
+            response.put("paymentId", booking.getPaymentId());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error retrieving payment status: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/cancel/{bookingId}")
     public ResponseEntity<?> cancelPayment(@PathVariable Integer bookingId, @RequestBody(required = false) Map<String, Object> body) {
         try {

@@ -112,23 +112,26 @@ const StaffTestBookingManager = () => {
           serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
         }
         await fetchServiceNames(serviceIds);
-        setBookings(data.map(b => {
-          const serviceId = getServiceId(b);
-          const displayServiceName = getServiceName(b);
-          return {
-            id: b.id,
-            bookingId: b.bookingId,
-            fullName: b.fullName || "N/A",
-            phone: b.phone || "N/A",
-            serviceId: serviceId,
-            serviceName: displayServiceName,
-            content: b.bookingContent || "",
-            appointmentDate: b.appointmentDate ? (typeof b.appointmentDate === 'string' ? b.appointmentDate.split('T')[0] : (b.appointmentDate?.toString?.().split('T')[0] || "")) : "",
-            startTime: b.appointmentTime || "",
-            notes: b.bookingContent || "N/A",
-            testStatus: b.testStatus || "",
-          };
-        }));
+        setBookings(data
+          .filter(b => (b.paymentStatus || b.payment_status || '').toUpperCase() === 'PAID')
+          .map(b => {
+            const serviceId = getServiceId(b);
+            const displayServiceName = getServiceName(b);
+            return {
+              id: b.id,
+              bookingId: b.bookingId,
+              fullName: b.fullName || "N/A",
+              phone: b.phone || "N/A",
+              serviceId: serviceId,
+              serviceName: displayServiceName,
+              content: b.bookingContent || "",
+              appointmentDate: b.appointmentDate ? (typeof b.appointmentDate === 'string' ? b.appointmentDate.split('T')[0] : (b.appointmentDate?.toString?.().split('T')[0] || "")) : "",
+              startTime: b.appointmentTime || "",
+              notes: b.bookingContent || "N/A",
+              testStatus: b.testStatus || "",
+            };
+          })
+        );
       } else {
         setBookings([]);
       }

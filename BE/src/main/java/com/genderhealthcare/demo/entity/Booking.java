@@ -9,7 +9,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -78,6 +77,9 @@ public class Booking {
     @Column(name = "payment_id")
     private String paymentId;
 
+    @Column(name = "order_code", unique = true)
+    private Long orderCode; // Unique order code for PayOS (số nguyên dương, unique)
+
     private String createdAt; // Timestamp of when the booking was created
 
     // Tự động thiết lập thời gian tạo trước khi lưu vào database
@@ -85,6 +87,10 @@ public class Booking {
     protected void onCreate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = LocalDateTime.now().format(formatter);
+        // Nếu chưa có orderCode, sinh số nguyên dương duy nhất (timestamp millis)
+        if (this.orderCode == null) {
+            this.orderCode = System.currentTimeMillis();
+        }
         // Không tự động set endTime khi tạo mới, chỉ set khi kết thúc thủ công
         // Cập nhật status ban đầu
         updateStatus();

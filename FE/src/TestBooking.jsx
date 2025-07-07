@@ -19,6 +19,14 @@ const TestBooking = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Thêm loading state
   const [testTypes, setTestTypes] = useState([]); // Chuyển từ static thành state
 
+  // State cho quy trình thanh toán
+  const [bookingStep, setBookingStep] = useState('form'); // 'form', 'processing', 'payment', 'success', 'error'
+  const [paymentUrl, setPaymentUrl] = useState('');
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [servicePrice, setServicePrice] = useState(null);
+  const [serviceName, setServiceName] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('');
+
   useEffect(() => {
     // Lấy danh sách các loại test từ API
     const fetchTestTypes = async () => {
@@ -174,6 +182,21 @@ const TestBooking = () => {
     }
   };
 
+  // Hàm lấy giá tiền từ serviceId
+  const fetchServicePrice = async (serviceId) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/services/${serviceId}`);
+      if (!res.ok) throw new Error('Không lấy được giá dịch vụ');
+      const data = await res.json();
+      setServicePrice(data.price);
+      setServiceName(data.serviceName || '');
+      return data.price;
+    } catch (err) {
+      alert('Không lấy được giá dịch vụ');
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -241,6 +264,7 @@ const TestBooking = () => {
     }
     
     setIsSubmitting(true); // Bắt đầu loading
+    setBookingStep('processing');
     
     // Chuẩn bị dữ liệu để gửi về backend
     const serviceId = parseInt(formData.testType);
@@ -249,6 +273,7 @@ const TestBooking = () => {
     if (!serviceId || serviceId <= 0) {
       alert('Vui lòng chọn loại dịch vụ hợp lệ!');
       setIsSubmitting(false);
+      setBookingStep('form');
       return;
     }
     
@@ -289,11 +314,55 @@ const TestBooking = () => {
         },
         body: JSON.stringify(bookingData)
       });
-      
       if (response.ok) {
-        const result = await response.json();
-        console.log('Booking created successfully:', result);
-        setIsSubmitted(true);
+        const bookingDataRes = await response.json();
+        setCurrentBooking(bookingDataRes);
+        // Lấy giá tiền từ serviceId (đảm bảo là số, không phải string có VNĐ)
+        let price = null;
+        let serviceData = null;
+        try {
+          const serviceRes = await fetch(`http://localhost:8080/api/services/${serviceId}`);
+          if (serviceRes.ok) {
+            serviceData = await serviceRes.json();
+            price = Number(serviceData.price);
+            setServicePrice(price);
+            setServiceName(serviceData.serviceName || '');
+          }
+        } catch (err) {
+          console.error('Lỗi lấy service:', err);
+        }
+        if (!price || isNaN(price)) {
+          alert('Không lấy được giá dịch vụ hợp lệ!');
+          setIsSubmitting(false);
+          setBookingStep('form');
+          return;
+        }
+        // Tạo payment PayOS
+        const baseUrl = window.location.origin;
+        const returnUrl = `${baseUrl}/test-booking?bookingId=${bookingDataRes.bookingId}&status=success`;
+        const cancelUrl = `${baseUrl}/test-booking?bookingId=${bookingDataRes.bookingId}&status=cancel`;
+        const paymentPayload = {
+          bookingId: bookingDataRes.bookingId,
+          amount: price,
+          description: `Thanh toán dịch vụ xét nghiệm #${bookingDataRes.bookingId} - ${serviceData?.serviceName || ''}`,
+          returnUrl,
+          cancelUrl
+        };
+        console.log('PayOS payload:', paymentPayload);
+        const paymentRes = await fetch('http://localhost:8080/api/payment/payos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentPayload)
+        });
+        if (paymentRes.ok) {
+          const paymentData = await paymentRes.json();
+          setPaymentUrl(paymentData.payUrl);
+          setBookingStep('payment');
+        } else {
+          const errorText = await paymentRes.text();
+          alert('Không thể tạo liên kết thanh toán: ' + errorText);
+          setBookingStep('form');
+        }
       } else {
         const errorText = await response.text();
         console.error('Failed to submit booking:', response.status, errorText);
@@ -313,23 +382,76 @@ const TestBooking = () => {
         } else if (response.status === 500) {
           alert('Lỗi server nội bộ. Vui lòng thử lại sau hoặc liên hệ quản trị viên!');
         } else {
-          // Other errors
-          try {
-            const errorObj = JSON.parse(errorText);
-            const errorMessage = errorObj.message || 'Có lỗi xảy ra khi đặt lịch';
-            alert(`Lỗi (${response.status}): ${errorMessage}`);
-          } catch (e) {
-            alert(`Có lỗi xảy ra khi đặt lịch (${response.status}). Vui lòng thử lại!`);
-          }
+          alert(`Có lỗi xảy ra khi đặt lịch (${response.status}). Vui lòng thử lại!`);
         }
+        setBookingStep('form');
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
       alert('Có lỗi xảy ra khi đặt lịch. Vui lòng kiểm tra kết nối mạng!');
+      setBookingStep('form');
     } finally {
-      setIsSubmitting(false); // Kết thúc loading
+      setIsSubmitting(false);
     }
-  };  return (
+  };  
+
+  // Theo dõi trạng thái thanh toán khi ở bước payment
+  useEffect(() => {
+    let intervalId;
+    if (bookingStep === 'payment' && currentBooking?.bookingId) {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await fetch(`http://localhost:8080/api/payment/status/${currentBooking.bookingId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setPaymentStatus(data.paymentStatus);
+            if (data.paymentStatus === 'PAID') {
+              setBookingStep('success');
+              clearInterval(intervalId);
+            } else if (data.paymentStatus === 'CANCELLED') {
+              setBookingStep('error');
+              clearInterval(intervalId);
+            }
+          }
+        } catch {}
+      }, 3000);
+    }
+    return () => intervalId && clearInterval(intervalId);
+  }, [bookingStep, currentBooking]);
+
+  // Xử lý redirect từ PayOS
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingIdParam = urlParams.get('bookingId');
+    const orderCodeParam = urlParams.get('orderCode');
+    const statusParam = urlParams.get('status');
+    // Ưu tiên kiểm tra orderCode nếu có (PayOS trả về UUID)
+    const checkStatus = async (id, isOrderCode = false) => {
+      setBookingStep('processing');
+      try {
+        let res;
+        if (isOrderCode) {
+          res = await fetch(`http://localhost:8080/api/payment/status/order/${id}`);
+        } else {
+          res = await fetch(`http://localhost:8080/api/payment/status/${id}`);
+        }
+        if (res.ok) {
+          const data = await res.json();
+          setPaymentStatus(data.paymentStatus);
+          if (data.paymentStatus === 'PAID') setBookingStep('success');
+          else setBookingStep('error');
+        } else setBookingStep('error');
+      } catch { setBookingStep('error'); }
+    };
+    if ((orderCodeParam || bookingIdParam) && statusParam === 'success') {
+      if (orderCodeParam) checkStatus(orderCodeParam, true);
+      else checkStatus(bookingIdParam, false);
+    } else if ((orderCodeParam || bookingIdParam) && statusParam === 'cancel') {
+      setBookingStep('error');
+    }
+  }, []);
+
+  return (
     <div style={{ backgroundColor: "#f0f9ff", minHeight: "100vh", display: "flex", flexDirection: "column", width: "100vw" }}>{/* Header */}      <header style={{
         background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
         paddingBottom: 0,
@@ -385,11 +507,86 @@ const TestBooking = () => {
           </Link>
         </div>
 
-        {!isSubmitted ? (
-          <>            <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
+        {/* Các bước UI mới */}
+        {bookingStep === 'processing' && (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '24px', marginBottom: '20px', color: '#333' }}>⏳ Đang xử lý thanh toán...</div>
+            <div style={{ color: '#666', marginBottom: '20px' }}>
+              Yêu cầu của bạn đang được xử lý. Vui lòng chờ hoặc kiểm tra lại sau ít phút.
+            </div>
+          </div>
+        )}
+        {bookingStep === 'payment' && paymentUrl && (
+          <iframe
+            src={paymentUrl}
+            title="PayOS Payment"
+            style={{
+              position: 'fixed',
+              top: 110,
+              left: 0,
+              width: '100vw',
+              height: 'calc(100vh - 110px)',
+              border: 'none',
+              borderRadius: 0,
+              margin: 0,
+              padding: 0,
+              zIndex: 1000,
+              background: '#fff',
+              display: 'block',
+              overflow: 'hidden',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            allow="payment"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            scrolling="no"
+          />
+        )}
+        {bookingStep === 'success' && (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ background: 'rgba(232, 245, 233, 0.9)', borderRadius: '16px', padding: '30px', border: '2px solid rgba(67, 160, 71, 0.2)', boxShadow: '0 8px 16px rgba(67, 160, 71, 0.1)' }}>
+              <div style={{ fontSize: '64px', marginBottom: '20px', color: '#43a047' }}>✅</div>
+              <h2 style={{ fontSize: '28px', fontWeight: '600', marginBottom: '15px', color: '#43a047' }}>Đặt lịch xét nghiệm thành công!</h2>
+              <p><strong>Mã booking:</strong> {currentBooking?.bookingId}</p>
+              <p><strong>Dịch vụ:</strong> {serviceName}</p>
+              <p><strong>Giá tiền:</strong> {servicePrice?.toLocaleString()} VND</p>
+              <p><strong>Trạng thái:</strong> <span style={{color: '#43a047'}}>Đã thanh toán</span></p>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <Link
+                  to="/my-test-bookings"
+                  style={{
+                    display: 'inline-block',
+                    background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                    color: '#fff',
+                    textDecoration: 'none',
+                    padding: '12px 25px',
+                    borderRadius: '25px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  📋 Xem lịch xét nghiệm của tôi
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+        {bookingStep === 'error' && (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '24px', marginBottom: '20px', color: 'red' }}>❌</div>
+            <div style={{ color: '#666', marginBottom: '30px' }}>Thanh toán thất bại hoặc đã bị hủy. Vui lòng thử lại hoặc liên hệ hỗ trợ.</div>
+            <button onClick={() => setBookingStep('form')} style={{marginTop: 20, padding: '10px 30px', borderRadius: 20, background: '#0891b2', color: '#fff', border: 'none', fontWeight: 600}}>Quay lại</button>
+          </div>
+        )}
+
+        {/* Ẩn form khi không ở bước 'form' */}
+        {bookingStep === 'form' && !isSubmitted && (
+          <>
+            <h2 style={{ textAlign: "center", color: "#2c3e50", marginBottom: "30px", width: "100%" }}>
               Đặt lịch xét nghiệm y tế
             </h2>
-              <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
+            <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "1600px", margin: "0 auto" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))", gap: "25px", width: "100%" }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={labelStyle}>Họ và tên *</label>
@@ -546,61 +743,8 @@ const TestBooking = () => {
               </div>
             </form>
           </>
-        ) : (
-          <div style={{ textAlign: "center", padding: "40px 20px" }}>
-            <div style={{ 
-              fontSize: "64px", 
-              marginBottom: "20px",
-              color: "#0891b2"
-            }}>
-              ✅
-            </div>
-            <h2 style={{ color: "#2c3e50", marginBottom: "20px" }}>Đặt lịch xét nghiệm thành công!</h2>
-            
-            {/* Hiển thị thông tin đã đặt */}
-            <div style={{ 
-              backgroundColor: "#f8f9fa", 
-              padding: "20px", 
-              borderRadius: "10px", 
-              marginTop: "20px",
-              textAlign: "left",
-              maxWidth: "500px",
-              margin: "20px auto 0"
-            }}>
-              <h3 style={{ color: "#2c3e50", marginBottom: "15px", textAlign: "center" }}>Thông tin đặt lịch</h3>
-              <p><strong>Họ tên:</strong> {formData.fullName}</p>
-              <p><strong>Điện thoại:</strong> {formData.phone}</p>
-              <p><strong>Email:</strong> {formData.email || 'Không có'}</p>
-              <p><strong>Loại xét nghiệm:</strong> {getServiceById(formData.testType)?.serviceName || 'N/A'}</p>
-              <p><strong>Giá tiền:</strong> {getServiceById(formData.testType)?.price || 'N/A'}</p>
-              <p><strong>Ngày giờ hẹn:</strong> {formData.preferredDate} {formData.preferredTime}:00</p>
-              <p><strong>Trạng thái:</strong> <span style={{color: "#f39c12"}}>Chờ bắt đầu</span></p>
-              {formData.notes && formData.notes.trim() && <p><strong>Ghi chú:</strong> {formData.notes}</p>}
-              
-              {/* Nút xem lịch đặt */}
-              <div style={{ textAlign: "center", marginTop: "20px" }}>
-                <Link
-                  to="/my-test-bookings"
-                  style={{
-                    display: "inline-block",
-                    background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
-                    color: "#fff",
-                    textDecoration: "none",
-                    padding: "12px 25px",
-                    borderRadius: "25px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    transition: "all 0.3s ease"
-                  }}
-                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
-                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
-                >
-                  📋 Xem lịch xét nghiệm của tôi
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}        {/* Thông tin thêm */}        <div style={{ 
+        )}
+        {/* Thông tin thêm */}        <div style={{ 
           marginTop: "40px", 
           padding: "20px", 
           backgroundColor: "#e0f2fe", 

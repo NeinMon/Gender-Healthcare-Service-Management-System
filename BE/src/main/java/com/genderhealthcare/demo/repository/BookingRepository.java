@@ -42,5 +42,8 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     // Deprecated - chỉ kiểm tra theo ngày (không chính xác)
     @Deprecated
     boolean existsByConsultantIdAndAppointmentDate(Integer consultantId, LocalDate appointmentDate);
+
+    // Tìm booking theo orderCode (PayOS)
+    Booking findByOrderCode(Long orderCode);
 }
 

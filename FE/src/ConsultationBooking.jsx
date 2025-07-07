@@ -292,8 +292,8 @@ const ConsultationBooking = () => {
   // Check if the URL contains success or cancel params from PayOS redirect
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    // PayOS có thể trả về orderCode hoặc bookingId
-    const bookingIdParam = urlParams.get('bookingId') || urlParams.get('orderCode');
+    const bookingIdParam = urlParams.get('bookingId');
+    const orderCodeParam = urlParams.get('orderCode');
     const statusParam = urlParams.get('status');
     const cancelParam = urlParams.get('cancel');
 
@@ -307,19 +307,54 @@ const ConsultationBooking = () => {
       return;
     }
 
-    // Nếu có bookingId/orderCode và status=success hoặc status=PROCESSING thì kiểm tra trạng thái thanh toán
-    if (bookingIdParam && (statusParam === 'success' || statusParam?.toUpperCase() === 'PROCESSING')) {
-      checkPaymentStatus(bookingIdParam);
+    // Nếu có orderCode hoặc bookingId và status=success/PROCESSING thì kiểm tra trạng thái thanh toán
+    const checkStatus = async (id, isOrderCode = false) => {
+      setBookingStep('processing');
+      try {
+        let res;
+        if (isOrderCode) {
+          res = await fetch(`http://localhost:8080/api/payment/status/order/${id}`);
+        } else {
+          res = await fetch(`http://localhost:8080/api/payment/status/${id}`);
+        }
+        if (res.ok) {
+          const data = await res.json();
+          setBookingDetails(data);
+          setPaymentStatus(data.paymentStatus);
+          if (data.paymentStatus === 'PAID') {
+            setBookingStep('success');
+            setError('');
+          } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+            setBookingStep('error');
+            setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+          } else if (data.paymentStatus === 'PROCESSING') {
+            setBookingStep('processing');
+            setError('');
+          } else {
+            setBookingStep('payment');
+            setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+          }
+        } else {
+          setBookingStep('error');
+          setError('Không thể kiểm tra trạng thái thanh toán. Vui lòng liên hệ hỗ trợ.');
+        }
+      } catch (error) {
+        setBookingStep('error');
+        setError('Lỗi kết nối khi kiểm tra thanh toán.');
+        console.error('Error checking payment status:', error);
+      }
+    };
+
+    if ((orderCodeParam || bookingIdParam) && (statusParam === 'success' || statusParam?.toUpperCase() === 'PROCESSING')) {
+      if (orderCodeParam) checkStatus(orderCodeParam, true);
+      else checkStatus(bookingIdParam, false);
       return;
     }
-
-    // Nếu có bookingId/orderCode mà không có status, vẫn kiểm tra trạng thái (trường hợp PayOS chỉ trả về orderCode)
-    if (bookingIdParam && !statusParam) {
-      checkPaymentStatus(bookingIdParam);
+    if ((orderCodeParam || bookingIdParam) && !statusParam) {
+      if (orderCodeParam) checkStatus(orderCodeParam, true);
+      else checkStatus(bookingIdParam, false);
       return;
     }
-
-    // Nếu có status nhưng không có bookingId/orderCode, chỉ hiển thị lỗi chung
     if (statusParam && (statusParam.toUpperCase() === 'CANCELLED' || statusParam.toUpperCase() === 'EXPIRED' || statusParam.toLowerCase() === 'cancel')) {
       setBookingStep('error');
       setError('Bạn đã hủy thanh toán hoặc thanh toán đã hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');

@@ -59,8 +59,12 @@ const MyTestBookings = () => {
   };
 
   const filteredTestBookings = testBookings.filter(booking => {
+    // Luôn chỉ hiển thị các booking đã thanh toán thành công (PAID), không hiển thị PENDING
+    const paymentStatus = (booking.paymentStatus || booking.payment_status || '').toUpperCase();
+    if (paymentStatus !== 'PAID') return false;
+    const testStatus = booking.testStatus || booking.status;
     if (filterStatus === 'all') return true;
-    return booking.testStatus === filterStatus;
+    return testStatus === filterStatus;
   });
 
   const formatStatus = (status) => {
@@ -98,7 +102,7 @@ const MyTestBookings = () => {
     
     try {
       // Lấy thông tin chi tiết booking từ API
-      const bookingDetailResponse = await fetch(`http://localhost:8080/api/test-bookings/${booking.bookingId}/detail`);
+      const bookingDetailResponse = await fetch(`http://localhost:8080/api/test-bookings/${booking.id}/detail`);
       if (!bookingDetailResponse.ok) {
         throw new Error('Không thể lấy thông tin chi tiết booking');
       }
@@ -128,7 +132,7 @@ const MyTestBookings = () => {
       setResultData({
         customerName: userName,
         phoneNumber: userPhone,
-        testType: serviceType || bookingDetail.serviceType || booking.serviceType || booking.serviceName || 'Không có dữ liệu',
+        testType: serviceType || bookingDetail.serviceType || booking.serviceName || 'Không có dữ liệu',
         price: servicePrice || bookingDetail.price || booking.price,
         appointmentDateTime: (() => {
           // Gộp ngày và giờ hẹn từ backend

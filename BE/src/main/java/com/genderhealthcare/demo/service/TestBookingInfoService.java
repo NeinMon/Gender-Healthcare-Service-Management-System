@@ -173,6 +173,8 @@ public class TestBookingInfoService {
                 }
             }
             dto.setServiceName(serviceName);
+            // Set paymentStatus cho FE filter
+            dto.setPaymentStatus(booking.getPaymentStatus());
         }
         
         return dto;

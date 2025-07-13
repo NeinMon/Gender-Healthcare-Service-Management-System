@@ -547,7 +547,6 @@ const TestBooking = () => {
             <div style={{ background: 'rgba(232, 245, 233, 0.9)', borderRadius: '16px', padding: '30px', border: '2px solid rgba(67, 160, 71, 0.2)', boxShadow: '0 8px 16px rgba(67, 160, 71, 0.1)' }}>
               <div style={{ fontSize: '64px', marginBottom: '20px', color: '#43a047' }}>✅</div>
               <h2 style={{ fontSize: '28px', fontWeight: '600', marginBottom: '15px', color: '#43a047' }}>Đặt lịch xét nghiệm thành công!</h2>
-              <p><strong>Mã booking:</strong> {currentBooking?.bookingId}</p>
               <p><strong>Dịch vụ:</strong> {serviceName}</p>
               <p><strong>Giá tiền:</strong> {servicePrice?.toLocaleString()} VND</p>
               <p><strong>Trạng thái:</strong> <span style={{color: '#43a047'}}>Đã thanh toán</span></p>

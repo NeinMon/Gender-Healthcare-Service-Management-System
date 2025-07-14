@@ -173,8 +173,10 @@ public class TestBookingInfoService {
                 }
             }
             dto.setServiceName(serviceName);
-            // Set paymentStatus cho FE filter
-            dto.setPaymentStatus(booking.getPaymentStatus());
+            // Set object payment trả về cho FE
+            if (booking.getPayment() != null) {
+                dto.setPayment(booking.getPayment());
+            }
         }
         
         return dto;

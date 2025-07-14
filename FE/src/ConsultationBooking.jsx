@@ -320,28 +320,28 @@ const ConsultationBooking = () => {
         if (res.ok) {
           const data = await res.json();
           setBookingDetails(data);
-          setPaymentStatus(data.paymentStatus);
-          if (data.paymentStatus === 'PAID') {
+          setPaymentStatus(data.payment?.status);
+          if (data.payment?.status === 'PAID') {
             setBookingStep('success');
             setError('');
-          } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+          } else if (data.payment?.status === 'CANCELLED' || data.payment?.status === 'EXPIRED') {
             setBookingStep('error');
-            setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
-          } else if (data.paymentStatus === 'PROCESSING') {
+            setError(data.payment?.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+          } else if (data.payment?.status === 'PROCESSING') {
             setBookingStep('processing');
             setError('');
           } else {
             setBookingStep('payment');
-            setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+            setError(data.payment?.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
           }
         } else {
-          setBookingStep('error');
-          setError('Không thể kiểm tra trạng thái thanh toán. Vui lòng liên hệ hỗ trợ.');
+          // Nếu backend lỗi, chuyển sang trạng thái processing (không hiện lỗi đỏ)
+          setBookingStep('processing');
+          setError('Đang xác nhận thanh toán, vui lòng chờ...');
         }
       } catch (error) {
-        setBookingStep('error');
-        setError('Lỗi kết nối khi kiểm tra thanh toán.');
-        console.error('Error checking payment status:', error);
+        setBookingStep('processing');
+        setError('Đang xác nhận thanh toán, vui lòng chờ...');
       }
     };
 
@@ -370,20 +370,20 @@ const ConsultationBooking = () => {
       if (response.ok) {
         const data = await response.json();
         setBookingDetails(data);
-        setPaymentStatus(data.paymentStatus);
+        setPaymentStatus(data.payment?.status);
         // Sử dụng statusMessage từ backend nếu có
-        if (data.paymentStatus === 'PAID') {
+        if (data.payment?.status === 'PAID') {
           setBookingStep('success');
           setError('');
-        } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+        } else if (data.payment?.status === 'CANCELLED' || data.payment?.status === 'EXPIRED') {
           setBookingStep('error');
-          setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
-        } else if (data.paymentStatus === 'PROCESSING') {
+          setError(data.payment?.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+        } else if (data.payment?.status === 'PROCESSING') {
           setBookingStep('processing');
           setError('');
         } else {
           setBookingStep('payment');
-          setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+          setError(data.payment?.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
         }
       } else {
         setBookingStep('error');
@@ -450,29 +450,29 @@ const ConsultationBooking = () => {
           const response = await fetch(`http://localhost:8080/api/payment/status/${bookingDetails.bookingId}`);
           if (response.ok) {
             const data = await response.json();
-            setPaymentStatus(data.paymentStatus);
+            setPaymentStatus(data.payment?.status);
             setBookingDetails(data);
-            // Sử dụng statusMessage từ backend nếu có
-            if (data.paymentStatus === 'PROCESSING') {
-              setBookingStep('processing');
-              setError('');
-              clearInterval(intervalId);
-            } else if (data.paymentStatus === 'PAID') {
+            // Chỉ clearInterval khi đã PAID, CANCELLED hoặc EXPIRED
+            if (data.payment?.status === 'PAID') {
               setBookingStep('success');
               setError('');
               clearInterval(intervalId);
-            } else if (data.paymentStatus === 'CANCELLED' || data.paymentStatus === 'EXPIRED') {
+            } else if (data.payment?.status === 'CANCELLED' || data.payment?.status === 'EXPIRED') {
               setBookingStep('error');
-              setError(data.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
+              setError(data.payment?.statusMessage || 'Thanh toán đã bị hủy hoặc hết hạn. Vui lòng thử lại hoặc đặt lại lịch.');
               clearInterval(intervalId);
+            } else if (data.payment?.status === 'PROCESSING') {
+              setBookingStep('processing');
+              setError('');
+              // KHÔNG clearInterval, tiếp tục polling
             } else {
-              setError(data.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+              setError(data.payment?.statusMessage || 'Thanh toán chưa hoàn tất. Vui lòng thử lại.');
             }
           }
         } catch (err) {
           // Không làm gì, thử lại ở lần sau
         }
-      }, 3000); // 3 giây/lần
+      }, 3000);
     }
     return () => intervalId && clearInterval(intervalId);
   }, [bookingStep, bookingDetails]);

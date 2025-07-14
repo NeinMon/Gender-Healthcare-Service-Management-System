@@ -34,7 +34,6 @@ public class BookingAPI {
             if (booking.getServiceId() == null) {
                 booking.setServiceId(1);
             }
-            
             // Kiểm tra trùng lịch tư vấn viên theo khung giờ chính xác
             if (booking.getConsultantId() != null && booking.getAppointmentDate() != null && booking.getStartTime() != null) {
                 // Tự động tính endTime nếu chưa có (mặc định 1 giờ)
@@ -42,39 +41,23 @@ public class BookingAPI {
                 if (endTime == null) {
                     endTime = booking.getStartTime().plusHours(1);
                 }
-                
                 boolean hasConflict = bookingService.hasConflictingBooking(
                     booking.getConsultantId(),
                     booking.getAppointmentDate(),
                     booking.getStartTime(),
                     endTime
                 );
-                
                 if (hasConflict) {
                     return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Tư vấn viên đã có lịch trùng trong khung giờ này! Vui lòng chọn giờ khác.");
                 }
             }
-            
             // Set default values
             booking.setEndTime(null);
-            booking.setPaymentStatus("PENDING");
-
-            // If amount is not set, set a default amount (can be calculated based on service)
-            if (booking.getAmount() == null) {
-                booking.setAmount(100000.0); // Default amount, in practice should be based on the service
-            }
-
-            // Status sẽ tự động là "Chờ bắt đầu" hoặc "Đang diễn ra" dựa vào startTime
+            // Payment will be created separately, so no need to set paymentStatus or amount here
             Booking saved = bookingService.createBooking(booking);
-
-            // Return payment-related information for frontend
-            Map<String, Object> response = new HashMap<>();
-            response.put("bookingId", saved.getBookingId());
-            response.put("amount", saved.getAmount());
-            response.put("message", "Booking created successfully. Proceed to payment.");
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            // Trả về object booking đầy đủ (bao gồm payment)
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
@@ -209,7 +192,7 @@ public class BookingAPI {
             java.util.Set<String> bookedSlots = new java.util.HashSet<>();
             for (Booking b : bookings) {
                 // Chỉ tính các booking chưa kết thúc VÀ đã thanh toán thành công (PAID) HOẶC PROCESSING
-                if (!"Đã kết thúc".equals(b.getStatus()) && ("PAID".equals(b.getPaymentStatus()) || "PROCESSING".equals(b.getPaymentStatus()))) {
+                if (!"Đã kết thúc".equals(b.getStatus()) && b.getPayment() != null && ("PAID".equals(b.getPayment().getStatus()) || "PROCESSING".equals(b.getPayment().getStatus()))) {
                     LocalTime startTime = b.getStartTime();
                     LocalTime endTime = b.getEndTime() != null ? b.getEndTime() : startTime.plusHours(1);
                     // Kiểm tra slot nào bị trùng với booking này
@@ -289,14 +272,17 @@ public class BookingAPI {
         if (booking == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
         }
+        if (booking.getPayment() == null) {
+            return ResponseEntity.badRequest().body("No payment record found for this booking");
+        }
         // Chỉ cho phép cập nhật sang PAID hoặc CANCELLED từ PROCESSING
-        if (!"PROCESSING".equals(booking.getPaymentStatus())) {
+        if (!"PROCESSING".equals(booking.getPayment().getStatus())) {
             return ResponseEntity.badRequest().body("Chỉ cập nhật trạng thái khi booking đang PROCESSING");
         }
         if (!"PAID".equals(status) && !"CANCELLED".equals(status)) {
             return ResponseEntity.badRequest().body("Trạng thái hợp lệ: PAID hoặc CANCELLED");
         }
-        booking.setPaymentStatus(status);
+        booking.getPayment().setStatus(status);
         bookingService.createBooking(booking);
         return ResponseEntity.ok("Đã cập nhật trạng thái thanh toán cho booking.");
     }

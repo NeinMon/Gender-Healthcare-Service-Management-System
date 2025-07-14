@@ -35,13 +35,13 @@ public class PaymentAPI {
             }
 
             // Check if booking is already paid
-            if ("PAID".equals(booking.getPaymentStatus())) {
+            if (booking.getPayment() != null && "PAID".equals(booking.getPayment().getStatus())) {
                 return ResponseEntity.badRequest().body("This booking is already paid");
             }
 
-            // If amount is not provided in request, use the amount from booking
-            if (paymentRequest.getAmount() == null) {
-                paymentRequest.setAmount(booking.getAmount());
+            // If amount is not provided in request, use the amount from Payment entity
+            if (paymentRequest.getAmount() == null && booking.getPayment() != null) {
+                paymentRequest.setAmount(booking.getPayment().getAmount());
             }
 
             // Generate default description if not provided
@@ -70,42 +70,39 @@ public class PaymentAPI {
             Booking booking = bookingService.getBookingById(bookingId);
             if (booking == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Booking not found with ID: " + bookingId);
+                        .body("Booking not found with ID: " + bookingId);
             }
 
-            // Luôn kiểm tra trạng thái link PayOS bằng bookingId (orderCode)
             paymentService.syncBookingStatusWithPayOS(booking);
-            // Lấy lại trạng thái booking mới nhất từ DB
             booking = bookingService.getBookingById(bookingId);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("bookingId", booking.getBookingId());
-            response.put("paymentStatus", booking.getPaymentStatus());
-            response.put("amount", booking.getAmount());
-            response.put("paymentId", booking.getPaymentId());
-            // Add additional information for better UX
-            String statusMessage;
-            switch (booking.getPaymentStatus()) {
-                case "PAID":
-                    statusMessage = "Thanh toán thành công! Lịch tư vấn của bạn đã được xác nhận.";
-                    break;
-                case "PENDING":
-                    statusMessage = "Chưa thanh toán. Vui lòng hoàn thành thanh toán để xác nhận lịch tư vấn.";
-                    break;
-                case "CANCELLED":
-                    statusMessage = "Thanh toán đã bị hủy. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần thiết.";
-                    break;
-                case "EXPIRED":
-                    statusMessage = "Thanh toán đã hết hạn. Vui lòng tạo lịch tư vấn mới.";
-                    break;
-                default:
-                    statusMessage = "Trạng thái thanh toán: " + booking.getPaymentStatus();
+            // Đảm bảo payment có statusMessage phù hợp
+            if (booking.getPayment() != null) {
+                String statusMessage;
+                switch (booking.getPayment().getStatus()) {
+                    case "PAID":
+                        statusMessage = "Thanh toán thành công! Lịch tư vấn của bạn đã được xác nhận.";
+                        break;
+                    case "PENDING":
+                        statusMessage = "Chưa thanh toán. Vui lòng hoàn thành thanh toán để xác nhận lịch tư vấn.";
+                        break;
+                    case "CANCELLED":
+                        statusMessage = "Thanh toán đã bị hủy. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu cần thiết.";
+                        break;
+                    case "EXPIRED":
+                        statusMessage = "Thanh toán đã hết hạn. Vui lòng tạo lịch tư vấn mới.";
+                        break;
+                    default:
+                        statusMessage = "Trạng thái thanh toán: " + booking.getPayment().getStatus();
+                }
+                booking.getPayment().setStatusMessage(statusMessage);
             }
-            response.put("statusMessage", statusMessage);
-            return ResponseEntity.ok(response);
+
+            // Trả về object booking (bao gồm payment)
+            return ResponseEntity.ok(booking);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error retrieving payment status: " + e.getMessage());
+                    .body("Error retrieving payment status: " + e.getMessage());
         }
     }
 
@@ -118,14 +115,15 @@ public class PaymentAPI {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Booking not found with orderCode: " + orderCode);
             }
-            paymentService.syncBookingStatusWithPayOS(booking);
-            booking = bookingService.getBookingByOrderCode(orderCode);
+            // Không gọi PayOS nữa, chỉ trả về thông tin payment nội bộ
             Map<String, Object> response = new HashMap<>();
             response.put("bookingId", booking.getBookingId());
-            response.put("orderCode", booking.getOrderCode());
-            response.put("paymentStatus", booking.getPaymentStatus());
-            response.put("amount", booking.getAmount());
-            response.put("paymentId", booking.getPaymentId());
+            if (booking.getPayment() != null) {
+                response.put("orderCode", booking.getPayment().getOrderCode());
+                response.put("paymentStatus", booking.getPayment().getStatus());
+                response.put("amount", booking.getPayment().getAmount());
+                response.put("paymentId", booking.getPayment().getPaymentId());
+            }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -139,9 +137,9 @@ public class PaymentAPI {
             String reason = body != null && body.get("cancellationReason") != null ? body.get("cancellationReason").toString() : "Khách hàng hủy thanh toán";
             boolean result = paymentService.cancelPaymentRequest(bookingId, reason);
             if (result) {
-                return ResponseEntity.ok("Đã hủy liên kết thanh toán và cập nhật trạng thái booking.");
+                return ResponseEntity.ok("Đã hủy liên kết thanh toán và cập nhật trạng thái booking/payment.");
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Không thể hủy thanh toán hoặc booking đã ở trạng thái cuối.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Không thể hủy thanh toán hoặc booking/payment đã ở trạng thái cuối.");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

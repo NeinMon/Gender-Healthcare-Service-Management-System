@@ -113,7 +113,7 @@ const StaffTestBookingManager = () => {
         }
         await fetchServiceNames(serviceIds);
         setBookings(data
-          .filter(b => (b.paymentStatus || b.payment_status || '').toUpperCase() === 'PAID')
+          .filter(b => (b.payment?.status || '').toUpperCase() === 'PAID')
           .map(b => {
             const serviceId = getServiceId(b);
             const displayServiceName = getServiceName(b);
@@ -129,6 +129,10 @@ const StaffTestBookingManager = () => {
               startTime: b.appointmentTime || "",
               notes: b.bookingContent || "N/A",
               testStatus: b.testStatus || "",
+              paymentStatus: b.payment?.status || '',
+              amount: b.payment?.amount || '',
+              paymentId: b.payment?.paymentLinkId || '',
+              orderCode: b.payment?.orderCode || '',
             };
           })
         );

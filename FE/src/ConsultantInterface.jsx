@@ -217,7 +217,7 @@ const ConsultantInterface = () => {
     : bookings.filter(b => b.status === filterStatus);
 
   // Lọc booking chỉ hiển thị các lịch đã PAID
-  const paidBookings = bookings.filter(b => b.paymentStatus === 'PAID');
+  const paidBookings = bookings.filter(b => b.payment?.status === 'PAID');
 
   // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
   const submitAnswer = async () => {

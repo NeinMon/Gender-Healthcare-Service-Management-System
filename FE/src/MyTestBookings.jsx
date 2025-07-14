@@ -60,7 +60,7 @@ const MyTestBookings = () => {
 
   const filteredTestBookings = testBookings.filter(booking => {
     // Luôn chỉ hiển thị các booking đã thanh toán thành công (PAID), không hiển thị PENDING
-    const paymentStatus = (booking.paymentStatus || booking.payment_status || '').toUpperCase();
+    const paymentStatus = (booking.payment?.status || '').toUpperCase();
     if (paymentStatus !== 'PAID') return false;
     const testStatus = booking.testStatus || booking.status;
     if (filterStatus === 'all') return true;
@@ -133,7 +133,7 @@ const MyTestBookings = () => {
         customerName: userName,
         phoneNumber: userPhone,
         testType: serviceType || bookingDetail.serviceType || booking.serviceName || 'Không có dữ liệu',
-        price: servicePrice || bookingDetail.price || booking.price,
+        price: servicePrice || bookingDetail.price || booking.payment?.amount || booking.price,
         appointmentDateTime: (() => {
           // Gộp ngày và giờ hẹn từ backend
           let dateTimeString = 'Không có dữ liệu';

@@ -10,5 +10,8 @@ import lombok.NoArgsConstructor;
 public class BookingPaymentResponse {
     private Integer bookingId;
     private Double amount;
+    private String paymentStatus;
+    private String paymentId;
+    private Long orderCode;
     private String message;
 }

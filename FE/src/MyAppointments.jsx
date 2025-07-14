@@ -94,8 +94,8 @@ const MyAppointments = () => {
 
   // Lọc chỉ các lịch đã thanh toán thành công (paymentStatus === 'PAID')
   const filteredAppointments = appointments.filter(app => {
-    if (filterStatus === 'all') return app.paymentStatus === 'PAID';
-    return app.status === filterStatus && app.paymentStatus === 'PAID';
+    if (filterStatus === 'all') return app.payment?.status === 'PAID';
+    return app.status === filterStatus && app.payment?.status === 'PAID';
   });
   // Chức năng hủy lịch hẹn đã được gỡ bỏ
   // Chức năng kiểm tra điều kiện hủy lịch hẹn đã được gỡ bỏ

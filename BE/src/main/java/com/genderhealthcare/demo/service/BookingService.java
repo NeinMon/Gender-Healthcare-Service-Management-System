@@ -108,17 +108,19 @@ public class BookingService {
         // Lấy tất cả booking của consultant trong ngày
         List<Booking> bookingsInDay = bookingRepository.findByConsultantIdAndAppointmentDate(consultantId, appointmentDate);
         for (Booking booking : bookingsInDay) {
-            // Kiểm tra booking có paymentStatus là PAID hoặc PROCESSING
-            String status = booking.getPaymentStatus();
-            if ("PAID".equalsIgnoreCase(status) || "PROCESSING".equalsIgnoreCase(status)) {
-                LocalTime bookingStart = booking.getStartTime();
-                LocalTime bookingEnd = booking.getEndTime();
-                if (bookingEnd == null) {
-                    bookingEnd = bookingStart.plusHours(1);
-                }
-                // Kiểm tra overlap: hai khoảng thời gian có giao nhau không
-                if (startTime.isBefore(bookingEnd) && endTime.isAfter(bookingStart)) {
-                    return true; // Có trùng lịch đã PAID hoặc PROCESSING
+            // Kiểm tra booking có paymentStatus là PAID hoặc PROCESSING từ Payment entity
+            if (booking.getPayment() != null) {
+                String status = booking.getPayment().getStatus();
+                if ("PAID".equalsIgnoreCase(status) || "PROCESSING".equalsIgnoreCase(status)) {
+                    LocalTime bookingStart = booking.getStartTime();
+                    LocalTime bookingEnd = booking.getEndTime();
+                    if (bookingEnd == null) {
+                        bookingEnd = bookingStart.plusHours(1);
+                    }
+                    // Kiểm tra overlap: hai khoảng thời gian có giao nhau không
+                    if (startTime.isBefore(bookingEnd) && endTime.isAfter(bookingStart)) {
+                        return true; // Có trùng lịch đã PAID hoặc PROCESSING
+                    }
                 }
             }
         }
@@ -180,16 +182,23 @@ public class BookingService {
     }
 
     @Transactional
+
     public Booking updateBookingPaymentStatus(Integer bookingId, String newPaymentStatus) {
         Booking booking = bookingRepository.findById(bookingId).orElse(null);
         if (booking == null) {
             throw new IllegalArgumentException("Booking not found with ID: " + bookingId);
         }
-        booking.setPaymentStatus(newPaymentStatus);
+        if (booking.getPayment() == null) {
+            throw new IllegalArgumentException("No payment record found for this booking");
+        }
+        booking.getPayment().setStatus(newPaymentStatus);
         return bookingRepository.save(booking);
     }
 
     public Booking getBookingByOrderCode(Long orderCode) {
-        return bookingRepository.findByOrderCode(orderCode);
+        // Now handled via Payment entity
+        return bookingRepository.findAll().stream()
+                .filter(b -> b.getPayment() != null && orderCode.equals(b.getPayment().getOrderCode()))
+                .findFirst().orElse(null);
     }
 }

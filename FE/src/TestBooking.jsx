@@ -404,16 +404,24 @@ const TestBooking = () => {
           const res = await fetch(`http://localhost:8080/api/payment/status/${currentBooking.bookingId}`);
           if (res.ok) {
             const data = await res.json();
-            setPaymentStatus(data.paymentStatus);
-            if (data.paymentStatus === 'PAID') {
+            setPaymentStatus(data.paymentStatus || data.payment?.status);
+            if ((data.paymentStatus || data.payment?.status) === 'PAID') {
               setBookingStep('success');
               clearInterval(intervalId);
-            } else if (data.paymentStatus === 'CANCELLED') {
+            } else if ((data.paymentStatus || data.payment?.status) === 'CANCELLED') {
               setBookingStep('error');
               clearInterval(intervalId);
             }
+          } else {
+            // Nếu backend lỗi, chuyển sang trạng thái processing và báo đang xác nhận
+            setBookingStep('processing');
+            setPaymentStatus('');
           }
-        } catch {}
+        } catch {
+          // Nếu fetch lỗi, cũng chuyển sang trạng thái processing
+          setBookingStep('processing');
+          setPaymentStatus('');
+        }
       }, 3000);
     }
     return () => intervalId && clearInterval(intervalId);
@@ -440,8 +448,13 @@ const TestBooking = () => {
           setPaymentStatus(data.paymentStatus);
           if (data.paymentStatus === 'PAID') setBookingStep('success');
           else setBookingStep('error');
-        } else setBookingStep('error');
-      } catch { setBookingStep('error'); }
+        } else {
+          // Nếu backend lỗi, chuyển sang trạng thái processing (không hiện lỗi đỏ)
+          setBookingStep('processing');
+        }
+      } catch {
+        setBookingStep('processing');
+      }
     };
     if ((orderCodeParam || bookingIdParam) && statusParam === 'success') {
       if (orderCodeParam) checkStatus(orderCodeParam, true);
@@ -547,10 +560,8 @@ const TestBooking = () => {
             <div style={{ background: 'rgba(232, 245, 233, 0.9)', borderRadius: '16px', padding: '30px', border: '2px solid rgba(67, 160, 71, 0.2)', boxShadow: '0 8px 16px rgba(67, 160, 71, 0.1)' }}>
               <div style={{ fontSize: '64px', marginBottom: '20px', color: '#43a047' }}>✅</div>
               <h2 style={{ fontSize: '28px', fontWeight: '600', marginBottom: '15px', color: '#43a047' }}>Đặt lịch xét nghiệm thành công!</h2>
-              <p><strong>Mã booking:</strong> {currentBooking?.bookingId}</p>
               <p><strong>Dịch vụ:</strong> {serviceName}</p>
-              <p><strong>Giá tiền:</strong> {servicePrice?.toLocaleString()} VND</p>
-              <p><strong>Trạng thái:</strong> <span style={{color: '#43a047'}}>Đã thanh toán</span></p>
+              <p><strong>Giá tiền:</strong> {currentBooking?.payment?.amount?.toLocaleString() || servicePrice?.toLocaleString()} VND</p>
               <div style={{ textAlign: 'center', marginTop: '20px' }}>
                 <Link
                   to="/my-test-bookings"

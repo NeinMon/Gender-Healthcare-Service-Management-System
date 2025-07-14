@@ -30,7 +30,8 @@ public class TestBookingDetailDTO {
     private String testResults;
     private String createdAt;
     private String updatedAt;
-    private String paymentStatus;
+    // Object Payment trả về cho FE
+    private com.genderhealthcare.demo.entity.Payment payment;
     
     // Thông tin từ Users
     private String fullName;

@@ -21,6 +21,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
 
 @Entity
 @Table(name = "booking")
@@ -64,40 +66,18 @@ public class Booking {
     @Column(name = "status", columnDefinition = "NVARCHAR(50)")
     private String status;
 
-    @Pattern(
-        regexp = "PENDING|PROCESSING|PAID|FAILED|CANCELLED|EXPIRED",
-        message = "Payment status must be one of: PENDING, PROCESSING, PAID, FAILED, CANCELLED, EXPIRED"
-    )
-    @Column(name = "payment_status", columnDefinition = "VARCHAR(20)") // Removed DEFAULT 'PENDING'
-    private String paymentStatus = "PENDING";
-
-    @Column(name = "amount")
-    private Double amount;
-
-    @Column(name = "payment_id")
-    private String paymentId;
-
-    @Column(name = "order_code", unique = true)
-    private Long orderCode; // Unique order code for PayOS (số nguyên dương, unique)
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    private Payment payment;
 
     private String createdAt; // Timestamp of when the booking was created
 
-    // Tự động thiết lập thời gian tạo trước khi lưu vào database
     @PrePersist
     protected void onCreate() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         this.createdAt = LocalDateTime.now().format(formatter);
-        // Nếu chưa có orderCode, sinh số nguyên dương duy nhất (timestamp millis)
-        if (this.orderCode == null) {
-            this.orderCode = System.currentTimeMillis();
-        }
         // Không tự động set endTime khi tạo mới, chỉ set khi kết thúc thủ công
         // Cập nhật status ban đầu
         updateStatus();
-        // Set payment status to PENDING if not set
-        if (this.paymentStatus == null) {
-            this.paymentStatus = "PENDING";
-        }
     }
 
     @PreUpdate

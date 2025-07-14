@@ -14,6 +14,7 @@ import UserQuestions from './UserQuestions.jsx'
 import MyAppointments from './MyAppointments.jsx'
 import MyTestBookings from './MyTestBookings.jsx'
 import StaffTestBookingManager, { RedirectToStaffTestBookings } from './StaffTestBookingManager.jsx'
+import ServiceManager from './ServiceManager.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/my-test-bookings" element={<MyTestBookings />} />
         <Route path="/staff-test-bookings" element={<StaffTestBookingManager />} />
         <Route path="/staff" element={<RedirectToStaffTestBookings />} />
+        <Route path="/service-manager" element={<ServiceManager />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

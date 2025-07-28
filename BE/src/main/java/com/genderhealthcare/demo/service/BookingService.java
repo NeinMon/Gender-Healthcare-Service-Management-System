@@ -19,6 +19,9 @@ public class BookingService {
     @Autowired
     private TestBookingInfoService testBookingInfoService;
 
+    @Autowired
+    private com.genderhealthcare.demo.service.ServiceService serviceService;
+
     @Transactional
     public Booking createBooking(Booking booking) {
         // Đặt trạng thái mặc định nếu chưa có
@@ -200,5 +203,170 @@ public class BookingService {
         return bookingRepository.findAll().stream()
                 .filter(b -> b.getPayment() != null && orderCode.equals(b.getPayment().getOrderCode()))
                 .findFirst().orElse(null);
+    }
+
+    /**
+     * Lấy danh sách khung giờ trống của tư vấn viên trong ngày
+     */
+    public List<String> getAvailableTimeSlots(Integer consultantId, LocalDate date) {
+        // Danh sách khung giờ chuẩn (cố định)
+        String[] allSlots = {
+            "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+            "13:30 - 14:30", "14:30 - 15:30", "15:30 - 16:30", "16:30 - 17:30"
+        };
+        
+        // Lấy tất cả booking của consultant trong ngày
+        List<Booking> bookings = getBookingsByConsultantIdAndDate(consultantId, date);
+        
+        // Tạo set các slot đã được đặt (chỉ tính booking chưa kết thúc)
+        java.util.Set<String> bookedSlots = new java.util.HashSet<>();
+        for (Booking b : bookings) {
+            // Chỉ tính các booking chưa kết thúc VÀ đã thanh toán thành công (PAID) HOẶC PROCESSING
+            if (!"Đã kết thúc".equals(b.getStatus()) && b.getPayment() != null && 
+                ("PAID".equals(b.getPayment().getStatus()) || "PROCESSING".equals(b.getPayment().getStatus()))) {
+                
+                LocalTime startTime = b.getStartTime();
+                LocalTime endTime = b.getEndTime() != null ? b.getEndTime() : startTime.plusHours(1);
+                
+                // Kiểm tra slot nào bị trùng với booking này
+                for (String slot : allSlots) {
+                    String[] timeParts = slot.split(" - ");
+                    LocalTime slotStart = LocalTime.parse(timeParts[0]);
+                    LocalTime slotEnd = LocalTime.parse(timeParts[1]);
+                    
+                    // Kiểm tra overlap: booking và slot có giao nhau không
+                    if (startTime.isBefore(slotEnd) && endTime.isAfter(slotStart)) {
+                        bookedSlots.add(slot);
+                    }
+                }
+            }
+        }
+        
+        // Lọc ra các slot còn trống
+        java.util.List<String> available = new java.util.ArrayList<>();
+        for (String slot : allSlots) {
+            if (!bookedSlots.contains(slot)) {
+                available.add(slot);
+            }
+        }
+        return available;
+    }
+
+    /**
+     * Tạo booking với validation và logic đầy đủ (cho API mặc định)
+     */
+    public Booking createBookingWithDefaultService(Booking booking) {
+        // API mặc định: tự động set serviceId = 1 nếu chưa có
+        if (booking.getServiceId() == null) {
+            booking.setServiceId(1);
+        }
+        
+        // Kiểm tra trùng lịch tư vấn viên theo khung giờ chính xác
+        if (booking.getConsultantId() != null && booking.getAppointmentDate() != null && booking.getStartTime() != null) {
+            // Tự động tính endTime nếu chưa có (mặc định 1 giờ)
+            LocalTime endTime = booking.getEndTime();
+            if (endTime == null) {
+                endTime = booking.getStartTime().plusHours(1);
+            }
+            boolean hasConflict = hasConflictingBooking(
+                booking.getConsultantId(),
+                booking.getAppointmentDate(),
+                booking.getStartTime(),
+                endTime
+            );
+            if (hasConflict) {
+                throw new IllegalArgumentException("Tư vấn viên đã có lịch trùng trong khung giờ này! Vui lòng chọn giờ khác.");
+            }
+        }
+        
+        // Set default values
+        booking.setEndTime(null);
+        
+        return createBooking(booking);
+    }
+
+    /**
+     * Tạo booking với service cụ thể (yêu cầu serviceId)
+     */
+    public Booking createBookingWithSpecificService(Booking booking) {
+        if (booking.getServiceId() == null) {
+            throw new IllegalArgumentException("Service ID is required for this operation");
+        }
+        return createBooking(booking);
+    }
+
+    /**
+     * Cập nhật trạng thái booking với endTime
+     */
+    public Booking updateBookingStatusWithEndTime(Integer bookingId, String status, String endTimeStr) {
+        Booking booking = getBookingById(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found");
+        }
+
+        // Validate status value
+        if (!"Đã kết thúc".equals(status)) {
+            throw new IllegalArgumentException("Invalid status. Only 'Đã kết thúc' is allowed for this action");
+        }
+
+        // Parse endTime nếu có
+        if (endTimeStr != null) {
+            try {
+                LocalTime endTime = LocalTime.parse(endTimeStr);
+                booking.setEndTime(endTime);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid endTime format. Use HH:mm");
+            }
+        } else {
+            // Nếu không truyền endTime thì lấy thời điểm hiện tại
+            booking.setEndTime(LocalTime.now());
+        }
+        
+        booking.setStatus("Đã kết thúc");
+        return createBooking(booking);
+    }
+
+    /**
+     * Cập nhật trạng thái payment
+     */
+    public Booking updatePaymentStatus(Integer bookingId, String status) {
+        Booking booking = getBookingById(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found");
+        }
+        if (booking.getPayment() == null) {
+            throw new IllegalArgumentException("No payment record found for this booking");
+        }
+        // Chỉ cho phép cập nhật sang PAID hoặc CANCELLED từ PROCESSING
+        if (!"PROCESSING".equals(booking.getPayment().getStatus())) {
+            throw new IllegalArgumentException("Chỉ cập nhật trạng thái khi booking đang PROCESSING");
+        }
+        if (!"PAID".equals(status) && !"CANCELLED".equals(status)) {
+            throw new IllegalArgumentException("Trạng thái hợp lệ: PAID hoặc CANCELLED");
+        }
+        booking.getPayment().setStatus(status);
+        return createBooking(booking);
+    }
+
+    /**
+     * Lấy bookings theo tên service
+     */
+    public List<Booking> getBookingsByServiceName(String serviceName) {
+        com.genderhealthcare.demo.entity.Service service = serviceService.getServiceByName(serviceName);
+        if (service == null) {
+            throw new IllegalArgumentException("Service not found");
+        }
+        return getBookingsByServiceId(service.getServiceId());
+    }
+
+    /**
+     * Lấy bookings theo tên service và trạng thái
+     */
+    public List<Booking> getBookingsByServiceNameAndStatus(String serviceName, String status) {
+        com.genderhealthcare.demo.entity.Service service = serviceService.getServiceByName(serviceName);
+        if (service == null) {
+            throw new IllegalArgumentException("Service not found");
+        }
+        return getBookingsByServiceIdAndStatus(service.getServiceId(), status);
     }
 }

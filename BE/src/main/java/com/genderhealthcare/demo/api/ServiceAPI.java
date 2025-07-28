@@ -34,35 +34,55 @@ public class ServiceAPI {
     
     // READ - Lấy tất cả services
     @GetMapping
-    public ResponseEntity<List<Service>> getAllServices() {
-        List<Service> services = serviceService.getAllServices();
-        return ResponseEntity.ok(services);
+    public ResponseEntity<?> getAllServices() {
+        try {
+            List<Service> services = serviceService.getAllServices();
+            return ResponseEntity.ok(services);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy danh sách services: " + e.getMessage());
+        }
     }
     
     // READ - Lấy service theo ID
     @GetMapping("/{serviceId}")
     public ResponseEntity<?> getServiceById(@PathVariable("serviceId") Integer serviceId) {
-        Service service = serviceService.getServiceById(serviceId);
-        if (service != null) {
-            return ResponseEntity.ok(service);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("Service not found with ID: " + serviceId);
+        try {
+            Service service = serviceService.getServiceById(serviceId);
+            if (service != null) {
+                return ResponseEntity.ok(service);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Service not found with ID: " + serviceId);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy service: " + e.getMessage());
         }
     }
     
     // READ - Lấy services theo manager ID
     @GetMapping("/manager/{managerId}")
-    public ResponseEntity<List<Service>> getServicesByManagerId(@PathVariable("managerId") Integer managerId) {
-        List<Service> services = serviceService.getServicesByManagerId(managerId);
-        return ResponseEntity.ok(services);
+    public ResponseEntity<?> getServicesByManagerId(@PathVariable("managerId") Integer managerId) {
+        try {
+            List<Service> services = serviceService.getServicesByManagerId(managerId);
+            return ResponseEntity.ok(services);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy services theo managerId: " + e.getMessage());
+        }
     }
     
     // READ - Tìm kiếm services theo tên
     @GetMapping("/search")
-    public ResponseEntity<List<Service>> searchServicesByName(@RequestParam("name") String serviceName) {
-        List<Service> services = serviceService.searchServicesByName(serviceName);
-        return ResponseEntity.ok(services);
+    public ResponseEntity<?> searchServicesByName(@RequestParam("name") String serviceName) {
+        try {
+            List<Service> services = serviceService.searchServicesByName(serviceName);
+            return ResponseEntity.ok(services);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi tìm kiếm services: " + e.getMessage());
+        }
     }
     
     // UPDATE - Cập nhật service
@@ -70,25 +90,34 @@ public class ServiceAPI {
     public ResponseEntity<?> updateService(
             @PathVariable("serviceId") Integer serviceId,
             @Valid @RequestBody Service serviceDetails) {
-        
-        Service updatedService = serviceService.updateService(serviceId, serviceDetails);
-        if (updatedService != null) {
-            return ResponseEntity.ok(updatedService);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("Service not found with ID: " + serviceId);
+        try {
+            Service updatedService = serviceService.updateService(serviceId, serviceDetails);
+            if (updatedService != null) {
+                return ResponseEntity.ok(updatedService);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Service not found with ID: " + serviceId);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Lỗi cập nhật service: " + e.getMessage());
         }
     }
     
     // DELETE - Xóa service
     @DeleteMapping("/{serviceId}")
     public ResponseEntity<?> deleteService(@PathVariable("serviceId") Integer serviceId) {
-        boolean isDeleted = serviceService.deleteService(serviceId);
-        if (isDeleted) {
-            return ResponseEntity.ok("Service deleted successfully");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("Service not found with ID: " + serviceId);
+        try {
+            boolean isDeleted = serviceService.deleteService(serviceId);
+            if (isDeleted) {
+                return ResponseEntity.ok("Service deleted successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Service not found with ID: " + serviceId);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Lỗi xóa service: " + e.getMessage());
         }
     }
 }

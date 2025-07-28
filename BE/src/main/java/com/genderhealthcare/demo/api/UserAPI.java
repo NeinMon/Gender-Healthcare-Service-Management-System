@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,16 +31,23 @@ public class    UserAPI {
     UserService userService;
     
     @PostMapping
-    public ResponseEntity<Users> createNewUser(@Valid @RequestBody Users user) {
-     
-       Users newUsers = userService.createnewUsers(user);
-       return ResponseEntity.ok(newUsers);
+    public ResponseEntity<?> createNewUser(@Valid @RequestBody Users user) {
+        try {
+            Users newUsers = userService.createnewUsers(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newUsers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi tạo người dùng: " + e.getMessage());
+        }
     }
     
     @GetMapping
-    public ResponseEntity<List<Users>> getAllUsers() {
-        List<Users> users = userService.getAllUser();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            List<Users> users = userService.getAllUser();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy danh sách người dùng: " + e.getMessage());
+        }
     }
     
     @GetMapping("/{userId}")

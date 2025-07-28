@@ -35,34 +35,47 @@ public class MenstrualCycleAPI {
     }
 
     @GetMapping
-    public ResponseEntity<List<MenstrualCycle>> getAllMenstrualCycles() {
-        List<MenstrualCycle> cycles = menstrualCycleService.getAllMenstrualCycles();
-        return new ResponseEntity<>(cycles, HttpStatus.OK);
-    }    @GetMapping("/user/{userId}")
-    public ResponseEntity<MenstrualCycle> getMenstrualCycleByUserId(@PathVariable Long userId) {
+    public ResponseEntity<?> getAllMenstrualCycles() {
+        try {
+            List<MenstrualCycle> cycles = menstrualCycleService.getAllMenstrualCycles();
+            return ResponseEntity.ok(cycles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy danh sách chu kỳ kinh nguyệt: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getMenstrualCycleByUserId(@PathVariable Long userId) {
         try {
             MenstrualCycle cycle = menstrualCycleService.getMenstrualCycleByUserId(userId);
-            return new ResponseEntity<>(cycle, HttpStatus.OK);
+            return ResponseEntity.ok(cycle);
         } catch (MenstrualCycleNotFoundException e) {
-            // Return 404 status instead of throwing exception
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy chu kỳ kinh nguyệt cho người dùng ID: " + userId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy chu kỳ kinh nguyệt: " + e.getMessage());
         }
     }    @GetMapping("/{id}")
-    public ResponseEntity<MenstrualCycle> getMenstrualCycleById(@PathVariable Long id) {
+    public ResponseEntity<?> getMenstrualCycleById(@PathVariable Long id) {
         try {
             MenstrualCycle cycle = menstrualCycleService.getMenstrualCycleById(id);
-            return new ResponseEntity<>(cycle, HttpStatus.OK);
+            return ResponseEntity.ok(cycle);
         } catch (MenstrualCycleNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy chu kỳ kinh nguyệt với ID: " + id);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy chu kỳ kinh nguyệt: " + e.getMessage());
         }
     }
 
     @GetMapping("/user/{userId}/exists")
-    public ResponseEntity<Map<String, Boolean>> checkUserHasCycle(@PathVariable Long userId) {
-        boolean exists = menstrualCycleService.hasUserMenstrualCycle(userId);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("exists", exists);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    public ResponseEntity<?> checkUserHasCycle(@PathVariable Long userId) {
+        try {
+            boolean exists = menstrualCycleService.hasUserMenstrualCycle(userId);
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("exists", exists);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi kiểm tra chu kỳ kinh nguyệt: " + e.getMessage());
+        }
     }@PostMapping
     public ResponseEntity<MenstrualCycle> createMenstrualCycle(@Valid @RequestBody MenstrualCycleRequest request) {
         try {

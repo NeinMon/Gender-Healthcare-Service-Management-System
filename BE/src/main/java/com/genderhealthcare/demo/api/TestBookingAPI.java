@@ -1,9 +1,7 @@
 package com.genderhealthcare.demo.api;
 
 import com.genderhealthcare.demo.entity.TestBookingInfo;
-import com.genderhealthcare.demo.entity.Booking;
 import com.genderhealthcare.demo.service.TestBookingInfoService;
-import com.genderhealthcare.demo.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * API Controller cho quản lý đặt lịch xét nghiệm với checkin/checkout offline
@@ -26,9 +23,6 @@ public class TestBookingAPI {
     
     @Autowired
     private TestBookingInfoService testBookingInfoService;
-    
-    @Autowired
-    private BookingService bookingService;
     
     // === CRUD & Status Operations ===
 
@@ -43,45 +37,75 @@ public class TestBookingAPI {
     }
 
     @GetMapping
-    public ResponseEntity<List<TestBookingInfo>> getAllTestBookings() {
-        List<TestBookingInfo> testBookings = testBookingInfoService.getAllTestBookingInfos();
-        return ResponseEntity.ok(testBookings);
+    public ResponseEntity<?> getAllTestBookings() {
+        try {
+            List<TestBookingInfo> testBookings = testBookingInfoService.getAllTestBookingInfos();
+            return ResponseEntity.ok(testBookings);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy danh sách test bookings: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTestBookingById(@PathVariable("id") Integer id) {
-        TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoById(id);
-        if (testBookingInfo == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found");
+        try {
+            TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoById(id);
+            if (testBookingInfo == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found");
+            }
+            return ResponseEntity.ok(testBookingInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy test booking: " + e.getMessage());
         }
-        return ResponseEntity.ok(testBookingInfo);
     }
 
     @GetMapping("/booking/{bookingId}")
     public ResponseEntity<?> getTestBookingByBookingId(@PathVariable("bookingId") Integer bookingId) {
-        TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoByBookingId(bookingId);
-        if (testBookingInfo == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found for booking ID: " + bookingId);
+        try {
+            TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoByBookingId(bookingId);
+            if (testBookingInfo == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found for booking ID: " + bookingId);
+            }
+            return ResponseEntity.ok(testBookingInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy test booking theo bookingId: " + e.getMessage());
         }
-        return ResponseEntity.ok(testBookingInfo);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<TestBookingInfo>> getTestBookingsByStatus(@PathVariable("status") String status) {
-        List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStatus(status);
-        return ResponseEntity.ok(testBookings);
+    public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
+        try {
+            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStatus(status);
+            return ResponseEntity.ok(testBookings);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy test bookings theo status: " + e.getMessage());
+        }
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TestBookingInfo>> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
-        List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByUserId(userId);
-        return ResponseEntity.ok(testBookings);
+    public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
+        try {
+            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByUserId(userId);
+            return ResponseEntity.ok(testBookings);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy test bookings theo userId: " + e.getMessage());
+        }
     }
 
     @GetMapping("/staff/{staffId}")
-    public ResponseEntity<List<TestBookingInfo>> getTestBookingsByStaffId(@PathVariable("staffId") Integer staffId) {
-        List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStaffId(staffId);
-        return ResponseEntity.ok(testBookings);
+    public ResponseEntity<?> getTestBookingsByStaffId(@PathVariable("staffId") Integer staffId) {
+        try {
+            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStaffId(staffId);
+            return ResponseEntity.ok(testBookings);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy test bookings theo staffId: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
@@ -117,21 +141,14 @@ public class TestBookingAPI {
     @PostMapping("/create-with-booking")
     public ResponseEntity<?> createTestBookingWithBooking(@Valid @RequestBody Map<String, Object> request) {
         try {
-            Booking booking = new Booking();
-            booking.setUserId((Integer) request.get("userId"));
-            booking.setServiceId((Integer) request.get("serviceId"));
-            booking.setContent((String) request.get("content"));
-            Booking createdBooking = bookingService.createBooking(booking);
-            TestBookingInfo testBookingInfo = new TestBookingInfo();
-            testBookingInfo.setBookingId(createdBooking.getBookingId());
-            testBookingInfo.setUserId(createdBooking.getUserId());
-            TestBookingInfo createdTestBooking = testBookingInfoService.createTestBookingInfo(testBookingInfo);
-            Map<String, Object> response = new HashMap<>();
-            response.put("booking", createdBooking);
-            response.put("testBookingInfo", createdTestBooking);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            Integer userId = (Integer) request.get("userId");
+            Integer serviceId = (Integer) request.get("serviceId");
+            String content = (String) request.get("content");
+            
+            Map<String, Object> result = testBookingInfoService.createBookingWithTestBooking(userId, serviceId, content);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi tạo booking với test booking: " + e.getMessage());
         }
     }
 
@@ -184,31 +201,35 @@ public class TestBookingAPI {
     }
 
     @GetMapping("/status/{status}/detail")
-    public ResponseEntity<List<com.genderhealthcare.demo.model.TestBookingDetailDTO>> getTestBookingDetailsByStatus(@PathVariable("status") String status) {
-        List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getTestBookingDetailsByStatus(status);
-        return ResponseEntity.ok(details);
+    public ResponseEntity<?> getTestBookingDetailsByStatus(@PathVariable("status") String status) {
+        try {
+            List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getTestBookingDetailsByStatus(status);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy chi tiết test bookings theo status: " + e.getMessage());
+        }
     }
 
     @GetMapping("/user/{userId}/detail")
-    public ResponseEntity<List<com.genderhealthcare.demo.model.TestBookingDetailDTO>> getTestBookingDetailsByUserId(@PathVariable("userId") Integer userId) {
-        List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getTestBookingDetailsByUserId(userId);
-        return ResponseEntity.ok(details);
+    public ResponseEntity<?> getTestBookingDetailsByUserId(@PathVariable("userId") Integer userId) {
+        try {
+            List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getTestBookingDetailsByUserId(userId);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy chi tiết test bookings theo userId: " + e.getMessage());
+        }
     }
     
     @GetMapping("/all/detail")
-    public ResponseEntity<List<com.genderhealthcare.demo.model.TestBookingDetailDTO>> getAllTestBookingDetails() {
-        // Get all test bookings first
-        List<TestBookingInfo> allBookings = testBookingInfoService.getAllTestBookingInfos();
-        
-        // Then manually convert each one to detail DTO
-        List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = new java.util.ArrayList<>();
-        for (TestBookingInfo booking : allBookings) {
-            com.genderhealthcare.demo.model.TestBookingDetailDTO detail = testBookingInfoService.getTestBookingDetailById(booking.getId());
-            if (detail != null) {
-                details.add(detail);
-            }
+    public ResponseEntity<?> getAllTestBookingDetails() {
+        try {
+            List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = testBookingInfoService.getAllTestBookingDetails();
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Lỗi lấy tất cả chi tiết test bookings: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(details);
     }
 }

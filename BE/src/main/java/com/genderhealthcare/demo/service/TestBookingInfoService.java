@@ -215,4 +215,44 @@ public class TestBookingInfoService {
         }
         return testBookingInfoRepository.save(existingInfo);
     }
+
+    /**
+     * Lấy tất cả test booking details
+     */
+    public List<com.genderhealthcare.demo.model.TestBookingDetailDTO> getAllTestBookingDetails() {
+        List<TestBookingInfo> allBookings = getAllTestBookingInfos();
+        List<com.genderhealthcare.demo.model.TestBookingDetailDTO> details = new java.util.ArrayList<>();
+        
+        for (TestBookingInfo booking : allBookings) {
+            com.genderhealthcare.demo.model.TestBookingDetailDTO detail = getTestBookingDetailById(booking.getId());
+            if (detail != null) {
+                details.add(detail);
+            }
+        }
+        return details;
+    }
+
+    /**
+     * Tạo booking và test booking cùng lúc
+     */
+    public java.util.Map<String, Object> createBookingWithTestBooking(Integer userId, Integer serviceId, String content) {
+        // Tạo booking trước
+        Booking booking = new Booking();
+        booking.setUserId(userId);
+        booking.setServiceId(serviceId);
+        booking.setContent(content);
+        Booking createdBooking = bookingRepository.save(booking);
+        
+        // Tạo test booking info
+        TestBookingInfo testBookingInfo = new TestBookingInfo();
+        testBookingInfo.setBookingId(createdBooking.getBookingId());
+        testBookingInfo.setUserId(createdBooking.getUserId());
+        TestBookingInfo createdTestBooking = createTestBookingInfo(testBookingInfo);
+        
+        // Trả về cả hai
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("booking", createdBooking);
+        result.put("testBookingInfo", createdTestBooking);
+        return result;
+    }
 }

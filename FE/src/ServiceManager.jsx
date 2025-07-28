@@ -30,7 +30,7 @@ const ServiceManager = () => {
     dob: '',
     phone: '',
     address: '',
-    role: 'CONSULTANT',
+    role: 'CUSTOMER', // Mặc định là customer
     specification: ''
   });
 
@@ -107,7 +107,7 @@ const ServiceManager = () => {
         if (response.ok) {
           const data = await response.json();
           const filteredUsers = data.filter(user => 
-            (user.role === 'CONSULTANT' || user.role === 'STAFF') &&
+            (user.role === 'CONSULTANT' || user.role === 'STAFF' || user.role === 'CUSTOMER') &&
             (user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
              user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
              user.phone?.includes(searchTerm))
@@ -133,9 +133,9 @@ const ServiceManager = () => {
       const response = await fetch('http://localhost:8080/api/users');
       if (response.ok) {
         const data = await response.json();
-        // Chỉ lấy consultant và staff
+        // Lấy tất cả các role: consultant, staff và customer
         const filteredUsers = data.filter(user => 
-          user.role === 'CONSULTANT' || user.role === 'STAFF'
+          user.role === 'CONSULTANT' || user.role === 'STAFF' || user.role === 'CUSTOMER'
         );
         setUsers(filteredUsers);
       } else {
@@ -160,7 +160,7 @@ const ServiceManager = () => {
       dob: '',
       phone: '',
       address: '',
-      role: 'CONSULTANT',
+      role: 'CUSTOMER',
       specification: ''
     });
   };
@@ -516,7 +516,7 @@ const ServiceManager = () => {
       dob: user.dob ? user.dob.split('T')[0] : '',
       phone: user.phone || '',
       address: user.address || '',
-      role: user.role || 'CONSULTANT',
+      role: user.role || 'CUSTOMER',
       specification: user.specification || ''
     });
     setShowEditUserModal(true);
@@ -994,7 +994,7 @@ const ServiceManager = () => {
                         <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Họ tên</th>
                         <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Email</th>
                         <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Vai trò</th>
-                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Chuyên môn</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Địa chỉ</th>
                         <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>SĐT</th>
                         <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thao tác</th>
                       </tr>
@@ -1031,18 +1031,25 @@ const ServiceManager = () => {
                                 borderRadius: "20px",
                                 fontWeight: 600,
                                 fontSize: "13px",
-                                backgroundColor: user.role === 'CONSULTANT' ? "#dbeafe" : "#fef3c7",
-                                color: user.role === 'CONSULTANT' ? "#1d4ed8" : "#92400e"
+                                backgroundColor: user.role === 'CONSULTANT' ? "#dbeafe" : 
+                                                user.role === 'STAFF' ? "#fef3c7" : "#f3e8ff",
+                                color: user.role === 'CONSULTANT' ? "#1d4ed8" : 
+                                       user.role === 'STAFF' ? "#92400e" : "#7c3aed"
                               }}>
-                                {user.role === 'CONSULTANT' ? 'Tư vấn viên' : 'Nhân viên'}
+                                {user.role === 'CONSULTANT' ? 'Tư vấn viên' : 
+                                 user.role === 'STAFF' ? 'Nhân viên' : 'Khách hàng'}
                               </span>
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                              {user.role === 'CONSULTANT' ? (
-                                user.specification || <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Chưa có</span>
-                              ) : (
-                                <span style={{ color: "#9ca3af", fontStyle: "italic" }}>N/A</span>
-                              )}
+                              <div style={{ 
+                                maxWidth: "150px", 
+                                overflow: "hidden", 
+                                textOverflow: "ellipsis", 
+                                whiteSpace: "nowrap",
+                                margin: "0 auto"
+                              }}>
+                                {user.address || <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Chưa có địa chỉ</span>}
+                              </div>
                             </td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>{user.phone}</td>
                             <td style={{ padding: '16px 20px', textAlign: "center" }}>
@@ -1354,6 +1361,7 @@ const ServiceManager = () => {
                     required
                     style={inputStyle}
                   >
+                    <option value="CUSTOMER">Khách hàng</option>
                     <option value="CONSULTANT">Tư vấn viên</option>
                     <option value="STAFF">Nhân viên</option>
                   </select>
@@ -1522,6 +1530,7 @@ const ServiceManager = () => {
                     required
                     style={inputStyle}
                   >
+                    <option value="CUSTOMER">Khách hàng</option>
                     <option value="CONSULTANT">Tư vấn viên</option>
                     <option value="STAFF">Nhân viên</option>
                   </select>

@@ -75,21 +75,38 @@ const MyTestBookings = () => {
         return 'Đã check-in';
       case 'Đã check-out':
         return 'Đã check-out';
+      case 'Đã kết thúc':
+        return 'Đã kết thúc';
       default:
         return status || 'Không xác định';
     }
   };
 
+  // Hàm helper cho màu sắc trạng thái
   const getStatusColor = (status) => {
     switch (status) {
       case 'Chờ bắt đầu':
-        return '#ff9800';
+        return { bg: '#fde68a', color: '#b45309' };
       case 'Đã check-in':
-        return '#4caf50';
+        return { bg: '#22d3ee', color: '#fff' };
       case 'Đã check-out':
-        return '#2196f3';
+        return { bg: '#86efac', color: '#166534' };
+      case 'Đã kết thúc':
+        return { bg: '#c084fc', color: '#fff' };
       default:
-        return '#757575';
+        return { bg: '#e5e7eb', color: '#374151' };
+    }
+  };
+
+  // Hàm helper cho màu sắc kết quả xét nghiệm
+  const getResultColor = (result) => {
+    switch (result) {
+      case 'Dương tính':
+        return { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' };
+      case 'Âm tính':
+        return { bg: '#dcfce7', color: '#16a34a', border: '#86efac' };
+      default:
+        return { bg: '#f3f4f6', color: '#6b7280', border: '#d1d5db' };
     }
   };
 
@@ -159,7 +176,9 @@ const MyTestBookings = () => {
           return dateTimeString;
         })(),
         testResult: bookingDetail.testResults || booking.testResults || 'Chưa có kết quả',
-        notes: bookingDetail.notes || booking.notes
+        resultNote: bookingDetail.resultNote || booking.resultNote || '',
+        notes: bookingDetail.notes || booking.notes,
+        lastUpdated: bookingDetail.updatedAt || bookingDetail.createdAt || 'Không có thông tin'
       });
       
       setResultLoading(false);
@@ -221,10 +240,40 @@ const MyTestBookings = () => {
                 <div style={{ marginBottom: 12 }}><strong>Loại xét nghiệm:</strong> {resultData.testType || 'Không có dữ liệu'}</div>
                 <div style={{ marginBottom: 12 }}><strong>Giá tiền:</strong> {resultData.price ? resultData.price.toLocaleString() + ' VNĐ' : 'Không có dữ liệu'}</div>
                 <div style={{ marginBottom: 12 }}><strong>Ngày giờ hẹn:</strong> {resultData.appointmentDateTime || 'Không có dữ liệu'}</div>
-                <div style={{ marginBottom: 12 }}><strong>Kết quả xét nghiệm:</strong> {resultData.testResult || 'Chưa có kết quả'}</div>
+                <div style={{ marginBottom: 12 }}>
+                  <strong>Kết quả xét nghiệm:</strong> 
+                  {resultData.testResult ? (
+                    <span style={{
+                      display: "inline-block",
+                      marginLeft: "8px",
+                      padding: "6px 12px",
+                      borderRadius: "16px",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      backgroundColor: getResultColor(resultData.testResult).bg,
+                      color: getResultColor(resultData.testResult).color,
+                      border: `2px solid ${getResultColor(resultData.testResult).border}`
+                    }}>
+                      {resultData.testResult}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#9ca3af', fontStyle: 'italic', marginLeft: "8px" }}>Chưa có kết quả</span>
+                  )}
+                </div>
+                {resultData.resultNote && (
+                  <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#f0f9ff', borderRadius: 6, border: '1px solid #e0f2fe' }}>
+                    <strong style={{ color: '#0891b2' }}>Ghi chú kết quả:</strong>
+                    <div style={{ marginTop: 6, color: '#374151' }}>{resultData.resultNote}</div>
+                  </div>
+                )}
                 {resultData.notes && (
                   <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 6 }}>
-                    <strong>Ghi chú:</strong> {resultData.notes}
+                    <strong>Ghi chú booking:</strong> {resultData.notes}
+                  </div>
+                )}
+                {resultData.lastUpdated && (
+                  <div style={{ marginTop: 16, fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>
+                    <strong>Cập nhật lần cuối:</strong> {new Date(resultData.lastUpdated).toLocaleString('vi-VN') || resultData.lastUpdated}
                   </div>
                 )}
               </div>
@@ -353,6 +402,7 @@ const MyTestBookings = () => {
                 <option value="Chờ bắt đầu">Chờ bắt đầu</option>
                 <option value="Đã check-in">Đã check-in</option>
                 <option value="Đã check-out">Đã check-out</option>
+                <option value="Đã kết thúc">Đã kết thúc</option>
               </select>
             </div>
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -542,14 +592,15 @@ const MyTestBookings = () => {
                               fontWeight: 600,
                               fontSize: "13px",
                               color: "#fff",
-                              backgroundColor: getStatusColor(booking.testStatus)
+                              backgroundColor: getStatusColor(booking.testStatus).bg,
+                              color: getStatusColor(booking.testStatus).color
                             }}>
                               {formatStatus(booking.testStatus)}
                             </span>
                           </div>
                         </td>
                         <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                          {booking.testStatus === 'Đã check-out' && (
+                          {booking.testStatus === 'Đã kết thúc' && (
                             <button
                               onClick={() => handleShowResult(booking)}
                               style={{
@@ -580,9 +631,10 @@ const MyTestBookings = () => {
                               <span style={{ fontSize: "16px" }}>📋</span> Xem kết quả
                             </button>
                           )}
-                          {booking.testStatus !== 'Đã check-out' && (
+                          {booking.testStatus !== 'Đã kết thúc' && (
                             <span style={{ color: '#757575', fontSize: '14px' }}>
-                              {booking.testStatus === 'Đã check-in' ? 'Đang thực hiện' : 'Chưa thực hiện'}
+                              {booking.testStatus === 'Đã check-in' ? 'Đang thực hiện' : 
+                               booking.testStatus === 'Đã check-out' ? 'Chờ kết quả' : 'Chưa thực hiện'}
                             </span>
                           )}
                         </td>

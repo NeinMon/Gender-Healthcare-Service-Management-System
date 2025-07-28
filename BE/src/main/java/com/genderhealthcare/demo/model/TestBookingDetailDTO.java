@@ -28,6 +28,7 @@ public class TestBookingDetailDTO {
     private Integer staffId;
     private String staffName;
     private String testResults;
+    private String resultNote;
     private String createdAt;
     private String updatedAt;
     // Object Payment trả về cho FE

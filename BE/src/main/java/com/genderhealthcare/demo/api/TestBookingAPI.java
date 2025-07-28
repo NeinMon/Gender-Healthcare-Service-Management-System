@@ -8,9 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * API Controller xử lý các yêu cầu đặt lịch xét nghiệm
@@ -188,26 +186,37 @@ public class TestBookingAPI {
     /**
      * API cập nhật trạng thái test booking
      * Cập nhật trạng thái của test booking cho quy trình check-in/check-out
-     * Hỗ trợ 3 trạng thái: Pending, Đã check-in, Đã check-out
+     * Hỗ trợ 4 trạng thái: Chờ bắt đầu, Đã check-in, Đã check-out, Đã kết thúc
      * 
      * @param id ID của test booking cần cập nhật trạng thái
-     * @param status Trạng thái mới (Pending/Đã check-in/Đã check-out)
+     * @param status Trạng thái mới (Chờ bắt đầu/Đã check-in/Đã check-out/Đã kết thúc)
      * @param testResult Kết quả xét nghiệm (bắt buộc khi status = "Đã check-out")
+     * @param resultNote Ghi chú kết quả (tùy chọn)
+     * @param staffName Tên nhân viên (tùy chọn)
      * @return ResponseEntity chứa TestBookingInfo đã cập nhật trạng thái hoặc lỗi
      * @throws IllegalArgumentException nếu ID không tồn tại hoặc trạng thái không hợp lệ
      */
-    // Chỉ còn 1 endpoint cập nhật trạng thái (3 trạng thái hợp lệ)
+    // Chỉ còn 1 endpoint cập nhật trạng thái (4 trạng thái hợp lệ)
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable("id") Integer id,
                                           @RequestParam("status") String status,
-                                          @RequestParam(value = "testResult", required = false) String testResult) {
+                                          @RequestParam(value = "testResult", required = false) String testResult,
+                                          @RequestParam(value = "resultNote", required = false) String resultNote,
+                                          @RequestParam(value = "staffName", required = false) String staffName) {
         try {
             TestBookingInfo updated;
+            
             if ("Đã check-out".equals(status) && testResult != null) {
-                updated = testBookingInfoService.updateTestStatusWithResult(id, status, testResult);
+                // Cập nhật thành check-out với kết quả
+                updated = testBookingInfoService.updateTestStatusWithResult(id, status, testResult, resultNote);
+            } else if ("Đã kết thúc".equals(status)) {
+                // Hoàn thành test booking - chuyển từ check-out sang kết thúc
+                updated = testBookingInfoService.completeTestBooking(id, testResult, resultNote, staffName);
             } else {
+                // Cập nhật trạng thái thông thường (check-in, etc.)
                 updated = testBookingInfoService.updateTestStatus(id, status);
             }
+            
             return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -273,13 +282,48 @@ public class TestBookingAPI {
             }
             
             // Sử dụng phương thức hiện có để cập nhật trạng thái và kết quả
-            TestBookingInfo updated = testBookingInfoService.updateTestStatusWithResult(id, testStatus, testResult);
+            TestBookingInfo updated = testBookingInfoService.updateTestStatusWithResult(id, testStatus, testResult, resultNote);
             
-            // Cập nhật các thông tin bổ sung nếu cần
-            if (resultNote != null && !resultNote.trim().isEmpty() || staffName != null && !staffName.trim().isEmpty()) {
-                TestBookingInfo additionalInfo = testBookingInfoService.getTestBookingInfoById(id);
-                updated = testBookingInfoService.updateTestBookingInfo(id, additionalInfo);
+            return ResponseEntity.ok(updated);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật kết quả xét nghiệm: " + e.getMessage());
+        }
+    }
+
+    /**
+     * API cập nhật kết quả và ghi chú cho test booking đã hoàn thành
+     * Chỉ cho phép cập nhật test booking có trạng thái "Đã kết thúc"
+     * 
+     * @param id ID của test booking cần cập nhật
+     * @param testResult Kết quả xét nghiệm mới
+     * @param resultNote Ghi chú kết quả mới (tùy chọn)
+     * @return ResponseEntity chứa TestBookingInfo đã cập nhật hoặc lỗi
+     */
+    @PutMapping("/{id}/update-result")
+    public ResponseEntity<?> updateCompletedResult(
+            @PathVariable("id") Integer id,
+            @RequestParam("testResult") String testResult,
+            @RequestParam(value = "resultNote", required = false) String resultNote) {
+        try {
+            // Kiểm tra xem test booking có tồn tại không
+            TestBookingInfo existing = testBookingInfoService.getTestBookingInfoById(id);
+            if (existing == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy thông tin đặt xét nghiệm với ID: " + id);
             }
+            
+            // Chỉ cho phép cập nhật nếu trạng thái là "Đã kết thúc"
+            if (!"Đã kết thúc".equals(existing.getTestStatus())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ có thể cập nhật kết quả cho xét nghiệm đã hoàn thành");
+            }
+            
+            // Cập nhật kết quả và ghi chú
+            existing.setTestResults(testResult);
+            existing.setResultNote(resultNote);
+            TestBookingInfo updated = testBookingInfoService.updateTestBookingInfo(id, existing);
             
             return ResponseEntity.ok(updated);
             

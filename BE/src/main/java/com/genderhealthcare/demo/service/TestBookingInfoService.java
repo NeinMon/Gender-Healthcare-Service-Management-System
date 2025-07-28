@@ -92,8 +92,8 @@ public class TestBookingInfoService {
         if (testBookingInfo == null) {
             throw new IllegalArgumentException("Test booking info not found with ID: " + id);
         }
-        // Chỉ cho phép chuyển đổi giữa 3 trạng thái hợp lệ
-        if (!newStatus.equals("Chờ bắt đầu") && !newStatus.equals("Đã check-in") && !newStatus.equals("Đã check-out")) {
+        // Chỉ cho phép chuyển đổi giữa 4 trạng thái hợp lệ
+        if (!newStatus.equals("Chờ bắt đầu") && !newStatus.equals("Đã check-in") && !newStatus.equals("Đã check-out") && !newStatus.equals("Đã kết thúc")) {
             throw new IllegalArgumentException("Invalid status for test booking");
         }
         testBookingInfo.setTestStatus(newStatus);
@@ -110,7 +110,7 @@ public class TestBookingInfoService {
     }
     
     // Cập nhật trạng thái (cho phép truyền testResult khi check-out)
-    public TestBookingInfo updateTestStatusWithResult(Integer id, String newStatus, String testResult) {
+    public TestBookingInfo updateTestStatusWithResult(Integer id, String newStatus, String testResult, String resultNote) {
         TestBookingInfo testBookingInfo = testBookingInfoRepository.findById(id).orElse(null);
         if (testBookingInfo == null) {
             throw new IllegalArgumentException("Test booking info not found with ID: " + id);
@@ -121,6 +121,25 @@ public class TestBookingInfoService {
         testBookingInfo.setTestStatus(newStatus);
         testBookingInfo.setCheckoutTime(java.time.LocalDateTime.now());
         testBookingInfo.setTestResults(testResult);
+        testBookingInfo.setResultNote(resultNote);
+        return testBookingInfoRepository.save(testBookingInfo);
+    }
+
+    // Cập nhật trạng thái thành "Đã kết thúc" sau khi staff gửi kết quả
+    public TestBookingInfo completeTestBooking(Integer id, String testResult, String resultNote, String staffName) {
+        TestBookingInfo testBookingInfo = testBookingInfoRepository.findById(id).orElse(null);
+        if (testBookingInfo == null) {
+            throw new IllegalArgumentException("Test booking info not found with ID: " + id);
+        }
+        if (!"Đã check-out".equals(testBookingInfo.getTestStatus())) {
+            throw new IllegalArgumentException("Test booking must be in 'Đã check-out' status before completion");
+        }
+        
+        // Cập nhật thông tin kết quả và trạng thái
+        testBookingInfo.setTestResults(testResult);
+        testBookingInfo.setResultNote(resultNote);
+        testBookingInfo.setTestStatus("Đã kết thúc");
+        
         return testBookingInfoRepository.save(testBookingInfo);
     }
     
@@ -149,6 +168,7 @@ public class TestBookingInfoService {
         dto.setCheckoutTime(testBookingInfo.getCheckoutTime());
         dto.setStaffId(testBookingInfo.getStaffId());
         dto.setTestResults(testBookingInfo.getTestResults());
+        dto.setResultNote(testBookingInfo.getResultNote());
         dto.setCreatedAt(testBookingInfo.getCreatedAt());
 
         // Set thông tin từ Users
@@ -206,7 +226,7 @@ public class TestBookingInfoService {
                 .toList();
     }
     
-    // Cập nhật thông tin TestBookingInfo (chỉ cho phép cập nhật notes, staffId, staffName, testResults)
+    // Cập nhật thông tin TestBookingInfo (chỉ cho phép cập nhật notes, staffId, staffName, testResults, resultNote)
     public TestBookingInfo updateTestBookingInfo(Integer id, TestBookingInfo updatedInfo) {
         TestBookingInfo existingInfo = testBookingInfoRepository.findById(id).orElse(null);
         if (existingInfo == null) {
@@ -218,6 +238,9 @@ public class TestBookingInfoService {
         }
         if (updatedInfo.getTestResults() != null) {
             existingInfo.setTestResults(updatedInfo.getTestResults());
+        }
+        if (updatedInfo.getResultNote() != null) {
+            existingInfo.setResultNote(updatedInfo.getResultNote());
         }
         return testBookingInfoRepository.save(existingInfo);
     }

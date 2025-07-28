@@ -38,7 +38,7 @@ public class TestBookingInfo {
     
     // Trạng thái checkin/checkout
     @Pattern(
-        regexp = "Chờ bắt đầu|Đã check-in|Đã check-out",
+        regexp = "Chờ bắt đầu|Đã check-in|Đã check-out|Đã kết thúc",
         message = "Status must be valid test booking status"
     )
     @Column(name = "test_status", columnDefinition = "NVARCHAR(50)")
@@ -60,6 +60,10 @@ public class TestBookingInfo {
     @Column(name = "test_results", columnDefinition = "NTEXT")
     private String testResults;
     
+    // Ghi chú kết quả xét nghiệm
+    @Column(name = "result_note", columnDefinition = "NTEXT")
+    private String resultNote;
+    
     // Thời gian tạo và cập nhật
     @Column(name = "created_at")
     private String createdAt;
@@ -79,9 +83,10 @@ public class TestBookingInfo {
         this.staffId = staffId;
     }
 
-    public void performCheckout(String testResults) {
+    public void performCheckout(String testResults, String resultNote) {
         this.testStatus = "Đã check-out";
         this.checkoutTime = LocalDateTime.now();
         this.testResults = testResults;
+        this.resultNote = resultNote;
     }
 }

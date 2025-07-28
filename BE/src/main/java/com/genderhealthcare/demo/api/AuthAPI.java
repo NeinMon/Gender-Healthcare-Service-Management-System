@@ -31,10 +31,12 @@ public class AuthAPI {
     private AuthService authService;
     
     /**
-     * Đăng ký tài khoản mới
+     * API đăng ký tài khoản mới
+     * Tạo tài khoản cho customer, consultant hoặc staff
+     * Validate thông tin và kiểm tra trùng lặp email/username
      * 
-     * @param registerRequest Dữ liệu đăng ký
-     * @return Thông tin đăng ký thành công
+     * @param registerRequest Thông tin đăng ký (email, password, fullName, role, ...)
+     * @return ResponseEntity chứa thông tin user đã tạo hoặc lỗi
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
@@ -42,10 +44,12 @@ public class AuthAPI {
     }
     
     /**
-     * Đăng nhập vào hệ thống
+     * API đăng nhập vào hệ thống
+     * Xác thực thông tin đăng nhập và trả về thông tin user
+     * Hỗ trợ đăng nhập cho tất cả loại user (customer, consultant, staff)
      * 
-     * @param loginRequest Dữ liệu đăng nhập
-     * @return Thông tin đăng nhập thành công
+     * @param loginRequest Thông tin đăng nhập (email/username và password)
+     * @return ResponseEntity chứa thông tin user và role hoặc lỗi
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {

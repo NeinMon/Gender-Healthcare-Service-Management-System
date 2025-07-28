@@ -18,12 +18,13 @@ const ConsultationBooking = () => {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [error, setError] = useState('');
   const [loadingTimes, setLoadingTimes] = useState(false); // Thêm state loading cho khung giờ
-  
   // New states for payment flow
   const [bookingStep, setBookingStep] = useState('form'); // 'form', 'processing', 'payment', 'success', 'error'
   const [bookingDetails, setBookingDetails] = useState(null);
   const [paymentUrl, setPaymentUrl] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
+  // State cho giá dịch vụ tư vấn
+  const [consultationPrice, setConsultationPrice] = useState(10000); // default fallback
 
   useEffect(() => {
     // Gọi API lấy danh sách tư vấn viên
@@ -42,10 +43,21 @@ const ConsultationBooking = () => {
     };
     fetchConsultants();
 
+    // Lấy giá dịch vụ tư vấn (serviceId=1)
+    const fetchConsultationPrice = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/services/1');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.price) setConsultationPrice(data.price);
+        }
+      } catch (error) {}
+    };
+    fetchConsultationPrice();
+
     // Lấy thông tin user từ localStorage dựa vào loggedInUser
     let userId = 1; // Giá trị mặc định
     const userJson = localStorage.getItem('loggedInUser');
-    
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
@@ -56,7 +68,6 @@ const ConsultationBooking = () => {
         console.error("Lỗi khi đọc thông tin người dùng:", error);
       }
     }
-    
     const fetchUserInfo = async () => {
       try {
         const res = await fetch(`http://localhost:8080/api/users/${userId}`);
@@ -110,14 +121,20 @@ const ConsultationBooking = () => {
     return today > slotEnd;
   };
 
-const handleChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      // Nếu đổi tư vấn viên hoặc ngày thì reset time về rỗng
-      ...(name === 'consultantId' || name === 'date' ? { time: '' } : {})
-    }));
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    
+    // Reset thời gian đã chọn nếu thay đổi ngày và thời gian đó đã qua
+    if (name === 'date' && formData.time && isTimeSlotPassed(formData.time)) {
+      setFormData(prev => ({
+        ...prev,
+        time: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -189,8 +206,8 @@ const handleChange = (e) => {
       startTime: startTime, // HH:mm
       // Default service ID for consultation is 1
       serviceId: 1,
-      // Set a default amount for consultation - this should be set by the backend based on the service
-      amount: 10000
+      // Lấy giá từ backend
+      amount: consultationPrice
     };
 
     // Log payload để kiểm tra giá trị thực tế gửi lên
@@ -217,7 +234,7 @@ const handleChange = (e) => {
           
           const paymentPayload = {
             bookingId: bookingData.bookingId,
-            amount: 10000, // Test 10k
+            amount: consultationPrice,
             description: `Thanh toán dịch vụ tư vấn #${bookingData.bookingId}`,
             returnUrl: returnUrl,
             cancelUrl: cancelUrl
@@ -405,7 +422,7 @@ const handleChange = (e) => {
       
       const paymentPayload = {
         bookingId: bookingDetails.bookingId,
-        amount: 10000, // Test 10k
+        amount: consultationPrice,
         description: `Thanh toán dịch vụ tư vấn #${bookingDetails.bookingId}`,
         returnUrl: returnUrl,
         cancelUrl: cancelUrl

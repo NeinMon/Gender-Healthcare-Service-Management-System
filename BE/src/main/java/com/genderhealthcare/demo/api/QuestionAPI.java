@@ -36,6 +36,12 @@ public class QuestionAPI {
     @Autowired
     private QuestionService questionService;
 
+    /**
+     * API lấy tất cả câu hỏi trong hệ thống
+     * Trả về danh sách tất cả question có trong database
+     * 
+     * @return ResponseEntity chứa danh sách Question hoặc lỗi
+     */
     @GetMapping
     public ResponseEntity<List<Question>> getAllQuestions() {
         try {
@@ -46,6 +52,13 @@ public class QuestionAPI {
         }
     }
 
+    /**
+     * API lấy câu hỏi theo ID
+     * Tìm kiếm và trả về thông tin chi tiết của một question cụ thể
+     * 
+     * @param id ID của câu hỏi cần tìm
+     * @return ResponseEntity chứa Question hoặc thông báo không tìm thấy
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getQuestionById(@PathVariable Integer id) {
         try {
@@ -56,6 +69,13 @@ public class QuestionAPI {
         }
     }
 
+    /**
+     * API lấy danh sách câu hỏi theo user ID
+     * Lấy tất cả câu hỏi do một khách hàng cụ thể đặt ra
+     * 
+     * @param userId ID của khách hàng
+     * @return ResponseEntity chứa danh sách Question của user hoặc lỗi
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getQuestionsByUserId(@PathVariable Integer userId) {
         try {
@@ -65,6 +85,15 @@ public class QuestionAPI {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy câu hỏi nào của người dùng với ID: " + userId);
         }
     }
+    
+    /**
+     * API tạo câu hỏi mới
+     * Khách hàng tạo câu hỏi sức khỏe để được consultant tư vấn
+     * Convert QuestionRequest thành Question entity trước khi lưu
+     * 
+     * @param questionRequest QuestionRequest chứa thông tin câu hỏi (userID, title, content)
+     * @return ResponseEntity chứa Question đã tạo hoặc lỗi
+     */
     @PostMapping
     public ResponseEntity<?> createQuestion(@Valid @RequestBody QuestionRequest questionRequest) {
         try {
@@ -81,6 +110,15 @@ public class QuestionAPI {
         }
     }
 
+    /**
+     * API cập nhật câu hỏi
+     * Cập nhật thông tin câu hỏi đã tồn tại (title, content)
+     * Chỉ cho phép chủ sở hữu câu hỏi cập nhật
+     * 
+     * @param id ID của câu hỏi cần cập nhật
+     * @param questionRequest QuestionRequest chứa thông tin cập nhật
+     * @return ResponseEntity chứa Question đã cập nhật hoặc lỗi
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateQuestion(
             @PathVariable Integer id,
@@ -99,6 +137,14 @@ public class QuestionAPI {
         }
     }
 
+    /**
+     * API xóa câu hỏi
+     * Xóa câu hỏi khỏi hệ thống (cùng với các answer liên quan)
+     * Chỉ cho phép chủ sở hữu hoặc admin xóa câu hỏi
+     * 
+     * @param id ID của câu hỏi cần xóa
+     * @return ResponseEntity chứa thông báo thành công hoặc lỗi
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteQuestion(@PathVariable Integer id) {
         try {

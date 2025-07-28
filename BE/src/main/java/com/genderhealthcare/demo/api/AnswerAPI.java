@@ -26,6 +26,12 @@ public class AnswerAPI {
     @Autowired
     private AnswerService answerService;
 
+    /**
+     * API lấy tất cả câu trả lời trong hệ thống
+     * Trả về danh sách tất cả answer có trong database
+     * 
+     * @return ResponseEntity chứa danh sách Answer hoặc lỗi
+     */
     @GetMapping
     public ResponseEntity<List<Answer>> getAll() {
         try {
@@ -36,6 +42,13 @@ public class AnswerAPI {
         }
     }
 
+    /**
+     * API lấy câu trả lời theo question ID
+     * Tìm kiếm answer dựa trên ID của câu hỏi tương ứng
+     * 
+     * @param questionId ID của câu hỏi cần tìm answer
+     * @return ResponseEntity chứa Answer hoặc thông báo không tìm thấy
+     */
     @GetMapping("/{questionId}")
     public ResponseEntity<Object> getByQuestionId(@PathVariable Integer questionId) {
         try {
@@ -47,6 +60,13 @@ public class AnswerAPI {
         }
     }
 
+    /**
+     * API tạo câu trả lời mới
+     * Tạo answer entity trực tiếp từ dữ liệu frontend gửi lên
+     * 
+     * @param answer Đối tượng Answer cần tạo (đã validate)
+     * @return ResponseEntity chứa Answer đã tạo hoặc lỗi
+     */
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody Answer answer) {
         try {
@@ -57,6 +77,14 @@ public class AnswerAPI {
         }
     }
 
+    /**
+     * API trả lời câu hỏi từ consultant
+     * Endpoint chính cho consultant trả lời câu hỏi sức khỏe từ khách hàng
+     * Sử dụng AnswerRequest để validate và xử lý dữ liệu đầu vào
+     * 
+     * @param request AnswerRequest chứa thông tin câu trả lời (questionId, consultantId, content)
+     * @return ResponseEntity chứa answer đã tạo và thông báo thành công hoặc lỗi
+     */
     @PostMapping("/reply")
     public ResponseEntity<?> replyQuestion(@Valid @RequestBody AnswerRequest request) {
         try {

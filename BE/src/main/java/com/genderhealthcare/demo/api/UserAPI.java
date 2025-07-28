@@ -31,6 +31,13 @@ public class    UserAPI {
     @Autowired
     UserService userService;
     
+    /**
+     * API tạo người dùng mới
+     * Tạo user account trong hệ thống với đầy đủ thông tin
+     * 
+     * @param user Đối tượng Users cần tạo (đã validate)
+     * @return ResponseEntity chứa user đã tạo hoặc lỗi
+     */
     @PostMapping
     public ResponseEntity<?> createNewUser(@Valid @RequestBody Users user) {
         try {
@@ -41,6 +48,12 @@ public class    UserAPI {
         }
     }
     
+    /**
+     * API lấy danh sách tất cả người dùng
+     * Trả về danh sách tất cả user trong hệ thống
+     * 
+     * @return ResponseEntity chứa danh sách Users hoặc lỗi
+     */
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
         try {
@@ -51,6 +64,13 @@ public class    UserAPI {
         }
     }
     
+    /**
+     * API lấy thông tin người dùng theo ID
+     * Tìm kiếm và trả về thông tin chi tiết của một user cụ thể
+     * 
+     * @param userId ID của người dùng cần tìm
+     * @return ResponseEntity chứa thông tin Users hoặc lỗi
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@org.springframework.web.bind.annotation.PathVariable Integer userId) {
         try {
@@ -59,7 +79,17 @@ public class    UserAPI {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Không tìm thấy người dùng với ID: " + userId);
         }
-    }    @PutMapping("/{userId}")
+    }    
+    
+    /**
+     * API cập nhật thông tin người dùng
+     * Cập nhật thông tin profile của user đã tồn tại
+     * 
+     * @param userId ID của người dùng cần cập nhật
+     * @param updatedUser Đối tượng Users chứa thông tin mới
+     * @return ResponseEntity chứa user đã cập nhật hoặc lỗi
+     */
+    @PutMapping("/{userId}")
     public ResponseEntity<?> updateUser(@org.springframework.web.bind.annotation.PathVariable Integer userId, 
                                        @RequestBody Users updatedUser) {
         try {
@@ -79,12 +109,26 @@ public class    UserAPI {
         }
     }
 
+    /**
+     * API lấy danh sách tất cả consultant
+     * Trả về danh sách user có role là CONSULTANT
+     * 
+     * @return ResponseEntity chứa danh sách consultant
+     */
     @GetMapping("/consultants")
     public ResponseEntity<List<Users>> getAllConsultants() {
         List<Users> consultants = userService.getUsersByRole(com.genderhealthcare.demo.entity.Role.CONSULTANT);
         return ResponseEntity.ok(consultants);
     }
 
+    /**
+     * API cập nhật chuyên môn cho consultant
+     * Cập nhật thông tin specification (chuyên môn) cho user có role CONSULTANT
+     * 
+     * @param consultantId ID của consultant cần cập nhật
+     * @param specification Thông tin chuyên môn mới
+     * @return ResponseEntity chứa consultant đã cập nhật hoặc lỗi
+     */
     @PutMapping("/consultant/{consultantId}/specification")
     public ResponseEntity<?> updateConsultantSpecification(
             @org.springframework.web.bind.annotation.PathVariable Integer consultantId,

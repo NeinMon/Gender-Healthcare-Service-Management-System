@@ -25,6 +25,13 @@ public class ServiceAPI {
     @Autowired
     private ServiceService serviceService;
     
+    /**
+     * API tạo dịch vụ mới
+     * Thêm dịch vụ tư vấn sức khỏe mới vào hệ thống
+     * 
+     * @param service Đối tượng Service cần tạo (đã validate)
+     * @return ResponseEntity chứa Service đã tạo hoặc lỗi
+     */
     // CREATE - Tạo service mới
     @PostMapping
     public ResponseEntity<?> createService(@Valid @RequestBody Service service) {
@@ -37,6 +44,12 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API lấy tất cả dịch vụ trong hệ thống
+     * Trả về danh sách tất cả dịch vụ tư vấn sức khỏe
+     * 
+     * @return ResponseEntity chứa danh sách Service hoặc lỗi
+     */
     // READ - Lấy tất cả services
     @GetMapping
     public ResponseEntity<?> getAllServices() {
@@ -49,6 +62,13 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API lấy dịch vụ theo ID
+     * Tìm kiếm và trả về thông tin chi tiết của một dịch vụ cụ thể
+     * 
+     * @param serviceId ID của dịch vụ cần tìm
+     * @return ResponseEntity chứa Service hoặc thông báo không tìm thấy
+     */
     // READ - Lấy service theo ID
     @GetMapping("/{serviceId}")
     public ResponseEntity<?> getServiceById(@PathVariable("serviceId") Integer serviceId) {
@@ -66,6 +86,13 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API lấy dịch vụ theo manager ID
+     * Lấy danh sách các dịch vụ được quản lý bởi một manager cụ thể
+     * 
+     * @param managerId ID của manager quản lý dịch vụ
+     * @return ResponseEntity chứa danh sách Service hoặc lỗi
+     */
     // READ - Lấy services theo manager ID
     @GetMapping("/manager/{managerId}")
     public ResponseEntity<?> getServicesByManagerId(@PathVariable("managerId") Integer managerId) {
@@ -78,6 +105,13 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API tìm kiếm dịch vụ theo tên
+     * Search dịch vụ dựa trên tên dịch vụ (có thể partial match)
+     * 
+     * @param serviceName Tên dịch vụ cần tìm kiếm
+     * @return ResponseEntity chứa danh sách Service khớp với tên hoặc lỗi
+     */
     // READ - Tìm kiếm services theo tên
     @GetMapping("/search")
     public ResponseEntity<?> searchServicesByName(@RequestParam("name") String serviceName) {
@@ -90,6 +124,14 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API cập nhật thông tin dịch vụ
+     * Cập nhật thông tin dịch vụ tư vấn đã tồn tại (tên, mô tả, giá, ...)
+     * 
+     * @param serviceId ID của dịch vụ cần cập nhật
+     * @param serviceDetails Đối tượng Service chứa thông tin mới (đã validate)
+     * @return ResponseEntity chứa Service đã cập nhật hoặc lỗi
+     */
     // UPDATE - Cập nhật service
     @PutMapping("/{serviceId}")
     public ResponseEntity<?> updateService(
@@ -109,6 +151,13 @@ public class ServiceAPI {
         }
     }
     
+    /**
+     * API xóa dịch vụ
+     * Xóa dịch vụ tư vấn khỏi hệ thống (chỉ khi không có booking liên quan)
+     * 
+     * @param serviceId ID của dịch vụ cần xóa
+     * @return ResponseEntity chứa thông báo thành công hoặc lỗi
+     */
     // DELETE - Xóa service
     @DeleteMapping("/{serviceId}")
     public ResponseEntity<?> deleteService(@PathVariable("serviceId") Integer serviceId) {

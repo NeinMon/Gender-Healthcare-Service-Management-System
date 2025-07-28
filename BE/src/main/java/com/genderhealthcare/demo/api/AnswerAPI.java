@@ -32,15 +32,15 @@ public class AnswerAPI {
      * 
      * @return ResponseEntity chứa danh sách Answer hoặc lỗi
      */
-    @GetMapping
-    public ResponseEntity<List<Answer>> getAll() {
-        try {
-            List<Answer> answers = answerService.getAllAnswers();
-            return ResponseEntity.ok(answers);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
-        }
-    }
+    // @GetMapping
+    // public ResponseEntity<List<Answer>> getAll() {
+    //     try {
+    //         List<Answer> answers = answerService.getAllAnswers();
+    //         return ResponseEntity.ok(answers);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(500).body(null);
+    //     }
+    // }
 
     /**
      * API lấy câu trả lời theo question ID
@@ -67,15 +67,15 @@ public class AnswerAPI {
      * @param answer Đối tượng Answer cần tạo (đã validate)
      * @return ResponseEntity chứa Answer đã tạo hoặc lỗi
      */
-    @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody Answer answer) {
-        try {
-            Answer savedAnswer = answerService.createAnswer(answer);
-            return ResponseEntity.ok(savedAnswer);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
-        }
-    }
+    // @PostMapping
+    // public ResponseEntity<?> create(@Valid @RequestBody Answer answer) {
+    //     try {
+    //         Answer savedAnswer = answerService.createAnswer(answer);
+    //         return ResponseEntity.ok(savedAnswer);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(500).body("Lỗi: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API trả lời câu hỏi từ consultant

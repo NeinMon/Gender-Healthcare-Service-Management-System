@@ -48,8 +48,11 @@ public class ServiceService {
             if (serviceDetails.getDescription() != null) {
                 existingService.setDescription(serviceDetails.getDescription());
             }
-            if (serviceDetails.getManagerId() != 0) {
+            if (serviceDetails.getManagerId() != null && serviceDetails.getManagerId() != 0) {
                 existingService.setManagerId(serviceDetails.getManagerId());
+            }
+            if (serviceDetails.getPrice() != null) {
+                existingService.setPrice(serviceDetails.getPrice());
             }
             
             return serviceRepository.save(existingService);

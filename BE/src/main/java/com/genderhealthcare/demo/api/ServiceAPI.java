@@ -86,24 +86,24 @@ public class ServiceAPI {
         }
     }
     
-    /**
-     * API lấy dịch vụ theo manager ID
-     * Lấy danh sách các dịch vụ được quản lý bởi một manager cụ thể
-     * 
-     * @param managerId ID của manager quản lý dịch vụ
-     * @return ResponseEntity chứa danh sách Service hoặc lỗi
-     */
-    // READ - Lấy services theo manager ID
-    @GetMapping("/manager/{managerId}")
-    public ResponseEntity<?> getServicesByManagerId(@PathVariable("managerId") Integer managerId) {
-        try {
-            List<Service> services = serviceService.getServicesByManagerId(managerId);
-            return ResponseEntity.ok(services);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy services theo managerId: " + e.getMessage());
-        }
-    }
+    // /**
+    //  * API lấy dịch vụ theo manager ID
+    //  * Lấy danh sách các dịch vụ được quản lý bởi một manager cụ thể
+    //  * 
+    //  * @param managerId ID của manager quản lý dịch vụ
+    //  * @return ResponseEntity chứa danh sách Service hoặc lỗi
+    //  */
+    // // READ - Lấy services theo manager ID
+    // @GetMapping("/manager/{managerId}")
+    // public ResponseEntity<?> getServicesByManagerId(@PathVariable("managerId") Integer managerId) {
+    //     try {
+    //         List<Service> services = serviceService.getServicesByManagerId(managerId);
+    //         return ResponseEntity.ok(services);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy services theo managerId: " + e.getMessage());
+    //     }
+    // }
     
     /**
      * API tìm kiếm dịch vụ theo tên

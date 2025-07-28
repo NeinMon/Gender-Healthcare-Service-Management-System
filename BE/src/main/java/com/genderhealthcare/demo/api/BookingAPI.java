@@ -66,43 +66,6 @@ public class BookingAPI {
     }
 
     /**
-     * API lấy tất cả booking trong hệ thống
-     * Cập nhật trạng thái booking trước khi trả về
-     * 
-     * @return ResponseEntity chứa danh sách tất cả booking hoặc lỗi
-     */
-    @GetMapping
-    public ResponseEntity<?> getAllBookings() {
-        try {
-            List<Booking> bookings = bookingService.getAllBookings();
-            bookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(bookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy danh sách booking: " + e.getMessage());
-        }
-    }
-
-    /**
-     * API lấy danh sách booking theo user ID
-     * Lấy tất cả booking của một khách hàng cụ thể
-     * 
-     * @param userId ID của khách hàng
-     * @return ResponseEntity chứa danh sách booking của user hoặc lỗi
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getBookingsByUserId(@PathVariable("userId") Integer userId) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByUserId(userId);
-            bookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(bookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy booking theo userId: " + e.getMessage());
-        }
-    }
-
-    /**
      * API lấy danh sách booking theo consultant ID
      * Lấy tất cả booking được phân công cho một consultant cụ thể
      * 
@@ -122,25 +85,6 @@ public class BookingAPI {
     }
 
     /**
-     * API lấy danh sách booking theo service ID
-     * Lấy tất cả booking sử dụng một dịch vụ cụ thể
-     * 
-     * @param serviceId ID của dịch vụ
-     * @return ResponseEntity chứa danh sách booking của service hoặc lỗi
-     */
-    @GetMapping("/service/{serviceId}")
-    public ResponseEntity<?> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByServiceId(serviceId);
-            bookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(bookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy booking theo serviceId: " + e.getMessage());
-        }
-    }
-
-    /**
      * API lấy danh sách booking tư vấn theo user ID
      * Chỉ lấy các booking có loại dịch vụ là tư vấn (consultation)
      * 
@@ -156,25 +100,6 @@ public class BookingAPI {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Lỗi lấy consultation bookings: " + e.getMessage());
-        }
-    }
-
-    /**
-     * API lấy danh sách booking dịch vụ khác (không phải tư vấn) theo user ID
-     * Lấy các booking có loại dịch vụ khác ngoài tư vấn (xét nghiệm, chăm sóc, ...)
-     * 
-     * @param userId ID của khách hàng
-     * @return ResponseEntity chứa danh sách other service booking hoặc lỗi
-     */
-    @GetMapping("/user/{userId}/other-services")
-    public ResponseEntity<?> getNonConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
-        try {
-            List<Booking> otherServiceBookings = bookingService.getNonConsultationBookingsByUserId(userId);
-            otherServiceBookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(otherServiceBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy other service bookings: " + e.getMessage());
         }
     }
 
@@ -203,48 +128,48 @@ public class BookingAPI {
         }
     }
 
-    /**
-     * API lấy danh sách booking theo tên dịch vụ
-     * Tìm kiếm booking dựa trên tên của dịch vụ
-     * 
-     * @param serviceName Tên của dịch vụ cần tìm
-     * @return ResponseEntity chứa danh sách booking hoặc lỗi
-     */
-    @GetMapping("/by-service-name")
-    public ResponseEntity<?> getBookingsByServiceName(@RequestParam("serviceName") String serviceName) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByServiceName(serviceName);
-            return ResponseEntity.ok(bookings);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy bookings theo service name: " + e.getMessage());
-        }
-    }
+    // /**
+    //  * API lấy danh sách booking theo tên dịch vụ
+    //  * Tìm kiếm booking dựa trên tên của dịch vụ
+    //  * 
+    //  * @param serviceName Tên của dịch vụ cần tìm
+    //  * @return ResponseEntity chứa danh sách booking hoặc lỗi
+    //  */
+    // @GetMapping("/by-service-name")
+    // public ResponseEntity<?> getBookingsByServiceName(@RequestParam("serviceName") String serviceName) {
+    //     try {
+    //         List<Booking> bookings = bookingService.getBookingsByServiceName(serviceName);
+    //         return ResponseEntity.ok(bookings);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy bookings theo service name: " + e.getMessage());
+    //     }
+    // }
 
-    /**
-     * API lấy danh sách booking theo tên dịch vụ và trạng thái
-     * Tìm kiếm booking với điều kiện kết hợp tên dịch vụ và trạng thái
-     * 
-     * @param serviceName Tên của dịch vụ
-     * @param status Trạng thái booking
-     * @return ResponseEntity chứa danh sách booking hoặc lỗi
-     */
-    @GetMapping("/by-service-name-and-status")
-    public ResponseEntity<?> getBookingsByServiceNameAndStatus(
-            @RequestParam("serviceName") String serviceName,
-            @RequestParam("status") String status) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByServiceNameAndStatus(serviceName, status);
-            return ResponseEntity.ok(bookings);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy bookings theo service name và status: " + e.getMessage());
-        }
-    }
+    // /**
+    //  * API lấy danh sách booking theo tên dịch vụ và trạng thái
+    //  * Tìm kiếm booking với điều kiện kết hợp tên dịch vụ và trạng thái
+    //  * 
+    //  * @param serviceName Tên của dịch vụ
+    //  * @param status Trạng thái booking
+    //  * @return ResponseEntity chứa danh sách booking hoặc lỗi
+    //  */
+    // @GetMapping("/by-service-name-and-status")
+    // public ResponseEntity<?> getBookingsByServiceNameAndStatus(
+    //         @RequestParam("serviceName") String serviceName,
+    //         @RequestParam("status") String status) {
+    //     try {
+    //         List<Booking> bookings = bookingService.getBookingsByServiceNameAndStatus(serviceName, status);
+    //         return ResponseEntity.ok(bookings);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy bookings theo service name và status: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy khung giờ trống của consultant
@@ -278,17 +203,17 @@ public class BookingAPI {
      * 
      * @return ResponseEntity chứa danh sách test booking hoặc lỗi
      */
-    @GetMapping("/test-bookings")
-    public ResponseEntity<?> getAllTestBookings() {
-        try {
-            List<Booking> testBookings = bookingService.getTestBookings();
-            testBookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy danh sách test bookings: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/test-bookings")
+    // public ResponseEntity<?> getAllTestBookings() {
+    //     try {
+    //         List<Booking> testBookings = bookingService.getTestBookings();
+    //         testBookings.forEach(Booking::updateStatus);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy danh sách test bookings: " + e.getMessage());
+    //     }
+    // }
     
     /**
      * API lấy test booking theo trạng thái
@@ -297,17 +222,17 @@ public class BookingAPI {
      * @param status Trạng thái cần lọc (Đang chờ duyệt, Đã xác nhận, Hoàn thành, ...)
      * @return ResponseEntity chứa danh sách test booking theo trạng thái hoặc lỗi
      */
-    @GetMapping("/test-bookings/status/{status}")
-    public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
-        try {
-            List<Booking> testBookings = bookingService.getTestBookingsByStatus(status);
-            testBookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test bookings theo status: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/test-bookings/status/{status}")
+    // public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
+    //     try {
+    //         List<Booking> testBookings = bookingService.getTestBookingsByStatus(status);
+    //         testBookings.forEach(Booking::updateStatus);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test bookings theo status: " + e.getMessage());
+    //     }
+    // }
     
     /**
      * API lấy booking theo user ID và trạng thái
@@ -317,19 +242,19 @@ public class BookingAPI {
      * @param status Trạng thái booking cần lọc
      * @return ResponseEntity chứa danh sách booking hoặc lỗi
      */
-    @GetMapping("/user/{userId}/status/{status}")
-    public ResponseEntity<?> getBookingsByUserIdAndStatus(
-            @PathVariable("userId") Integer userId,
-            @PathVariable("status") String status) {
-        try {
-            List<Booking> bookings = bookingService.getBookingsByUserIdAndStatus(userId, status);
-            bookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(bookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy bookings theo userId và status: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/user/{userId}/status/{status}")
+    // public ResponseEntity<?> getBookingsByUserIdAndStatus(
+    //         @PathVariable("userId") Integer userId,
+    //         @PathVariable("status") String status) {
+    //     try {
+    //         List<Booking> bookings = bookingService.getBookingsByUserIdAndStatus(userId, status);
+    //         bookings.forEach(Booking::updateStatus);
+    //         return ResponseEntity.ok(bookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy bookings theo userId và status: " + e.getMessage());
+    //     }
+    // }
     
     /**
      * API cập nhật chỉ trạng thái booking (không cập nhật endTime)
@@ -339,16 +264,16 @@ public class BookingAPI {
      * @param status Trạng thái mới
      * @return ResponseEntity chứa booking đã cập nhật hoặc lỗi
      */
-    @PutMapping("/{id}/update-status")
-    public ResponseEntity<?> updateBookingStatusOnly(@PathVariable("id") Integer id,
-                                                     @RequestParam("status") String status) {
-        try {
-            Booking updated = bookingService.updateBookingStatus(id, status);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
+    // @PutMapping("/{id}/update-status")
+    // public ResponseEntity<?> updateBookingStatusOnly(@PathVariable("id") Integer id,
+    //                                                  @RequestParam("status") String status) {
+    //     try {
+    //         Booking updated = bookingService.updateBookingStatus(id, status);
+    //         return ResponseEntity.ok(updated);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo user ID
@@ -357,17 +282,17 @@ public class BookingAPI {
      * @param userId ID của khách hàng
      * @return ResponseEntity chứa danh sách test booking của user hoặc lỗi
      */
-    @GetMapping("/user/{userId}/test-bookings")
-    public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
-        try {
-            List<Booking> testBookings = bookingService.getTestBookingsByUserId(userId);
-            testBookings.forEach(Booking::updateStatus);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test bookings theo userId: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/user/{userId}/test-bookings")
+    // public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
+    //     try {
+    //         List<Booking> testBookings = bookingService.getTestBookingsByUserId(userId);
+    //         testBookings.forEach(Booking::updateStatus);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test bookings theo userId: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API cập nhật trạng thái thanh toán cho booking

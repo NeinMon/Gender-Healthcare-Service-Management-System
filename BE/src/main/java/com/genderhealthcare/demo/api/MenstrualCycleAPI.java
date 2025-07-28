@@ -37,13 +37,13 @@ public class MenstrualCycleAPI {
      * 
      * @return ResponseEntity chứa thông báo kết nối thành công
      */
-    @GetMapping("/test")
-    public ResponseEntity<Map<String, String>> testConnection() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Backend connection successful");
-        response.put("status", "OK");
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+    // @GetMapping("/test")
+    // public ResponseEntity<Map<String, String>> testConnection() {
+    //     Map<String, String> response = new HashMap<>();
+    //     response.put("message", "Backend connection successful");
+    //     response.put("status", "OK");
+    //     return new ResponseEntity<>(response, HttpStatus.OK);
+    // }
 
     /**
      * API lấy tất cả chu kỳ kinh nguyệt trong hệ thống
@@ -51,15 +51,15 @@ public class MenstrualCycleAPI {
      * 
      * @return ResponseEntity chứa danh sách MenstrualCycle hoặc lỗi
      */
-    @GetMapping
-    public ResponseEntity<?> getAllMenstrualCycles() {
-        try {
-            List<MenstrualCycle> cycles = menstrualCycleService.getAllMenstrualCycles();
-            return ResponseEntity.ok(cycles);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy danh sách chu kỳ kinh nguyệt: " + e.getMessage());
-        }
-    }
+    // @GetMapping
+    // public ResponseEntity<?> getAllMenstrualCycles() {
+    //     try {
+    //         List<MenstrualCycle> cycles = menstrualCycleService.getAllMenstrualCycles();
+    //         return ResponseEntity.ok(cycles);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy danh sách chu kỳ kinh nguyệt: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy chu kỳ kinh nguyệt theo user ID
@@ -87,17 +87,17 @@ public class MenstrualCycleAPI {
      * @param id ID của chu kỳ kinh nguyệt cần tìm
      * @return ResponseEntity chứa MenstrualCycle hoặc thông báo không tìm thấy
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getMenstrualCycleById(@PathVariable Long id) {
-        try {
-            MenstrualCycle cycle = menstrualCycleService.getMenstrualCycleById(id);
-            return ResponseEntity.ok(cycle);
-        } catch (MenstrualCycleNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy chu kỳ kinh nguyệt với ID: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy chu kỳ kinh nguyệt: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/{id}")
+    // public ResponseEntity<?> getMenstrualCycleById(@PathVariable Long id) {
+    //     try {
+    //         MenstrualCycle cycle = menstrualCycleService.getMenstrualCycleById(id);
+    //         return ResponseEntity.ok(cycle);
+    //     } catch (MenstrualCycleNotFoundException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy chu kỳ kinh nguyệt với ID: " + id);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy chu kỳ kinh nguyệt: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API kiểm tra user có chu kỳ kinh nguyệt không
@@ -151,19 +151,19 @@ public class MenstrualCycleAPI {
      * @throws AccountNotFoundException nếu không tìm thấy user
      * @throws InvalidMenstrualCycleDateException nếu ngày không hợp lệ
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<MenstrualCycle> updateMenstrualCycle(
-            @PathVariable Long id,
-            @Valid @RequestBody MenstrualCycleRequest request) {
-        try {
-            MenstrualCycle updatedCycle = menstrualCycleService.updateOrCreateMenstrualCycle(id, request);
-            return new ResponseEntity<>(updatedCycle, HttpStatus.OK);
-        } catch (MenstrualCycleNotFoundException | AccountNotFoundException | 
-                 InvalidMenstrualCycleDateException | IllegalArgumentException e) {
-            // Let the ValidationHandler handle these exceptions
-            throw e;
-        }
-    }    
+    // @PutMapping("/{id}")
+    // public ResponseEntity<MenstrualCycle> updateMenstrualCycle(
+    //         @PathVariable Long id,
+    //         @Valid @RequestBody MenstrualCycleRequest request) {
+    //     try {
+    //         MenstrualCycle updatedCycle = menstrualCycleService.updateOrCreateMenstrualCycle(id, request);
+    //         return new ResponseEntity<>(updatedCycle, HttpStatus.OK);
+    //     } catch (MenstrualCycleNotFoundException | AccountNotFoundException | 
+    //              InvalidMenstrualCycleDateException | IllegalArgumentException e) {
+    //         // Let the ValidationHandler handle these exceptions
+    //         throw e;
+    //     }
+    // }    
     
     /**
      * API cập nhật chu kỳ kinh nguyệt theo user ID
@@ -201,14 +201,14 @@ public class MenstrualCycleAPI {
      * @return ResponseEntity với status NO_CONTENT hoặc exception
      * @throws MenstrualCycleNotFoundException nếu không tìm thấy chu kỳ để xóa
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMenstrualCycle(@PathVariable Long id) {
-        try {
-            menstrualCycleService.deleteMenstrualCycle(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (MenstrualCycleNotFoundException e) {
-            // Let the ValidationHandler handle this exception
-            throw e;
-        }
-    }
+    // @DeleteMapping("/{id}")
+    // public ResponseEntity<Void> deleteMenstrualCycle(@PathVariable Long id) {
+    //     try {
+    //         menstrualCycleService.deleteMenstrualCycle(id);
+    //         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    //     } catch (MenstrualCycleNotFoundException e) {
+    //         // Let the ValidationHandler handle this exception
+    //         throw e;
+    //     }
+    // }
 }

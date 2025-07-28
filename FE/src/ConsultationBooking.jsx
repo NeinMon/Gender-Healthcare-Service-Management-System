@@ -110,20 +110,14 @@ const ConsultationBooking = () => {
     return today > slotEnd;
   };
 
-  const handleChange = (e) => {
+const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    
-    // Reset thời gian đã chọn nếu thay đổi ngày và thời gian đó đã qua
-    if (name === 'date' && formData.time && isTimeSlotPassed(formData.time)) {
-      setFormData(prev => ({
-        ...prev,
-        time: ''
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+      // Nếu đổi tư vấn viên hoặc ngày thì reset time về rỗng
+      ...(name === 'consultantId' || name === 'date' ? { time: '' } : {})
+    }));
   };
 
   const handleSubmit = async (e) => {

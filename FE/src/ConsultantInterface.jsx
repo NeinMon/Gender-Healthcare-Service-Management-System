@@ -216,8 +216,8 @@ const ConsultantInterface = () => {
     ? bookings
     : bookings.filter(b => b.status === filterStatus);
 
-  // Lọc booking chỉ hiển thị các lịch đã PAID
-  const paidBookings = bookings.filter(b => b.payment?.status === 'PAID');
+  // Lọc booking chỉ hiển thị các lịch đã PAID và theo filter status
+  const paidFilteredBookings = filteredBookings.filter(b => b.payment?.status === 'PAID');
 
   // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
   const submitAnswer = async () => {
@@ -625,7 +625,10 @@ const ConsultantInterface = () => {
               gap: "12px"
             }}>
               <button 
-                onClick={() => setActiveSection('questions')}
+                onClick={() => {
+                  setActiveSection('questions');
+                  setFilterStatus('all'); // Reset filter khi chuyển section
+                }}
                 style={{
                   padding: "12px 20px",
                   borderRadius: "8px",
@@ -646,7 +649,10 @@ const ConsultantInterface = () => {
                 Câu hỏi
               </button>
               <button 
-                onClick={() => setActiveSection('online')}
+                onClick={() => {
+                  setActiveSection('online');
+                  setFilterStatus('all'); // Reset filter khi chuyển section
+                }}
                 style={{
                   padding: "12px 20px",
                   borderRadius: "8px",
@@ -994,6 +1000,35 @@ const ConsultantInterface = () => {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                 marginBottom: "24px"
               }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center", 
+                  gap: "12px"
+                }}>
+                  <label style={{ 
+                    fontWeight: 600, 
+                    color: '#0891b2' 
+                  }}>Lọc theo trạng thái: </label>
+                  <select 
+                    value={filterStatus} 
+                    onChange={e => setFilterStatus(e.target.value)} 
+                    style={{ 
+                      padding: "10px 16px", 
+                      borderRadius: "8px", 
+                      border: '1px solid #22d3ee', 
+                      outline: 'none', 
+                      fontWeight: 500, 
+                      color: '#0891b2', 
+                      background: '#fff',
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="Chờ bắt đầu">Chờ bắt đầu</option>
+                    <option value="Đang diễn ra">Đang diễn ra</option>
+                    <option value="Đã kết thúc">Đã kết thúc</option>
+                  </select>
+                </div>
                 <h2 style={{ 
                   color: "#0891b2", 
                   margin: 0,
@@ -1021,7 +1056,7 @@ const ConsultantInterface = () => {
                   }}></div>
                   <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách lịch hẹn...</p>
                 </div>
-              ) : paidBookings.length === 0 ? (
+              ) : paidFilteredBookings.length === 0 ? (
                 <div style={{ 
                   textAlign: 'center', 
                   padding: "60px 20px",
@@ -1032,7 +1067,12 @@ const ConsultantInterface = () => {
                   boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
                 }}>
                   <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
-                  <div>Không có lịch hẹn nào đã thanh toán.</div>
+                  <div>
+                    {filterStatus === 'all' 
+                      ? 'Không có lịch hẹn nào đã thanh toán.' 
+                      : `Không có lịch hẹn nào ở trạng thái "${filterStatus}".`
+                    }
+                  </div>
                 </div>
               ) : (
                 <div style={{ 
@@ -1058,7 +1098,7 @@ const ConsultantInterface = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {paidBookings.map((booking, idx) => (
+                        {paidFilteredBookings.map((booking, idx) => (
                           <tr 
                             key={booking.bookingId || idx} 
                             style={{ 

@@ -11,6 +11,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ * Service xử lý logic nghiệp vụ cho các thao tác booking (đặt lịch tư vấn)
+ * Quản lý toàn bộ quy trình đặt lịch từ tạo booking, cập nhật trạng thái,
+ * đến quản lý thanh toán và tích hợp với dịch vụ tư vấn
+ * Đảm bảo tính nhất quán dữ liệu qua @Transactional
+ */
 @Service
 public class BookingService {
     @Autowired

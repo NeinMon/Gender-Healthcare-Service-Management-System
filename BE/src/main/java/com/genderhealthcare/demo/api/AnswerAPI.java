@@ -14,6 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * API Controller xử lý các yêu cầu quản lý câu trả lời
+ * Quản lý các câu trả lời từ consultant cho câu hỏi sức khỏe của khách hàng
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RestController
 @RequestMapping("/api/answers")

@@ -20,6 +20,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service xử lý logic nghiệp vụ cho các thao tác thanh toán
+ * Tích hợp với cổng thanh toán PayOS để xử lý:
+ * - Tạo liên kết thanh toán
+ * - Đồng bộ trạng thái thanh toán
+ * - Hủy thanh toán
+ * - Xác thực webhook từ PayOS
+ */
 @Service
 public class PaymentService {
 

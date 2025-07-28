@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service xử lý logic nghiệp vụ cho quản lý người dùng
+ * Quản lý thông tin user (customer, consultant, staff) trong hệ thống
+ * Xử lý CRUD operations và các nghiệp vụ liên quan đến user
+ * Đảm bảo tính nhất quán dữ liệu qua @Transactional
+ */
 @Service // Đánh dấu đây là một service trong Spring Boot
 public class UserService {
 

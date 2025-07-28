@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * API Controller xử lý các yêu cầu thanh toán
+ * Tích hợp với cổng thanh toán PayOS để xử lý thanh toán online
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @RestController
 @RequestMapping("/api/payment")
 @CrossOrigin("*")
@@ -24,6 +29,13 @@ public class PaymentAPI {
     @Autowired
     private BookingService bookingService;
 
+    /**
+     * API tạo liên kết thanh toán PayOS
+     * Tạo URL thanh toán để chuyển hướng user đến cổng thanh toán
+     * 
+     * @param paymentRequest Thông tin yêu cầu thanh toán (bookingId, amount, description)
+     * @return ResponseEntity chứa URL thanh toán hoặc lỗi
+     */
     @PostMapping("/payos")
     public ResponseEntity<?> createPayOSPayment(@RequestBody PaymentRequest paymentRequest) {
         try {
@@ -64,6 +76,13 @@ public class PaymentAPI {
         }
     }
 
+    /**
+     * API lấy trạng thái thanh toán theo booking ID
+     * Đồng bộ trạng thái từ PayOS và trả về thông tin booking kèm payment
+     * 
+     * @param bookingId ID của booking cần kiểm tra trạng thái thanh toán
+     * @return ResponseEntity chứa thông tin booking và payment hoặc lỗi
+     */
     @GetMapping("/status/{bookingId}")
     public ResponseEntity<?> getPaymentStatus(@PathVariable Integer bookingId) {
         try {
@@ -106,6 +125,13 @@ public class PaymentAPI {
         }
     }
 
+    /**
+     * API lấy trạng thái thanh toán theo order code từ PayOS
+     * Sử dụng để theo dõi giao dịch thông qua mã đơn hàng PayOS
+     * 
+     * @param orderCode Mã đơn hàng từ PayOS
+     * @return ResponseEntity chứa thông tin thanh toán hoặc lỗi
+     */
     // API lấy trạng thái/thanh toán qua orderCode (PayOS)
     @GetMapping("/status/order/{orderCode}")
     public ResponseEntity<?> getPaymentStatusByOrderCode(@PathVariable Long orderCode) {
@@ -131,6 +157,14 @@ public class PaymentAPI {
         }
     }
 
+    /**
+     * API hủy thanh toán
+     * Hủy liên kết thanh toán và cập nhật trạng thái booking/payment
+     * 
+     * @param bookingId ID của booking cần hủy thanh toán
+     * @param body Thông tin bổ sung (lý do hủy)
+     * @return ResponseEntity chứa kết quả hủy thanh toán
+     */
     @PostMapping("/cancel/{bookingId}")
     public ResponseEntity<?> cancelPayment(@PathVariable Integer bookingId, @RequestBody(required = false) Map<String, Object> body) {
         try {

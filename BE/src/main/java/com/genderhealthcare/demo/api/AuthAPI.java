@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 /**
+ * API Controller xử lý các yêu cầu xác thực và phân quyền người dùng
+ * Quản lý đăng ký, đăng nhập cho customer, consultant và staff
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
+/**
  * Controller xử lý các yêu cầu xác thực người dùng
  */
 @RestController

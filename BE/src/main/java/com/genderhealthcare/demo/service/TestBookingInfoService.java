@@ -11,6 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service xử lý logic nghiệp vụ cho đặt lịch xét nghiệm
+ * Quản lý quy trình đặt lịch xét nghiệm offline với check-in/check-out
+ * Tích hợp với booking system và quản lý trạng thái xét nghiệm
+ * Đảm bảo tính nhất quán dữ liệu qua @Transactional
+ */
 @Service
 @Transactional  
 public class TestBookingInfoService {

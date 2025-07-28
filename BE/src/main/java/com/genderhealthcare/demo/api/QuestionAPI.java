@@ -23,6 +23,11 @@ import com.genderhealthcare.demo.service.QuestionService;
 
 import jakarta.validation.Valid;
 
+/**
+ * API Controller xử lý các yêu cầu quản lý câu hỏi
+ * Quản lý hệ thống hỏi đáp sức khỏe phụ nữ trong ứng dụng
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RequestMapping("/api/questions")

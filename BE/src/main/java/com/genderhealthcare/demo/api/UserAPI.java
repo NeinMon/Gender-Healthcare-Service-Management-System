@@ -19,8 +19,9 @@ import com.genderhealthcare.demo.entity.Users;
 import com.genderhealthcare.demo.service.UserService;
 
 /**
- * Controller chính của ứng dụng.
- * Quản lý các endpoint API cơ bản của hệ thống.
+ * API Controller xử lý các yêu cầu quản lý người dùng
+ * Quản lý thông tin user, consultant, staff trong hệ thống
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
  */
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API

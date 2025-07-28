@@ -18,6 +18,11 @@ import java.util.Map;
 
 import java.util.List;
 
+/**
+ * API Controller xử lý các yêu cầu theo dõi chu kỳ kinh nguyệt
+ * Quản lý thông tin chu kỳ kinh nguyệt của phụ nữ để hỗ trợ tư vấn sức khỏe
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @RestController
 @CrossOrigin("*")
 @RequestMapping("/api/menstrual-cycles")

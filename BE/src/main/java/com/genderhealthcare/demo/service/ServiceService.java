@@ -7,6 +7,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service xử lý logic nghiệp vụ cho quản lý dịch vụ tư vấn
+ * Quản lý các loại dịch vụ tư vấn sức khỏe phụ nữ trong hệ thống
+ * Xử lý CRUD operations cho service catalog
+ */
 @Service
 public class ServiceService {
     

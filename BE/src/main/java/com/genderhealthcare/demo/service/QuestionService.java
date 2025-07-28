@@ -14,6 +14,11 @@ import com.genderhealthcare.demo.exception.InvalidQuestionTitleException;
 import com.genderhealthcare.demo.exception.QuestionNotFoundException;
 import com.genderhealthcare.demo.repository.QuestionRepository;
 
+/**
+ * Service xử lý logic nghiệp vụ cho hệ thống hỏi đáp
+ * Quản lý câu hỏi sức khỏe từ khách hàng, validate và xử lý CRUD operations
+ * Tích hợp với hệ thống trả lời từ consultant
+ */
 @Service
 public class QuestionService {
 

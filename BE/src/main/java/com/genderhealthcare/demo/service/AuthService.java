@@ -13,6 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service xử lý logic nghiệp vụ cho xác thực và phân quyền
+ * Quản lý đăng ký, đăng nhập cho các loại user (customer, consultant, staff)
+ * Validate thông tin đăng nhập và phân quyền truy cập hệ thống
+ */
 @Service
 public class AuthService {    @Autowired
     private UserRepository userRepository;

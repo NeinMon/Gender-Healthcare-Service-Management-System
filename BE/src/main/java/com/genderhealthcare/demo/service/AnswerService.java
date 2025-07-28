@@ -14,6 +14,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service xử lý logic nghiệp vụ cho hệ thống trả lời câu hỏi
+ * Quản lý câu trả lời từ consultant cho các câu hỏi sức khỏe
+ * Đảm bảo liên kết đúng giữa question, answer và consultant
+ */
 @Service
 public class AnswerService {
 

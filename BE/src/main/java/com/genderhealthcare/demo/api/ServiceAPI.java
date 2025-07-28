@@ -11,6 +11,11 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+/**
+ * API Controller xử lý các yêu cầu quản lý dịch vụ tư vấn
+ * Quản lý các loại dịch vụ tư vấn sức khỏe phụ nữ (tư vấn cơ bản, chuyên sâu, ...)
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RequestMapping("/api/services")

@@ -12,6 +12,11 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.time.LocalDate;
 
+/**
+ * API Controller xử lý các yêu cầu đặt lịch tư vấn sức khỏe
+ * Quản lý việc tạo, cập nhật, truy vấn các booking của khách hàng
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
 @RestController
 @CrossOrigin("*") // Cho phép tất cả các nguồn truy cập vào API
 @RequestMapping("/api/bookings")
@@ -20,6 +25,13 @@ public class BookingAPI {
     @Autowired
     private BookingService bookingService;
 
+    /**
+     * API tạo booking với dịch vụ mặc định
+     * Tạo lịch tư vấn với dịch vụ tư vấn sức khỏe phụ nữ cơ bản
+     * 
+     * @param booking Thông tin booking từ frontend
+     * @return ResponseEntity chứa booking đã tạo hoặc lỗi
+     */
     @PostMapping
     public ResponseEntity<?> createBooking(@Valid @RequestBody Booking booking) {
         try {
@@ -33,6 +45,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API tạo booking với dịch vụ cụ thể
+     * Tạo lịch tư vấn với dịch vụ được chỉ định rõ ràng
+     * 
+     * @param booking Thông tin booking kèm service ID từ frontend
+     * @return ResponseEntity chứa booking đã tạo hoặc lỗi
+     */
     @PostMapping("/with-service")
     public ResponseEntity<?> createBookingWithService(@Valid @RequestBody Booking booking) {
         try {
@@ -46,6 +65,12 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy tất cả booking trong hệ thống
+     * Cập nhật trạng thái booking trước khi trả về
+     * 
+     * @return ResponseEntity chứa danh sách tất cả booking hoặc lỗi
+     */
     @GetMapping
     public ResponseEntity<?> getAllBookings() {
         try {
@@ -58,6 +83,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking theo user ID
+     * Lấy tất cả booking của một khách hàng cụ thể
+     * 
+     * @param userId ID của khách hàng
+     * @return ResponseEntity chứa danh sách booking của user hoặc lỗi
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getBookingsByUserId(@PathVariable("userId") Integer userId) {
         try {
@@ -70,6 +102,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking theo consultant ID
+     * Lấy tất cả booking được phân công cho một consultant cụ thể
+     * 
+     * @param consultantId ID của consultant
+     * @return ResponseEntity chứa danh sách booking của consultant hoặc lỗi
+     */
     @GetMapping("/consultant/{consultantId}")
     public ResponseEntity<?> getBookingsByConsultantId(@PathVariable("consultantId") Integer consultantId) {
         try {
@@ -82,6 +121,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking theo service ID
+     * Lấy tất cả booking sử dụng một dịch vụ cụ thể
+     * 
+     * @param serviceId ID của dịch vụ
+     * @return ResponseEntity chứa danh sách booking của service hoặc lỗi
+     */
     @GetMapping("/service/{serviceId}")
     public ResponseEntity<?> getBookingsByServiceId(@PathVariable("serviceId") Integer serviceId) {
         try {
@@ -94,6 +140,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking tư vấn theo user ID
+     * Chỉ lấy các booking có loại dịch vụ là tư vấn (consultation)
+     * 
+     * @param userId ID của khách hàng
+     * @return ResponseEntity chứa danh sách consultation booking hoặc lỗi
+     */
     @GetMapping("/user/{userId}/consultations")
     public ResponseEntity<?> getConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
         try {
@@ -106,6 +159,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking dịch vụ khác (không phải tư vấn) theo user ID
+     * Lấy các booking có loại dịch vụ khác ngoài tư vấn (xét nghiệm, chăm sóc, ...)
+     * 
+     * @param userId ID của khách hàng
+     * @return ResponseEntity chứa danh sách other service booking hoặc lỗi
+     */
     @GetMapping("/user/{userId}/other-services")
     public ResponseEntity<?> getNonConsultationBookingsByUserId(@PathVariable("userId") Integer userId) {
         try {
@@ -118,6 +178,15 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API cập nhật trạng thái booking
+     * Cập nhật trạng thái và thời gian kết thúc (nếu có) cho booking
+     * 
+     * @param id ID của booking cần cập nhật
+     * @param status Trạng thái mới
+     * @param endTimeStr Thời gian kết thúc (optional)
+     * @return ResponseEntity chứa booking đã cập nhật hoặc lỗi
+     */
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateBookingStatus(
             @PathVariable("id") Integer id,
@@ -134,6 +203,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking theo tên dịch vụ
+     * Tìm kiếm booking dựa trên tên của dịch vụ
+     * 
+     * @param serviceName Tên của dịch vụ cần tìm
+     * @return ResponseEntity chứa danh sách booking hoặc lỗi
+     */
     @GetMapping("/by-service-name")
     public ResponseEntity<?> getBookingsByServiceName(@RequestParam("serviceName") String serviceName) {
         try {
@@ -147,6 +223,14 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy danh sách booking theo tên dịch vụ và trạng thái
+     * Tìm kiếm booking với điều kiện kết hợp tên dịch vụ và trạng thái
+     * 
+     * @param serviceName Tên của dịch vụ
+     * @param status Trạng thái booking
+     * @return ResponseEntity chứa danh sách booking hoặc lỗi
+     */
     @GetMapping("/by-service-name-and-status")
     public ResponseEntity<?> getBookingsByServiceNameAndStatus(
             @RequestParam("serviceName") String serviceName,
@@ -162,6 +246,14 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy khung giờ trống của consultant
+     * Trả về danh sách các khung giờ còn trống để đặt lịch tư vấn
+     * 
+     * @param consultantId ID của consultant
+     * @param date Ngày cần kiểm tra (format: yyyy-MM-dd)
+     * @return ResponseEntity chứa danh sách khung giờ trống hoặc lỗi
+     */
     @GetMapping("/available-times")
     public ResponseEntity<?> getAvailableTimes(@RequestParam("consultantId") Integer consultantId,
                                                @RequestParam("date") String date) {
@@ -175,8 +267,17 @@ public class BookingAPI {
         }
     }
     
-    // === Test Booking Endpoints ===
+    /**
+     * === ENDPOINTS CHO TEST BOOKING (XÉT NGHIỆM) ===
+     * Các API dành riêng cho quản lý booking xét nghiệm
+     */
     
+    /**
+     * API lấy tất cả test booking trong hệ thống
+     * Chỉ lấy các booking có loại dịch vụ là xét nghiệm
+     * 
+     * @return ResponseEntity chứa danh sách test booking hoặc lỗi
+     */
     @GetMapping("/test-bookings")
     public ResponseEntity<?> getAllTestBookings() {
         try {
@@ -189,6 +290,13 @@ public class BookingAPI {
         }
     }
     
+    /**
+     * API lấy test booking theo trạng thái
+     * Lọc các booking xét nghiệm theo trạng thái cụ thể
+     * 
+     * @param status Trạng thái cần lọc (Đang chờ duyệt, Đã xác nhận, Hoàn thành, ...)
+     * @return ResponseEntity chứa danh sách test booking theo trạng thái hoặc lỗi
+     */
     @GetMapping("/test-bookings/status/{status}")
     public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
         try {
@@ -201,6 +309,14 @@ public class BookingAPI {
         }
     }
     
+    /**
+     * API lấy booking theo user ID và trạng thái
+     * Lọc booking của một khách hàng cụ thể theo trạng thái
+     * 
+     * @param userId ID của khách hàng
+     * @param status Trạng thái booking cần lọc
+     * @return ResponseEntity chứa danh sách booking hoặc lỗi
+     */
     @GetMapping("/user/{userId}/status/{status}")
     public ResponseEntity<?> getBookingsByUserIdAndStatus(
             @PathVariable("userId") Integer userId,
@@ -215,6 +331,14 @@ public class BookingAPI {
         }
     }
     
+    /**
+     * API cập nhật chỉ trạng thái booking (không cập nhật endTime)
+     * Cập nhật trạng thái đơn giản cho booking
+     * 
+     * @param id ID của booking cần cập nhật
+     * @param status Trạng thái mới
+     * @return ResponseEntity chứa booking đã cập nhật hoặc lỗi
+     */
     @PutMapping("/{id}/update-status")
     public ResponseEntity<?> updateBookingStatusOnly(@PathVariable("id") Integer id,
                                                      @RequestParam("status") String status) {
@@ -226,6 +350,13 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API lấy test booking theo user ID
+     * Lấy tất cả booking xét nghiệm của một khách hàng cụ thể
+     * 
+     * @param userId ID của khách hàng
+     * @return ResponseEntity chứa danh sách test booking của user hoặc lỗi
+     */
     @GetMapping("/user/{userId}/test-bookings")
     public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
         try {
@@ -238,6 +369,14 @@ public class BookingAPI {
         }
     }
 
+    /**
+     * API cập nhật trạng thái thanh toán cho booking
+     * Cập nhật payment status (PAID/CANCELLED) cho booking cụ thể
+     * 
+     * @param id ID của booking cần cập nhật
+     * @param status Trạng thái thanh toán (PAID, CANCELLED, PENDING)
+     * @return ResponseEntity chứa thông báo kết quả hoặc lỗi
+     */
     // === API cập nhật trạng thái paymentStatus cho booking (PAID/CANCELLED) ===
     @PutMapping("/{id}/update-payment-status")
     public ResponseEntity<?> updatePaymentStatus(@PathVariable("id") Integer id,

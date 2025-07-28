@@ -13,6 +13,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * API Controller xử lý các yêu cầu đặt lịch xét nghiệm
+ * Quản lý việc đặt lịch xét nghiệm offline với quy trình check-in/check-out
+ * API này chỉ tiếp nhận request từ frontend và gọi đến service layer
+ */
+/**
  * API Controller cho quản lý đặt lịch xét nghiệm với checkin/checkout offline
  */
 @RestController

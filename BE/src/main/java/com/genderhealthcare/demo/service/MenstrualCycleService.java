@@ -16,6 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Service xử lý logic nghiệp vụ cho theo dõi chu kỳ kinh nguyệt
+ * Quản lý thông tin chu kỳ kinh nguyệt của phụ nữ, tính toán dự đoán
+ * Validate dữ liệu chu kỳ và hỗ trợ tư vấn sức khỏe sinh sản
+ * Đảm bảo tính nhất quán dữ liệu qua @Transactional
+ */
 @Service
 public class MenstrualCycleService {
 

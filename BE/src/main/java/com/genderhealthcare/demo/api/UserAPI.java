@@ -54,9 +54,18 @@ public class    UserAPI {
     public ResponseEntity<?> updateUser(@org.springframework.web.bind.annotation.PathVariable Integer userId, 
                                        @RequestBody Users updatedUser) {
         try {
+            System.out.println("Updating user ID: " + userId);
+            System.out.println("Updated user data: " + updatedUser);
+            System.out.println("User fullName: " + updatedUser.getFullName());
+            System.out.println("User email: " + updatedUser.getEmail());
+            System.out.println("User role: " + updatedUser.getRole());
+            System.out.println("User dob: " + updatedUser.getDob());
+            
             Users user = userService.updateUser(userId, updatedUser);
             return ResponseEntity.ok(user);
         } catch (Exception e) {
+            System.err.println("Error updating user: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body("Không thể cập nhật thông tin người dùng: " + e.getMessage());
         }
     }
@@ -85,6 +94,16 @@ public class    UserAPI {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Không thể cập nhật chuyên môn: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteUser(@org.springframework.web.bind.annotation.PathVariable Integer userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok("Xóa người dùng thành công");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Không thể xóa người dùng: " + e.getMessage());
         }
     }
 

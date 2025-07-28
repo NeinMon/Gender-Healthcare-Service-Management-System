@@ -27,7 +27,7 @@ public class AuthResponse {
         } else if (role == Role.CONSULTANT) {
             redirectUrl = "/consultant-interface"; // URL cho consultant
         } else if (role == Role.MANAGER) {
-            redirectUrl = "/manager"; // URL cho manager
+            redirectUrl = "/service-manager"; // URL cho manager
         } else if (role == Role.ADMIN) {
             redirectUrl = "/admin"; // URL cho admin
         } else if (role == Role.STAFF) {

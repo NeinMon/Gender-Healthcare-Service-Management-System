@@ -52,39 +52,80 @@ public class UserService {
     
     @Transactional
     public Users updateUser(Integer userId, Users updatedUser) {
+        System.out.println("UserService.updateUser called with userId: " + userId);
+        
         Users existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new AccountNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
+        System.out.println("Found existing user: " + existingUser.getFullName());
+        System.out.println("Existing user email: " + existingUser.getEmail());
+
+        // Check email uniqueness only if email is being changed
+        if (updatedUser.getEmail() != null && !updatedUser.getEmail().equals(existingUser.getEmail())) {
+            System.out.println("Email is being changed from " + existingUser.getEmail() + " to " + updatedUser.getEmail());
+            if (userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new IllegalArgumentException("Email đã tồn tại trong hệ thống");
+            }
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+
         // Update fields that can be changed by the user
         if (updatedUser.getFullName() != null) {
+            System.out.println("Updating fullName to: " + updatedUser.getFullName());
             existingUser.setFullName(updatedUser.getFullName());
         }
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().trim().isEmpty()) {
+            System.out.println("Updating password");
+            existingUser.setPassword(updatedUser.getPassword());
+        }
         if (updatedUser.getPhone() != null) {
+            System.out.println("Updating phone to: " + updatedUser.getPhone());
             existingUser.setPhone(updatedUser.getPhone());
         }
         if (updatedUser.getAddress() != null) {
+            System.out.println("Updating address to: " + updatedUser.getAddress());
             existingUser.setAddress(updatedUser.getAddress());
         }
         if (updatedUser.getGender() != null) {
+            System.out.println("Updating gender to: " + updatedUser.getGender());
             existingUser.setGender(updatedUser.getGender());
         }
         if (updatedUser.getDob() != null) {
+            System.out.println("Updating dob to: " + updatedUser.getDob());
             existingUser.setDob(updatedUser.getDob());
+        }
+        if (updatedUser.getRole() != null) {
+            System.out.println("Updating role to: " + updatedUser.getRole());
+            existingUser.setRole(updatedUser.getRole());
         }
         
         // Cập nhật trường specification nếu người dùng là CONSULTANT
-        if (existingUser.getRole() == Role.CONSULTANT && updatedUser.getSpecification() != null) {
+        if (updatedUser.getRole() != null && updatedUser.getRole() == Role.CONSULTANT && updatedUser.getSpecification() != null) {
+            System.out.println("Updating specification to: " + updatedUser.getSpecification());
+            existingUser.setSpecification(updatedUser.getSpecification());
+        } else if (existingUser.getRole() == Role.CONSULTANT && updatedUser.getSpecification() != null) {
+            System.out.println("Updating specification (existing consultant) to: " + updatedUser.getSpecification());
             existingUser.setSpecification(updatedUser.getSpecification());
         }
         
-        // Don't allow changing email or role through this method
+        System.out.println("Saving updated user...");
+        Users savedUser = userRepository.save(existingUser);
+        System.out.println("User saved successfully with ID: " + savedUser.getUserID());
         
-        return userRepository.save(existingUser);
+        return savedUser;
     }
 
     @Transactional(readOnly = true)
     public List<Users> getUsersByRole(Role role) {
         return userRepository.findByRole(role);
+    }
+
+    @Transactional
+    public void deleteUser(Integer userId) {
+        Users existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new AccountNotFoundException("Không tìm thấy người dùng với ID: " + userId));
+        
+        userRepository.delete(existingUser);
     }
 
 }

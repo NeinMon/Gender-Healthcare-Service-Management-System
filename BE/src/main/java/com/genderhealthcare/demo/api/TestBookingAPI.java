@@ -42,15 +42,15 @@ public class TestBookingAPI {
      * @param testBookingInfo Thông tin test booking cần tạo (đã validate)
      * @return ResponseEntity chứa TestBookingInfo đã tạo hoặc lỗi
      */
-    @PostMapping
-    public ResponseEntity<?> createTestBooking(@Valid @RequestBody TestBookingInfo testBookingInfo) {
-        try {
-            TestBookingInfo created = testBookingInfoService.createTestBookingInfo(testBookingInfo);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
+    // @PostMapping
+    // public ResponseEntity<?> createTestBooking(@Valid @RequestBody TestBookingInfo testBookingInfo) {
+    //     try {
+    //         TestBookingInfo created = testBookingInfoService.createTestBookingInfo(testBookingInfo);
+    //         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy tất cả test booking trong hệ thống
@@ -58,16 +58,16 @@ public class TestBookingAPI {
      * 
      * @return ResponseEntity chứa danh sách TestBookingInfo hoặc lỗi
      */
-    @GetMapping
-    public ResponseEntity<?> getAllTestBookings() {
-        try {
-            List<TestBookingInfo> testBookings = testBookingInfoService.getAllTestBookingInfos();
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy danh sách test bookings: " + e.getMessage());
-        }
-    }
+    // @GetMapping
+    // public ResponseEntity<?> getAllTestBookings() {
+    //     try {
+    //         List<TestBookingInfo> testBookings = testBookingInfoService.getAllTestBookingInfos();
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy danh sách test bookings: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo ID
@@ -76,19 +76,19 @@ public class TestBookingAPI {
      * @param id ID của test booking cần tìm
      * @return ResponseEntity chứa TestBookingInfo hoặc thông báo không tìm thấy
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getTestBookingById(@PathVariable("id") Integer id) {
-        try {
-            TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoById(id);
-            if (testBookingInfo == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found");
-            }
-            return ResponseEntity.ok(testBookingInfo);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test booking: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/{id}")
+    // public ResponseEntity<?> getTestBookingById(@PathVariable("id") Integer id) {
+    //     try {
+    //         TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoById(id);
+    //         if (testBookingInfo == null) {
+    //             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found");
+    //         }
+    //         return ResponseEntity.ok(testBookingInfo);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test booking: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo booking ID
@@ -97,19 +97,19 @@ public class TestBookingAPI {
      * @param bookingId ID của booking chính liên kết với test booking
      * @return ResponseEntity chứa TestBookingInfo hoặc thông báo không tìm thấy
      */
-    @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<?> getTestBookingByBookingId(@PathVariable("bookingId") Integer bookingId) {
-        try {
-            TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoByBookingId(bookingId);
-            if (testBookingInfo == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found for booking ID: " + bookingId);
-            }
-            return ResponseEntity.ok(testBookingInfo);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test booking theo bookingId: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/booking/{bookingId}")
+    // public ResponseEntity<?> getTestBookingByBookingId(@PathVariable("bookingId") Integer bookingId) {
+    //     try {
+    //         TestBookingInfo testBookingInfo = testBookingInfoService.getTestBookingInfoByBookingId(bookingId);
+    //         if (testBookingInfo == null) {
+    //             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Test booking not found for booking ID: " + bookingId);
+    //         }
+    //         return ResponseEntity.ok(testBookingInfo);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test booking theo bookingId: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo trạng thái
@@ -118,16 +118,16 @@ public class TestBookingAPI {
      * @param status Trạng thái cần lọc (Pending, Confirmed, Completed, Cancelled)
      * @return ResponseEntity chứa danh sách TestBookingInfo theo trạng thái hoặc lỗi
      */
-    @GetMapping("/status/{status}")
-    public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
-        try {
-            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStatus(status);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test bookings theo status: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/status/{status}")
+    // public ResponseEntity<?> getTestBookingsByStatus(@PathVariable("status") String status) {
+    //     try {
+    //         List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStatus(status);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test bookings theo status: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo user ID
@@ -136,16 +136,16 @@ public class TestBookingAPI {
      * @param userId ID của khách hàng
      * @return ResponseEntity chứa danh sách TestBookingInfo của user hoặc lỗi
      */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
-        try {
-            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByUserId(userId);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test bookings theo userId: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/user/{userId}")
+    // public ResponseEntity<?> getTestBookingsByUserId(@PathVariable("userId") Integer userId) {
+    //     try {
+    //         List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByUserId(userId);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test bookings theo userId: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API lấy test booking theo staff ID
@@ -154,16 +154,16 @@ public class TestBookingAPI {
      * @param staffId ID của nhân viên xét nghiệm
      * @return ResponseEntity chứa danh sách TestBookingInfo được quản lý bởi staff hoặc lỗi
      */
-    @GetMapping("/staff/{staffId}")
-    public ResponseEntity<?> getTestBookingsByStaffId(@PathVariable("staffId") Integer staffId) {
-        try {
-            List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStaffId(staffId);
-            return ResponseEntity.ok(testBookings);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi lấy test bookings theo staffId: " + e.getMessage());
-        }
-    }
+    // @GetMapping("/staff/{staffId}")
+    // public ResponseEntity<?> getTestBookingsByStaffId(@PathVariable("staffId") Integer staffId) {
+    //     try {
+    //         List<TestBookingInfo> testBookings = testBookingInfoService.getTestBookingInfosByStaffId(staffId);
+    //         return ResponseEntity.ok(testBookings);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //             .body("Lỗi lấy test bookings theo staffId: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API cập nhật thông tin test booking
@@ -174,16 +174,16 @@ public class TestBookingAPI {
      * @return ResponseEntity chứa TestBookingInfo đã được cập nhật hoặc lỗi
      * @throws IllegalArgumentException nếu ID không tồn tại
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTestBooking(@PathVariable("id") Integer id, 
-                                               @Valid @RequestBody TestBookingInfo testBookingInfo) {
-        try {
-            TestBookingInfo updated = testBookingInfoService.updateTestBookingInfo(id, testBookingInfo);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
+    // @PutMapping("/{id}")
+    // public ResponseEntity<?> updateTestBooking(@PathVariable("id") Integer id, 
+    //                                            @Valid @RequestBody TestBookingInfo testBookingInfo) {
+    //     try {
+    //         TestBookingInfo updated = testBookingInfoService.updateTestBookingInfo(id, testBookingInfo);
+    //         return ResponseEntity.ok(updated);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    //     }
+    // }
 
     /**
      * API cập nhật trạng thái test booking
@@ -224,19 +224,19 @@ public class TestBookingAPI {
      * @throws Exception nếu có lỗi trong quá trình tạo booking hoặc test booking
      */
     // === Tạo test booking kèm booking gốc ===
-    @PostMapping("/create-with-booking")
-    public ResponseEntity<?> createTestBookingWithBooking(@Valid @RequestBody Map<String, Object> request) {
-        try {
-            Integer userId = (Integer) request.get("userId");
-            Integer serviceId = (Integer) request.get("serviceId");
-            String content = (String) request.get("content");
+    // @PostMapping("/create-with-booking")
+    // public ResponseEntity<?> createTestBookingWithBooking(@Valid @RequestBody Map<String, Object> request) {
+    //     try {
+    //         Integer userId = (Integer) request.get("userId");
+    //         Integer serviceId = (Integer) request.get("serviceId");
+    //         String content = (String) request.get("content");
             
-            Map<String, Object> result = testBookingInfoService.createBookingWithTestBooking(userId, serviceId, content);
-            return ResponseEntity.status(HttpStatus.CREATED).body(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi tạo booking với test booking: " + e.getMessage());
-        }
-    }
+    //         Map<String, Object> result = testBookingInfoService.createBookingWithTestBooking(userId, serviceId, content);
+    //         return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lỗi tạo booking với test booking: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * API cập nhật kết quả xét nghiệm

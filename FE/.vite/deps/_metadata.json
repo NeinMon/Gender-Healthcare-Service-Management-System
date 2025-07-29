@@ -1,0 +1,43 @@
+{
+  "hash": "03b309c4",
+  "configHash": "de489997",
+  "lockfileHash": "00d26cf7",
+  "browserHash": "7b039cff",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "c2fc1bf3",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "58a29707",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "dda67e82",
+      "needsInterop": false
+    },
+    "agora-rtc-sdk-ng": {
+      "src": "../../node_modules/agora-rtc-sdk-ng/AgoraRTC_N-production.js",
+      "file": "agora-rtc-sdk-ng.js",
+      "fileHash": "831480bb",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-XQIPT53K": {
+      "file": "chunk-XQIPT53K.js"
+    },
+    "chunk-KS2M7ZJI": {
+      "file": "chunk-KS2M7ZJI.js"
+    },
+    "chunk-5WRI5ZAA": {
+      "file": "chunk-5WRI5ZAA.js"
+    }
+  }
+}

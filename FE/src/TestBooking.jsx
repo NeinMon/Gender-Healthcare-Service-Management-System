@@ -605,10 +605,18 @@ const TestBooking = () => {
                     type="text"
                     name="fullName"
                     value={formData.fullName}
-                    onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="Nguyễn Văn A"
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
                 
@@ -618,10 +626,18 @@ const TestBooking = () => {
                     type="number"
                     name="age"
                     value={formData.age}
-                    onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="25"
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
 
@@ -630,9 +646,16 @@ const TestBooking = () => {
                   <select
                     name="gender"
                     value={formData.gender}
-                    onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
+                    disabled
+                    tabIndex="-1"
                   >
                     <option value="">-- Chọn giới tính --</option>
                     <option value="female">Nữ</option>
@@ -647,10 +670,18 @@ const TestBooking = () => {
                     type="tel"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
                     required
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="0912345678"
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
 
@@ -660,9 +691,17 @@ const TestBooking = () => {
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="example@gmail.com"
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
 

@@ -337,11 +337,18 @@ const AskQuestion = () => {
                     type="text"
                     name="fullName"
                     value={formData.fullName}
-                    onChange={handleChange}
                     required
-                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
+                    style={{
+                      ...inputStyle, 
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="Nguyễn Văn A"
-                    disabled={loading}
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
                 
@@ -351,11 +358,18 @@ const AskQuestion = () => {
                     type="number"
                     name="age"
                     value={formData.age}
-                    onChange={handleChange}
                     required
-                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
+                    style={{
+                      ...inputStyle, 
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="25"
-                    disabled={loading}
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
 
@@ -364,10 +378,16 @@ const AskQuestion = () => {
                   <select
                     name="gender"
                     value={formData.gender}
-                    onChange={handleChange}
                     required
-                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
-                    disabled={loading}
+                    style={{
+                      ...inputStyle, 
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
+                    disabled
+                    tabIndex="-1"
                   >
                     <option value="">-- Chọn giới tính --</option>
                     <option value="female">Nữ</option>
@@ -382,11 +402,18 @@ const AskQuestion = () => {
                     type="tel"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
                     required
-                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
+                    style={{
+                      ...inputStyle, 
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="0912345678"
-                    disabled={loading}
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>
 
@@ -396,10 +423,17 @@ const AskQuestion = () => {
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    style={{...inputStyle, backgroundColor: loading ? "#f5f5f5" : "#f9f9f9"}}
+                    style={{
+                      ...inputStyle, 
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      cursor: "not-allowed",
+                      border: "1px solid #ddd"
+                    }}
                     placeholder="example@gmail.com"
-                    disabled={loading}
+                    readOnly
+                    disabled
+                    tabIndex="-1"
                   />
                 </div>                <div style={{ display: "flex", flexDirection: "column" }}>
                   <label style={labelStyle}>Chủ đề câu hỏi *</label>

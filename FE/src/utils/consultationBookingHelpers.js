@@ -1,6 +1,6 @@
-// Utility functions for ConsultationBooking component
+// Các hàm tiện ích cho component ConsultationBooking
 
-// API calls
+// Các hàm gọi API
 export const fetchConsultants = async (setConsultants) => {
   try {
     const res = await fetch('http://localhost:8080/api/users/consultants');
@@ -28,7 +28,7 @@ export const fetchConsultationPrice = async (setConsultationPrice) => {
 };
 
 export const fetchUserInfo = async (setFormData) => {
-  // Lấy thông tin user từ localStorage dựa vào loggedInUser
+  // Lấy thông tin người dùng từ localStorage dựa vào loggedInUser
   let userId = 1; // Giá trị mặc định
   const userJson = localStorage.getItem('loggedInUser');
   if (userJson) {
@@ -75,7 +75,7 @@ export const fetchAvailableTimes = async (consultantId, date, setAvailableTimes,
   }
 };
 
-// Utility functions
+// Các hàm tiện ích
 export const isTimeSlotPassed = (timeSlot, date) => {
   if (!date) return false;
   const today = new Date();
@@ -87,11 +87,11 @@ export const isTimeSlotPassed = (timeSlot, date) => {
   const [startHour, startMinute] = slotStartTime.split(':').map(Number);
   const [endHour, endMinute] = slotEndTime.split(':').map(Number);
   
-  // Tạo đối tượng Date cho endTime của slot
+  // Tạo đối tượng Date cho thời gian kết thúc của slot
   const slotEnd = new Date(selectedDate);
   slotEnd.setHours(endHour, endMinute, 0, 0);
   
-  // Nếu thời gian hiện tại đã sau endTime của slot thì disable
+  // Nếu thời gian hiện tại đã sau thời gian kết thúc của slot thì vô hiệu hóa
   return today > slotEnd;
 };
 
@@ -127,7 +127,7 @@ export const validateBookingData = (userId, formData, availableTimes, appointmen
     return "Khung giờ đã chọn không còn trống! Vui lòng chọn lại.";
   }
 
-  return null; // No error
+  return null; // Không có lỗi
 };
 
 export const createBookingPayload = (formData, consultationPrice) => {
@@ -148,7 +148,7 @@ export const createBookingPayload = (formData, consultationPrice) => {
     content: formData.symptoms,
     appointmentDate: appointmentDate, // yyyy-MM-dd
     startTime: startTime, // HH:mm
-    // Default service ID for consultation is 1
+    // ID dịch vụ mặc định cho tư vấn là 1
     serviceId: 1,
     // Lấy giá từ backend
     amount: consultationPrice
@@ -286,7 +286,7 @@ export const cancelPayment = async (bookingDetails) => {
   return true;
 };
 
-// Form handlers
+// Các hàm xử lý form
 export const handleFormChange = (e, formData, setFormData, setFormData2) => {
   const { name, value } = e.target;
   const newFormData = {
@@ -304,7 +304,7 @@ export const handleFormChange = (e, formData, setFormData, setFormData2) => {
   }
 };
 
-// URL parameter handling
+// Xử lý tham số URL
 export const parseUrlParams = () => {
   const urlParams = new URLSearchParams(window.location.search);
   return {
@@ -327,7 +327,7 @@ export const shouldCheckPaymentStatus = (params) => {
          (params.status === 'success' || params.status?.toUpperCase() === 'PROCESSING' || !params.status);
 };
 
-// Styles
+// Các kiểu dáng giao diện
 export const labelStyle = {
   fontSize: "14px",
   fontWeight: "600",

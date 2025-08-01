@@ -1,8 +1,8 @@
-// Helper functions for ConsultantInterface component
+// Các hàm hỗ trợ cho component ConsultantInterface
 
 import React from 'react';
 
-// Utility functions
+// Các hàm tiện ích định dạng dữ liệu
 export const formatDate = (dateString) => {
   if (!dateString) return 'Không có ngày';
   
@@ -25,7 +25,7 @@ export const getStatusBadge = (status, id) => {
     display: 'inline-block'
   };
 
-  // Map status values to show only two states: Đã trả lời and Chờ trả lời
+  // Ánh xạ giá trị trạng thái để chỉ hiển thị hai trạng thái: Đã trả lời và Chờ trả lời
   switch(status?.toLowerCase()) {
     case 'resolved':
       return <span key={`status-${id || 'resolved'}`} style={{...badgeStyle, backgroundColor: '#d0f7ea', color: '#0f766e'}}>Đã trả lời</span>;
@@ -35,7 +35,7 @@ export const getStatusBadge = (status, id) => {
   }
 };
 
-// API functions
+// Các hàm gọi API
 export const fetchConsultantInfo = async (setConsultant) => {
   try {
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
@@ -162,7 +162,7 @@ export const fetchBookings = async (setLoadingBookings, setBookings, setBookingU
   setLoadingBookings(false);
 };
 
-// Event handlers
+// Các hàm xử lý sự kiện
 export const handleQuestionClick = (question, selectedQuestion, setSelectedQuestion, setAnswerText, setExistingAnswer, fetchExistingAnswer) => {
   // Xác định ID câu hỏi (hỗ trợ cả questionID và id)
   const questionId = question.questionID || question.id;

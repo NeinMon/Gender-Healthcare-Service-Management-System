@@ -1,6 +1,6 @@
-// Helper functions for App component
+// Các hàm hỗ trợ cho component App chính
 
-// Auth related functions
+// Các hàm liên quan đến xác thực và quản lý người dùng
 export const checkUserGender = async (userId, setUserGender) => {
   if (!userId) return null;
   
@@ -19,7 +19,7 @@ export const checkUserGender = async (userId, setUserGender) => {
       return gender;
     }
   } catch (err) {
-    console.error('Error checking user gender:', err);
+    console.error('Lỗi khi kiểm tra giới tính người dùng:', err);
   }
   return null;
 };
@@ -46,7 +46,7 @@ export const handlePeriodTrackingClick = async (e, isLoggedIn, userGender, check
   const userId = localStorage.getItem('userId');
   let gender = userGender;
   
-  // Nếu chưa có thông tin giới tính, kiểm tra lại
+  // Nếu chưa có thông tin giới tính, kiểm tra lại từ server
   if (!gender && userId) {
     gender = await checkUserGender(userId);
   }
@@ -58,7 +58,7 @@ export const handlePeriodTrackingClick = async (e, isLoggedIn, userGender, check
   }
 };
 
-// Form handling functions
+// Các hàm xử lý form đăng ký và đăng nhập
 export const handleRegisterChange = (e, registerData, setRegisterData) => {
   setRegisterData({ ...registerData, [e.target.name]: e.target.value });
 };
@@ -105,7 +105,7 @@ export const handleLoginSubmit = (e, loginData, setCurrentUser, setIsLoggedIn, c
     return;
   }
   
-  // Simulate login success và cập nhật state
+  // Mô phỏng đăng nhập thành công và cập nhật trạng thái
   const userData = {
     userID: 1,
     fullName: "Người dùng",
@@ -113,18 +113,18 @@ export const handleLoginSubmit = (e, loginData, setCurrentUser, setIsLoggedIn, c
     role: "USER"
   };
   
-  // Lưu vào localStorage
+  // Lưu thông tin người dùng vào localStorage
   localStorage.setItem('loggedInUser', JSON.stringify(userData));
   localStorage.setItem('userId', userData.userID);
   localStorage.setItem('email', userData.email);
   localStorage.setItem('fullName', userData.fullName);
   localStorage.setItem('role', userData.role);
   
-  // Cập nhật state
+  // Cập nhật trạng thái ứng dụng
   setCurrentUser(userData);
   setIsLoggedIn(true);
   
-  // Kiểm tra giới tính sau khi đăng nhập
+  // Kiểm tra giới tính người dùng sau khi đăng nhập thành công
   checkUserGender(userData.userID);
   
   alert("Đăng nhập thành công!");
@@ -132,7 +132,7 @@ export const handleLoginSubmit = (e, loginData, setCurrentUser, setIsLoggedIn, c
   setLoginData({ email: "", password: "" });
 };
 
-// Animation functions
+// Các hàm tạo hiệu ứng animation cho số liệu thống kê
 export const animateCounter = (target, current, setter, increment) => {
   if (current < target) {
     setTimeout(() => {
@@ -142,35 +142,43 @@ export const animateCounter = (target, current, setter, increment) => {
 };
 
 export const initializeAnimatedCounters = (animatedStats, setAnimatedStats) => {
+  // Khởi tạo animation cho số lượng khách hàng
   animateCounter(10000, animatedStats.customers, (val) => 
     setAnimatedStats(prev => ({ ...prev, customers: val })), 200);
+  // Khởi tạo animation cho số lượng xét nghiệm
   animateCounter(50000, animatedStats.tests, (val) => 
     setAnimatedStats(prev => ({ ...prev, tests: val })), 1000);
+  // Khởi tạo animation cho tỷ lệ hài lòng
   animateCounter(98, animatedStats.satisfaction, (val) => 
     setAnimatedStats(prev => ({ ...prev, satisfaction: val })), 2);
+  // Khởi tạo animation cho số năm kinh nghiệm
   animateCounter(5, animatedStats.experience, (val) => 
     setAnimatedStats(prev => ({ ...prev, experience: val })), 1);
 };
 
-// Event handlers
+// Các hàm xử lý sự kiện người dùng
 export const handleClickOutside = (event, showConsultationDropdown, showTestBookingDropdown, showQuestionDropdown, setShowConsultationDropdown, setShowTestBookingDropdown, setShowQuestionDropdown) => {
+  // Đóng dropdown tư vấn nếu click bên ngoài
   if (showConsultationDropdown && !event.target.closest('.consultation-dropdown')) {
     setShowConsultationDropdown(false);
   }
+  // Đóng dropdown đặt xét nghiệm nếu click bên ngoài
   if (showTestBookingDropdown && !event.target.closest('.test-booking-dropdown')) {
     setShowTestBookingDropdown(false);
   }
+  // Đóng dropdown câu hỏi nếu click bên ngoài
   if (showQuestionDropdown && !event.target.closest('.question-dropdown')) {
     setShowQuestionDropdown(false);
   }
 };
 
-// Intersection Observer setup
+// Thiết lập Intersection Observer để theo dõi các phần tử hiển thị trên màn hình
 export const setupIntersectionObserver = (setVisibleSections) => {
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
+          // Lấy ID của phần tử hoặc tạo ID mặc định
           const id = entry.target.id || entry.target.getAttribute('data-section-id') || 'statistics';
           setVisibleSections(prev => new Set([...prev, id]));
         }
@@ -179,20 +187,21 @@ export const setupIntersectionObserver = (setVisibleSections) => {
     { threshold: 0.1, rootMargin: '50px' }
   );
 
-  // Observe all sections with fade-in animation
+  // Theo dõi tất cả các phần tử có hiệu ứng fade-in
   const sections = document.querySelectorAll('[data-animate="fade-in"]');
   sections.forEach((section, index) => {
-    // Add data-section-id for sections without id
+    // Thêm data-section-id cho các phần tử không có id
     if (!section.id) {
       section.setAttribute('data-section-id', `section-${index}`);
     }
     observer.observe(section);
   });
 
+  // Trả về hàm cleanup để ngắt kết nối observer
   return () => observer.disconnect();
 };
 
-// Data constants
+// Dữ liệu hình ảnh cho carousel trên trang chủ
 export const carouselImages = [
   { src: "/dichvuchamsoc.jpg", alt: "Dịch vụ chăm sóc sức khỏe" },
   { src: "/Doctor2.jpg", alt: "Đội ngũ y bác sĩ" },

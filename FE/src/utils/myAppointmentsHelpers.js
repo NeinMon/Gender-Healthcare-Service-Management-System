@@ -1,9 +1,9 @@
 import React from 'react';
 import VideoCall from '../components/VideoCall';
 
-// Utility functions for MyAppointments component
+// Các hàm tiện ích cho component MyAppointments
 
-// Authentication and user management
+// Xác thực và quản lý người dùng
 export const checkUserAuthentication = (navigate) => {
   const userJson = localStorage.getItem('loggedInUser');
   if (!userJson) {
@@ -37,7 +37,7 @@ export const getUserFromStorage = () => {
   }
 };
 
-// API calls
+// Các hàm gọi API
 export const fetchAppointments = async (setLoading, setAppointments, setConsultantNames, setError) => {
   try {
     setLoading(true);
@@ -68,7 +68,7 @@ export const fetchAppointments = async (setLoading, setAppointments, setConsulta
 };
 
 export const fetchConsultantNames = async (appointments, setConsultantNames) => {
-  // Lấy danh sách consultantId duy nhất
+  // Lấy danh sách ID tư vấn viên duy nhất
   const consultantIds = [...new Set(appointments.map(item => item.consultantId).filter(Boolean))];
   
   // Gọi API lấy thông tin tư vấn viên cho từng consultantId
@@ -92,7 +92,7 @@ export const fetchConsultantNames = async (appointments, setConsultantNames) => 
   setConsultantNames(namesObj);
 };
 
-// Filter and data processing
+// Lọc và xử lý dữ liệu
 export const getFilteredAppointments = (appointments, filterStatus) => {
   // Lọc chỉ các lịch đã thanh toán thành công (paymentStatus === 'PAID')
   return appointments.filter(app => {
@@ -101,7 +101,7 @@ export const getFilteredAppointments = (appointments, filterStatus) => {
   });
 };
 
-// Status formatting and styling
+// Định dạng trạng thái và styling
 export const formatStatus = (status) => {
   switch (status) {
     case 'Chờ bắt đầu':
@@ -128,7 +128,7 @@ export const getStatusColor = (status) => {
   }
 };
 
-// Event handlers
+// Các hàm xử lý sự kiện
 export const handleFilterChange = (e, setFilterStatus) => {
   setFilterStatus(e.target.value);
 };

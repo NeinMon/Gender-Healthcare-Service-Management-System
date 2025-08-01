@@ -2,6 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import VideoCall from './components/VideoCall';
+import {
+  checkUserAuthentication,
+  fetchAppointments,
+  getFilteredAppointments,
+  formatStatus,
+  getStatusColor,
+  handleFilterChange,
+  handleJoinVideoCall,
+  handleShowDetailModal,
+  handleVideoCallLeave,
+  statusOptions,
+  getConsultantDisplayName,
+  getConsultantInitial,
+  shouldShowJoinButton,
+  shouldShowWaitingMessage,
+  shouldShowDetailButton
+} from './utils/myAppointmentsHelpers';
 
 const MyAppointments = () => {
   const navigate = useNavigate();
@@ -18,123 +35,15 @@ const MyAppointments = () => {
   const [detailData, setDetailData] = useState(null);
   
   useEffect(() => {
-    // Kiểm tra login
-    const userJson = localStorage.getItem('loggedInUser');
-    if (!userJson) {
-      navigate('/login', { state: { from: '/my-appointments' } });
-      return;
+    // Kiểm tra login và tải danh sách lịch hẹn
+    const user = checkUserAuthentication(navigate);
+    if (user) {
+      fetchAppointments(setLoading, setAppointments, setConsultantNames, setError);
     }
-    
-    try {
-      // Xác nhận là user object hợp lệ
-      const user = JSON.parse(userJson);
-      if (!user.userID) { // Sửa từ user.id thành user.userID theo Users entity
-        navigate('/login', { state: { from: '/my-appointments' } });
-        return;
-      }
-    } catch (err) {
-      navigate('/login', { state: { from: '/my-appointments' } });
-      return;
-    }
-    
-    // Tải danh sách lịch hẹn
-    fetchAppointments();
   }, [navigate]);
   
-  const fetchAppointments = async () => {
-    try {
-      setLoading(true);
-      const userJson = localStorage.getItem('loggedInUser');
-      const user = JSON.parse(userJson);
-      // Kiểm tra ID dựa trên entity Users.java sử dụng userID
-      const userId = user?.userID;
-      
-      if (!userId) {
-        throw new Error('Không tìm thấy thông tin người dùng');
-      }
-      
-      // Lấy danh sách booking của user - sử dụng endpoint consultations
-      const response = await fetch(`http://localhost:8080/api/bookings/user/${userId}/consultations`);
-      if (!response.ok) {
-        throw new Error('Lỗi khi lấy danh sách lịch hẹn');
-      }
-      
-      const data = await response.json();
-      console.log(`🔄 [MyAppointments] Làm mới dữ liệu: ${data.length} lịch hẹn`);
-      setAppointments(data);
-      
-      // Lấy danh sách consultantId duy nhất
-      const consultantIds = [...new Set(data.map(item => item.consultantId).filter(Boolean))];
-      
-      // Gọi API lấy thông tin tư vấn viên cho từng consultantId
-      const namesObj = {};
-      await Promise.all(
-        consultantIds.map(async (id) => {
-          try {
-            const res = await fetch(`http://localhost:8080/api/users/${id}`);
-            if (res.ok) {
-              const consultantData = await res.json();
-              // Sử dụng fullName từ entity Users
-              namesObj[id] = consultantData.fullName || `Tư vấn viên #${id}`;
-            } else {
-              namesObj[id] = `Tư vấn viên #${id}`;
-            }
-          } catch {
-            namesObj[id] = `Tư vấn viên #${id}`;
-          }
-        })
-      );
-      setConsultantNames(namesObj);
-      setLoading(false);
-    } catch (err) {
-      setError('Không thể tải danh sách lịch hẹn. Vui lòng thử lại sau: ' + err.message);
-      setLoading(false);
-    }
-  };
-
-  // Lọc chỉ các lịch đã thanh toán thành công (paymentStatus === 'PAID')
-  const filteredAppointments = appointments.filter(app => {
-    if (filterStatus === 'all') return app.payment?.status === 'PAID';
-    return app.status === filterStatus && app.payment?.status === 'PAID';
-  });
-  // Chức năng hủy lịch hẹn đã được gỡ bỏ
-  // Chức năng kiểm tra điều kiện hủy lịch hẹn đã được gỡ bỏ
-  // Đã xóa hàm kiểm tra điều kiện tham gia
-  
-  const formatStatus = (status) => {
-    switch (status) {
-      case 'Chờ bắt đầu':
-        return 'Chờ bắt đầu';
-      case 'Đang diễn ra':
-        return 'Đang diễn ra';
-      case 'Đã kết thúc':
-        return 'Đã kết thúc';
-      default:
-        return status || 'Không xác định';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Chờ bắt đầu':
-        return '#fde68a'; // vàng nhạt
-      case 'Đang diễn ra':
-        return '#22d3ee'; // xanh cyan
-      case 'Đã kết thúc':
-        return '#cbd5e1'; // xám nhạt
-      default:
-        return '#757575';
-    }
-  };
-
-  // Đúng mapping status backend
-  const statusOptions = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'Chờ bắt đầu', label: 'Chờ bắt đầu' },
-    { value: 'Đang diễn ra', label: 'Đang diễn ra' },
-    { value: 'Đã kết thúc', label: 'Đã kết thúc' }
-  ];
-
+  // Lọc chỉ các lịch đã thanh toán thành công
+  const filteredAppointments = getFilteredAppointments(appointments, filterStatus);
   return (
     <div style={{ 
       backgroundColor: "#f0f9ff", 
@@ -146,17 +55,8 @@ const MyAppointments = () => {
     }}>
       {showVideoCall && (
         <VideoCall 
-          channelName={videoChannel} 
-          onLeave={(endCall = false) => {
-            console.log(`🔄 [MyAppointments] Cuộc gọi kết thúc`);
-            setShowVideoCall(false);
-            setVideoChannel(null);
-            
-            // Xóa ID lịch hẹn đang hoạt động
-            if (activeBookingId) {
-              setActiveBookingId(null);
-            }
-          }} 
+          channelName={videoChannel}
+          onLeave={() => handleVideoCallLeave(setShowVideoCall, setVideoChannel, activeBookingId, setActiveBookingId)}
           userRole="audience"
         />
       )}
@@ -263,7 +163,7 @@ const MyAppointments = () => {
               }}>Lọc theo trạng thái: </label>
               <select 
                 value={filterStatus} 
-                onChange={e => setFilterStatus(e.target.value)} 
+                onChange={e => handleFilterChange(e, setFilterStatus)} 
                 style={{ 
                   padding: "10px 16px", 
                   borderRadius: "8px", 
@@ -409,13 +309,13 @@ const MyAppointments = () => {
                                 fontWeight: "bold",
                                 fontSize: "16px"
                               }}>
-                                {(consultantNames[consultantId] || '?').charAt(0).toUpperCase()}
+                                {getConsultantInitial(consultantId, consultantNames)}
                               </div>
                               <span style={{ 
                                 fontWeight: 600, 
                                 color: '#0891b2' 
                               }}>
-                                {consultantNames[consultantId] || 'Đang tải...'}
+                                {getConsultantDisplayName(consultantId, consultantNames)}
                               </span>
                             </div>
                           </td>
@@ -451,7 +351,7 @@ const MyAppointments = () => {
                             </div>
                           </td>
                           <td style={{ padding: '16px 20px', textAlign: "center" }}>
-                            {app.status === 'Đang diễn ra' && (
+                            {shouldShowJoinButton(app.status) && (
                               <button
                                 style={{
                                   background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
@@ -478,29 +378,19 @@ const MyAppointments = () => {
                                   e.currentTarget.style.transform = "scale(1)";
                                   e.currentTarget.style.boxShadow = "0 2px 8px rgba(34,211,238,0.25)";
                                 }}
-                                onClick={() => { 
-                                  const bookingId = app.bookingId;
-                                  const channelName = bookingId ? `booking_${bookingId}` : null;
-                                  if (!channelName) {
-                                    alert("Không thể tham gia cuộc gọi do thiếu thông tin đặt lịch!");
-                                    return;
-                                  }
-                                  setActiveBookingId(bookingId);
-                                  setVideoChannel(channelName);
-                                  setShowVideoCall(true);
-                                }}
+                                onClick={() => handleJoinVideoCall(app, setActiveBookingId, setVideoChannel, setShowVideoCall)}
                               >
                                 <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                   <span style={{ fontSize: "16px" }}>🎥</span> Tham gia tư vấn
                                 </span>
                               </button>
                             )}
-                            {app.status === 'Chờ bắt đầu' && (
+                            {shouldShowWaitingMessage(app.status) && (
                               <span style={{ color: "#b45309", fontSize: "14px", fontWeight: "500" }}>
                                 Chưa đến giờ hẹn
                               </span>
                             )}
-                            {app.status === 'Đã kết thúc' && (
+                            {shouldShowDetailButton(app.status) && (
                               <>
                                 <button
                                   style={{
@@ -515,17 +405,7 @@ const MyAppointments = () => {
                                     marginLeft: 4,
                                     transition: "all 0.2s"
                                   }}
-                                  onClick={() => {
-                                    setDetailData({
-                                      consultant: consultantNames[app.consultantId] || 'N/A',
-                                      content: app.content || 'Không có',
-                                      date: app.appointmentDate || 'N/A',
-                                      startTime: app.startTime || 'N/A',
-                                      endTime: app.endTime || 'N/A',
-                                      status: app.status
-                                    });
-                                    setShowDetailModal(true);
-                                  }}
+                                  onClick={() => handleShowDetailModal(app, consultantNames, setDetailData, setShowDetailModal)}
                                 >
                                   Xem chi tiết cuộc gọi
                                 </button>
@@ -540,7 +420,215 @@ const MyAppointments = () => {
               </div>
             </div>
           )}
-          {/* Modal chi tiết đã được ẩn */}
+          {/* Modal chi tiết */}
+          {showDetailModal && detailData && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1001,
+              backdropFilter: 'blur(4px)'
+            }}>
+              <div style={{
+                backgroundColor: '#fff',
+                padding: '32px',
+                borderRadius: '16px',
+                maxWidth: '600px',
+                width: '90%',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                border: '1px solid #e2e8f0',
+                position: 'relative'
+              }}>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '28px',
+                    cursor: 'pointer',
+                    color: '#64748b',
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ×
+                </button>
+
+                <h3 style={{
+                  margin: '0 0 24px 0',
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: '#1e293b',
+                  paddingRight: '50px'
+                }}>
+                  Chi tiết cuộc hẹn
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{
+                    display: 'flex',
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{
+                      fontWeight: '600',
+                      color: '#475569',
+                      minWidth: '120px',
+                      fontSize: '15px'
+                    }}>
+                      Bác sĩ:
+                    </span>
+                    <span style={{
+                      color: '#1e293b',
+                      fontSize: '15px',
+                      fontWeight: '500'
+                    }}>
+                      {detailData.consultant}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{
+                      fontWeight: '600',
+                      color: '#475569',
+                      minWidth: '120px',
+                      fontSize: '15px'
+                    }}>
+                      Ngày hẹn:
+                    </span>
+                    <span style={{
+                      color: '#1e293b',
+                      fontSize: '15px'
+                    }}>
+                      {detailData.date}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{
+                      fontWeight: '600',
+                      color: '#475569',
+                      minWidth: '120px',
+                      fontSize: '15px'
+                    }}>
+                      Thời gian:
+                    </span>
+                    <span style={{
+                      color: '#1e293b',
+                      fontSize: '15px'
+                    }}>
+                      {detailData.startTime} - {detailData.endTime}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{
+                      fontWeight: '600',
+                      color: '#475569',
+                      minWidth: '120px',
+                      fontSize: '15px'
+                    }}>
+                      Trạng thái:
+                    </span>
+                    <span style={{
+                      color: detailData.status === 'Đã kết thúc' ? '#059669' : '#dc2626',
+                      fontSize: '15px',
+                      fontWeight: '500'
+                    }}>
+                      {detailData.status}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <span style={{
+                      fontWeight: '600',
+                      color: '#475569',
+                      fontSize: '15px',
+                      display: 'block',
+                      marginBottom: '8px'
+                    }}>
+                      Nội dung tư vấn:
+                    </span>
+                    <div style={{
+                      color: '#1e293b',
+                      fontSize: '15px',
+                      lineHeight: '1.6',
+                      maxHeight: '150px',
+                      overflowY: 'auto',
+                      padding: '8px 0'
+                    }}>
+                      {detailData.content}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  marginTop: '24px',
+                  display: 'flex',
+                  justifyContent: 'flex-end'
+                }}>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    style={{
+                      background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 24px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '15px',
+                      boxShadow: '0 2px 8px rgba(34,211,238,0.25)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Modal hủy lịch hẹn đã được ẩn */}
         </div>
       </main>
@@ -567,82 +655,6 @@ const MyAppointments = () => {
           </div>
         </div>
       </footer>
-      {showDetailModal && detailData && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.25)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: 12,
-            padding: 32,
-            minWidth: 340,
-            maxWidth: '90vw',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-            position: 'relative'
-          }}>
-            <h2 style={{ color: '#0891b2', marginBottom: 18 }}>Chi tiết cuộc gọi</h2>
-            <div style={{ marginBottom: 10 }}><b>Tư vấn viên:</b> {detailData.consultant}</div>
-            <div style={{ marginBottom: 10 }}>
-              <div><b>Nội dung</b></div> 
-              <div style={{ 
-                wordWrap: 'break-word', 
-                wordBreak: 'break-word',
-                maxWidth: '400px',
-                marginLeft: '8px',
-                marginTop: '4px',
-                lineHeight: '1.5'
-              }}>
-                {detailData.content}
-              </div>
-            </div>
-            <div style={{ marginBottom: 10 }}><b>Ngày:</b> {detailData.date}</div>
-            <div style={{ marginBottom: 10 }}><b>Bắt đầu:</b> {detailData.startTime}</div>
-            <div style={{ marginBottom: 10 }}><b>Kết thúc:</b> {detailData.endTime}</div>
-            <div style={{ marginBottom: 18 }}><b>Trạng thái:</b> {detailData.status}</div>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-              <button
-                style={{
-                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 32,
-                  padding: '14px 48px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontSize: 18,
-                  boxShadow: '0 4px 24px rgba(34,211,238,0.18)',
-                  letterSpacing: 1,
-                  transition: 'all 0.2s',
-                  outline: 'none',
-                  margin: 0
-                }}
-                onClick={() => setShowDetailModal(false)}
-                onMouseOver={e => {
-                  e.currentTarget.style.background = 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)';
-                  e.currentTarget.style.transform = 'scale(1.06)';
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(34,211,238,0.28)';
-                }}
-                onMouseOut={e => {
-                  e.currentTarget.style.background = 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(34,211,238,0.18)';
-                }}
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,5 +1,18 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { 
+  checkUserGender, 
+  handleLogout, 
+  handlePeriodTrackingClick,
+  handleRegisterChange,
+  handleRegisterSubmit,
+  handleLoginChange,
+  handleLoginSubmit,
+  initializeAnimatedCounters,
+  handleClickOutside,
+  setupIntersectionObserver,
+  carouselImages
+} from './utils/appHelpers';
 
 const App = () => {
   const navigate = useNavigate();
@@ -56,7 +69,7 @@ const App = () => {
         
         // Kiểm tra giới tính nếu có userId
         if (userId) {
-          checkUserGender(userId);
+          checkUserGender(userId, setUserGender);
         }
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -65,84 +78,19 @@ const App = () => {
     }
   }, []);
 
-  // Hàm đăng xuất
-  const handleLogout = () => {
-    localStorage.removeItem('loggedInUser');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('email');
-    localStorage.removeItem('fullName');
-    localStorage.removeItem('role');
-    setCurrentUser(null);
-    setIsLoggedIn(false);
-    setUserGender(null);
+  // Hàm đăng xuất sử dụng helper
+  const handleLogoutClick = () => {
+    handleLogout(setCurrentUser, setIsLoggedIn, setUserGender);
   };
 
-  // Hàm kiểm tra giới tính của người dùng
-  const checkUserGender = async (userId) => {
-    if (!userId) return null;
-    
-    try {
-      const response = await fetch(`http://localhost:8080/api/users/${encodeURIComponent(userId)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        const gender = userData.gender;
-        setUserGender(gender);
-        return gender;
-      }
-    } catch (err) {
-      console.error('Error checking user gender:', err);
-    }
-    return null;
+  // Hàm xử lý navigation cho trang theo dõi chu kỳ sử dụng helper
+  const handlePeriodTrackingClickWrapper = async (e) => {
+    await handlePeriodTrackingClick(e, isLoggedIn, userGender, (userId) => checkUserGender(userId, setUserGender), navigate);
   };
 
-  // Hàm xử lý navigation cho trang theo dõi chu kỳ
-  const handlePeriodTrackingClick = async (e) => {
-    e.preventDefault();
-    
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
-    
-    const userId = localStorage.getItem('userId');
-    let gender = userGender;
-    
-    // Nếu chưa có thông tin giới tính, kiểm tra lại
-    if (!gender && userId) {
-      gender = await checkUserGender(userId);
-    }
-    
-    if (gender === 'Nữ' || gender === 'nữ' || gender === 'NỮ') {
-      navigate('/period-tracking');
-    } else {
-      alert('Tính năng theo dõi chu kỳ kinh nguyệt chỉ dành cho người dùng nữ.');
-    }
-  };
-
-  // Animated counter for statistics
-  const animateCounter = (target, current, setter, increment) => {
-    if (current < target) {
-      setTimeout(() => {
-        setter(Math.min(current + increment, target));
-      }, 50);
-    }
-  };
-  // Initialize animated counters
+  // Initialize animated counters sử dụng helper
   React.useEffect(() => {
-    animateCounter(10000, animatedStats.customers, (val) => 
-      setAnimatedStats(prev => ({ ...prev, customers: val })), 200);
-    animateCounter(50000, animatedStats.tests, (val) => 
-      setAnimatedStats(prev => ({ ...prev, tests: val })), 1000);
-    animateCounter(98, animatedStats.satisfaction, (val) => 
-      setAnimatedStats(prev => ({ ...prev, satisfaction: val })), 2);
-    animateCounter(5, animatedStats.experience, (val) => 
-      setAnimatedStats(prev => ({ ...prev, experience: val })), 1);
+    initializeAnimatedCounters(animatedStats, setAnimatedStats);
   }, []);
 
   // Initialize content loading
@@ -153,59 +101,21 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside sử dụng helper
   React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showConsultationDropdown && !event.target.closest('.consultation-dropdown')) {
-        setShowConsultationDropdown(false);
-      }
-      if (showTestBookingDropdown && !event.target.closest('.test-booking-dropdown')) {
-        setShowTestBookingDropdown(false);
-      }
-      if (showQuestionDropdown && !event.target.closest('.question-dropdown')) {
-        setShowQuestionDropdown(false);
-      }
+    const handleClickOutsideWrapper = (event) => {
+      handleClickOutside(event, showConsultationDropdown, showTestBookingDropdown, showQuestionDropdown, setShowConsultationDropdown, setShowTestBookingDropdown, setShowQuestionDropdown);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutsideWrapper);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutsideWrapper);
     };
   }, [showConsultationDropdown, showTestBookingDropdown, showQuestionDropdown]);
-  // Intersection Observer for fade-in animations
+  // Intersection Observer for fade-in animations sử dụng helper
   React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id || entry.target.getAttribute('data-section-id') || 'statistics';
-            setVisibleSections(prev => new Set([...prev, id]));
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    // Observe all sections with fade-in animation
-    const sections = document.querySelectorAll('[data-animate="fade-in"]');
-    sections.forEach((section, index) => {
-      // Add data-section-id for sections without id
-      if (!section.id) {
-        section.setAttribute('data-section-id', `section-${index}`);
-      }
-      observer.observe(section);
-    });
-
-    return () => observer.disconnect();
+    return setupIntersectionObserver(setVisibleSections);
   }, []);
-  // Image carousel data
-  const carouselImages = [
-    { src: "/dichvuchamsoc.jpg", alt: "Dịch vụ chăm sóc sức khỏe" },
-    { src: "/Doctor2.jpg", alt: "Đội ngũ y bác sĩ" },
-    { src: "/ongnghiem.jpg", alt: "Xét nghiệm chuyên nghiệp" },
-    { src: "/thietbi.jpg", alt: "Thiết bị y tế hiện đại" }
-  ];
-
   // Auto-rotate carousel
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -214,77 +124,21 @@ const App = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleRegisterChange = (e) => {
-    setRegisterData({ ...registerData, [e.target.name]: e.target.value });
+  // Form handlers sử dụng helper functions
+  const handleRegisterChangeWrapper = (e) => {
+    handleRegisterChange(e, registerData, setRegisterData);
   };
 
-  const handleRegisterSubmit = (e) => {
-    e.preventDefault();
-    if (
-      !registerData.name ||
-      !registerData.username ||
-      !registerData.gender ||
-      !registerData.dob ||
-      !registerData.email ||
-      !registerData.phone ||
-      !registerData.address ||
-      !registerData.password ||
-      registerData.password !== registerData.confirmPassword
-    ) {
-      alert("Vui lòng nhập đầy đủ thông tin và xác nhận mật khẩu trùng khớp!");
-      return;
-    }
-    alert("Đăng ký thành công!");
-    setShowRegister(false);
-    setRegisterData({
-      name: "",
-      username: "",
-      gender: "",
-      dob: "",
-      email: "",
-      phone: "",
-      address: "",
-      password: "",
-      confirmPassword: ""
-    });
+  const handleRegisterSubmitWrapper = (e) => {
+    handleRegisterSubmit(e, registerData, setShowRegister, setRegisterData);
   };
 
-  const handleLoginChange = (e) => {
-    setLoginData({ ...loginData, [e.target.name]: e.target.value });
+  const handleLoginChangeWrapper = (e) => {
+    handleLoginChange(e, loginData, setLoginData);
   };
 
-  const handleLoginSubmit = (e) => {
-    e.preventDefault();
-    if (!loginData.email || !loginData.password) {
-      alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
-      return;
-    }
-    
-    // Simulate login success và cập nhật state
-    const userData = {
-      userID: 1,
-      fullName: "Người dùng",
-      email: loginData.email,
-      role: "USER"
-    };
-    
-    // Lưu vào localStorage
-    localStorage.setItem('loggedInUser', JSON.stringify(userData));
-    localStorage.setItem('userId', userData.userID);
-    localStorage.setItem('email', userData.email);
-    localStorage.setItem('fullName', userData.fullName);
-    localStorage.setItem('role', userData.role);
-    
-    // Cập nhật state
-    setCurrentUser(userData);
-    setIsLoggedIn(true);
-    
-    // Kiểm tra giới tính sau khi đăng nhập
-    checkUserGender(userData.userID);
-    
-    alert("Đăng nhập thành công!");
-    setShowLogin(false);
-    setLoginData({ email: "", password: "" });
+  const handleLoginSubmitWrapper = (e) => {
+    handleLoginSubmit(e, loginData, setCurrentUser, setIsLoggedIn, (userId) => checkUserGender(userId, setUserGender), setShowLogin, setLoginData);
   };
 
   return (
@@ -619,7 +473,7 @@ const App = () => {
           <a
             href="#"
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={handlePeriodTrackingClick}
+            onClick={handlePeriodTrackingClickWrapper}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >
@@ -983,7 +837,7 @@ const App = () => {
           zIndex: 1000
         }}>
           <form
-            onSubmit={handleRegisterSubmit}
+            onSubmit={handleRegisterSubmitWrapper}
             style={{
               background: "#fff",
               borderRadius: 12,
@@ -1002,7 +856,7 @@ const App = () => {
                 type="text"
                 name="name"
                 value={registerData.name}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1013,7 +867,7 @@ const App = () => {
                 type="text"
                 name="username"
                 value={registerData.username}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1023,7 +877,7 @@ const App = () => {
               <select
                 name="gender"
                 value={registerData.gender}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               >
@@ -1039,7 +893,7 @@ const App = () => {
                 type="date"
                 name="dob"
                 value={registerData.dob}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1050,7 +904,7 @@ const App = () => {
                 type="email"
                 name="email"
                 value={registerData.email}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1061,7 +915,7 @@ const App = () => {
                 type="tel"
                 name="phone"
                 value={registerData.phone}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1072,7 +926,7 @@ const App = () => {
                 type="text"
                 name="address"
                 value={registerData.address}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1083,7 +937,7 @@ const App = () => {
                 type="password"
                 name="password"
                 value={registerData.password}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1094,7 +948,7 @@ const App = () => {
                 type="password"
                 name="confirmPassword"
                 value={registerData.confirmPassword}
-                onChange={handleRegisterChange}
+                onChange={handleRegisterChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1145,7 +999,7 @@ const App = () => {
           zIndex: 1000
         }}>
           <form
-            onSubmit={handleLoginSubmit}
+            onSubmit={handleLoginSubmitWrapper}
             style={{
               background: "#fff",
               borderRadius: 12,
@@ -1164,7 +1018,7 @@ const App = () => {
                 type="email"
                 name="email"
                 value={loginData.email}
-                onChange={handleLoginChange}
+                onChange={handleLoginChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />
@@ -1175,7 +1029,7 @@ const App = () => {
                 type="password"
                 name="password"
                 value={loginData.password}
-                onChange={handleLoginChange}
+                onChange={handleLoginChangeWrapper}
                 required
                 style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #0891b2", marginTop: 4 }}
               />

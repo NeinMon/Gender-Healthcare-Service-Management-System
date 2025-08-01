@@ -79,6 +79,15 @@ export const fetchQuestions = async (setQuestions, setLoading, setError) => {
 export const fetchExistingAnswer = async (questionId, setLoadingAnswer, setExistingAnswer, setAnswers, setAnswerText) => {
   try {
     setLoadingAnswer(true);
+    
+    // Check if questionId is valid
+    if (!questionId || questionId === undefined || questionId === null) {
+      console.error('Invalid questionId:', questionId);
+      setExistingAnswer(null);
+      setAnswerText('');
+      return;
+    }
+    
     const response = await fetch(`http://localhost:8080/api/answers/${questionId}`);
     
     if (response.ok) {
@@ -162,6 +171,48 @@ export const fetchBookings = async (setLoadingBookings, setBookings, setBookingU
   setLoadingBookings(false);
 };
 
+// Fetch user details for questions
+export const fetchUserDetailsForQuestions = async (questions, setUserDetails) => {
+  if (!Array.isArray(questions) || questions.length === 0) {
+    return;
+  }
+  
+  try {
+    // Get unique user IDs from questions
+    const uniqueUserIds = [...new Set(questions.map(q => q.userID).filter(id => id))];
+    console.log('📋 Fetching user details for questions. User IDs:', uniqueUserIds);
+    
+    if (uniqueUserIds.length === 0) {
+      console.log('❌ No valid user IDs found in questions');
+      return;
+    }
+    
+    const userMap = {};
+    await Promise.all(uniqueUserIds.map(async (userId) => {
+      try {
+        console.log(`📡 Fetching user data for ID: ${userId}`);
+        const userRes = await fetch(`http://localhost:8080/api/users/${userId}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          console.log(`✅ User data for ${userId}:`, userData);
+          userMap[userId] = userData;
+        } else {
+          console.log(`❌ Failed to fetch user ${userId}, status:`, userRes.status);
+          userMap[userId] = { fullName: 'Không rõ' };
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching user ${userId}:`, error);
+        userMap[userId] = { fullName: 'Không rõ' };
+      }
+    }));
+    
+    console.log('👥 Final user map for questions:', userMap);
+    setUserDetails(userMap);
+  } catch (error) {
+    console.error('❌ Error in fetchUserDetailsForQuestions:', error);
+  }
+};
+
 // Các hàm xử lý sự kiện
 export const handleQuestionClick = (question, selectedQuestion, setSelectedQuestion, setAnswerText, setExistingAnswer, fetchExistingAnswer) => {
   // Xác định ID câu hỏi (hỗ trợ cả questionID và id)
@@ -177,7 +228,9 @@ export const handleQuestionClick = (question, selectedQuestion, setSelectedQuest
     // Nếu câu hỏi đã có câu trả lời (resolved) thì hiển thị câu trả lời đó
     if (question.status?.toLowerCase() === 'resolved') {
       // Sử dụng ID chính xác để truy vấn câu trả lời
-      fetchExistingAnswer(questionId);
+      if (questionId) {
+        fetchExistingAnswer(questionId);
+      }
     } else {
       // Không phải câu hỏi đã trả lời, không hiển thị phần câu trả lời cũ
       setExistingAnswer(null);

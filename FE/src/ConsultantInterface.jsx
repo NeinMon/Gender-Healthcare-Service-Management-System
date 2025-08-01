@@ -9,6 +9,7 @@ import {
   fetchQuestions,
   fetchExistingAnswer,
   fetchBookings,
+  fetchUserDetailsForQuestions,
   handleQuestionClick,
   handleAnswerChange,
   handleFilterChange,
@@ -70,6 +71,13 @@ const ConsultantInterface = () => {
     // Fetch questions sử dụng helper
     fetchQuestions(setQuestions, setLoading, setError);
   }, []);
+  
+  // Fetch user details when questions are loaded
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      fetchUserDetailsForQuestions(questions, setUserDetails);
+    }
+  }, [questions]);
   
   // Filter data sử dụng helper functions
   const filteredQuestions = getFilteredQuestions(questions, filterStatus);
@@ -588,7 +596,7 @@ const ConsultantInterface = () => {
                           }}
                         >
                           <div 
-                            onClick={() => handleQuestionClick(question, setSelectedQuestion, setAnswerText, setExistingAnswer, setLoadingAnswer, () => fetchExistingAnswer(question.id, setExistingAnswer, setLoadingAnswer))}
+                            onClick={() => handleQuestionClick(question, selectedQuestion, setSelectedQuestion, setAnswerText, setExistingAnswer, () => fetchExistingAnswer(question.id || question.questionID, setLoadingAnswer, setExistingAnswer, setAnswers, setAnswerText))}
                             style={{
                               cursor: "pointer"
                             }}
@@ -697,7 +705,7 @@ const ConsultantInterface = () => {
                                 <>
                                   <textarea
                                     value={answerText}
-                                    onChange={handleAnswerChange}
+                                    onChange={(e) => handleAnswerChange(e, setAnswerText)}
                                     placeholder="Nhập câu trả lời của bạn..."
                                     disabled={submitting}
                                     style={{

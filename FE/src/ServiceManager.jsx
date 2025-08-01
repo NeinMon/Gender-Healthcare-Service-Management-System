@@ -42,7 +42,7 @@ const ServiceManager = () => {
     consultantID: '',
     workDate: '',
     shift: 'MORNING',
-    status: 'NOT_YET',
+    status: 'AVAILABLE',
     notes: ''
   });
 
@@ -143,7 +143,22 @@ const ServiceManager = () => {
             schedule.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase())
           );
-          setSchedules(filteredSchedules);
+          // Sort filtered schedules by workDate and shift
+          const sortedFilteredSchedules = filteredSchedules.sort((a, b) => {
+            // First sort by date (oldest first)
+            const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+            if (dateComparison !== 0) {
+              return dateComparison;
+            }
+            // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+            if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+              return -1;
+            } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+              return 1;
+            }
+            return 0;
+          });
+          setSchedules(sortedFilteredSchedules);
         } else {
           console.error('Failed to search schedules');
           showAlert('error', 'Không thể tìm kiếm lịch làm việc');
@@ -191,7 +206,22 @@ const ServiceManager = () => {
       const response = await fetch('http://localhost:8080/api/consultant-schedules/all');
       if (response.ok) {
         const data = await response.json();
-        setSchedules(data);
+        // Sort schedules by workDate (oldest first) and then by shift
+        const sortedData = data.sort((a, b) => {
+          // First sort by date (oldest first)
+          const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+          if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+            return -1;
+          } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+            return 1;
+          }
+          return 0;
+        });
+        setSchedules(sortedData);
       } else {
         console.error('Failed to fetch schedules');
         showAlert('error', 'Không thể tải danh sách lịch làm việc');
@@ -210,7 +240,7 @@ const ServiceManager = () => {
       consultantID: '',
       workDate: '',
       shift: 'MORNING',
-      status: 'NOT_YET',
+      status: 'AVAILABLE',
       notes: ''
     });
   };
@@ -1510,9 +1540,8 @@ const ServiceManager = () => {
                                   backgroundColor: schedule.status === 'AVAILABLE' ? "#d1fae5" : "#fee2e2",
                                   color: schedule.status === 'AVAILABLE' ? "#065f46" : "#991b1b"
                                 }}>
-                                  {schedule.status === 'AVAILABLE' ? 'Có mặt' : 
-                                   schedule.status === 'CANCELLED' ? 'Nghỉ' : 
-                                   schedule.status === 'NOT_YET' ? 'Chưa tới' : schedule.status}
+                                  {schedule.status === 'AVAILABLE' ? 'Có đi làm' : 
+                                   schedule.status === 'CANCELLED' ? 'Nghỉ làm' : schedule.status}
                                 </span>
                               </td>
                               <td style={{ padding: '16px 20px', textAlign: "center" }}>
@@ -2165,9 +2194,8 @@ const ServiceManager = () => {
                     required
                     style={inputStyle}
                   >
-                    <option value="AVAILABLE">Có mặt</option>
-                    <option value="CANCELLED">Nghỉ</option>
-                    <option value="NOT_YET">Chưa tới</option>
+                    <option value="AVAILABLE">Có đi làm</option>
+                    <option value="CANCELLED">Nghỉ làm</option>
                   </select>
                 </div>
               </div>
@@ -2288,9 +2316,8 @@ const ServiceManager = () => {
                     required
                     style={inputStyle}
                   >
-                    <option value="AVAILABLE">Có mặt</option>
-                    <option value="CANCELLED">Nghỉ</option>
-                    <option value="NOT_YET">Chưa tới</option>
+                    <option value="AVAILABLE">Có đi làm</option>
+                    <option value="CANCELLED">Nghỉ làm</option>
                   </select>
                 </div>
               </div>

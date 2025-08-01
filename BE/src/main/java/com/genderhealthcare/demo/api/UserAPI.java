@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -119,6 +120,24 @@ public class    UserAPI {
     public ResponseEntity<List<Users>> getAllConsultants() {
         List<Users> consultants = userService.getUsersByRole(com.genderhealthcare.demo.entity.Role.CONSULTANT);
         return ResponseEntity.ok(consultants);
+    }
+
+    /**
+     * API lấy danh sách consultant có lịch làm việc trong ngày cụ thể
+     * Trả về danh sách consultant có status AVAILABLE trong ngày đó
+     * 
+     * @param date Ngày cần kiểm tra (format: yyyy-MM-dd)
+     * @return ResponseEntity chứa danh sách consultant có lịch làm việc
+     */
+    @GetMapping("/consultants/available")
+    public ResponseEntity<?> getAvailableConsultants(@RequestParam("date") String date) {
+        try {
+            java.time.LocalDate appointmentDate = java.time.LocalDate.parse(date);
+            List<Users> availableConsultants = userService.getAvailableConsultantsByDate(appointmentDate);
+            return ResponseEntity.ok(availableConsultants);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi lấy danh sách consultant có lịch: " + e.getMessage());
+        }
     }
 
     /**

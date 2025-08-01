@@ -38,10 +38,18 @@ public class BookingAPI {
             Booking saved = bookingService.createBookingWithDefaultService(booking);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // Phân loại lỗi để trả về thông báo phù hợp
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("không có lịch làm việc") || errorMessage.contains("chưa có mặt")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CONSULTANT_NOT_AVAILABLE: " + errorMessage);
+            } else if (errorMessage.contains("trùng trong khung giờ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("TIME_CONFLICT: " + errorMessage);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("VALIDATION_ERROR: " + errorMessage);
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi tạo booking: " + e.getMessage());
+                .body("SYSTEM_ERROR: Lỗi tạo booking: " + e.getMessage());
         }
     }
 
@@ -58,10 +66,18 @@ public class BookingAPI {
             Booking saved = bookingService.createBookingWithSpecificService(booking);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // Phân loại lỗi để trả về thông báo phù hợp
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("không có lịch làm việc") || errorMessage.contains("chưa có mặt")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("CONSULTANT_NOT_AVAILABLE: " + errorMessage);
+            } else if (errorMessage.contains("trùng trong khung giờ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("TIME_CONFLICT: " + errorMessage);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("VALIDATION_ERROR: " + errorMessage);
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi tạo booking với service: " + e.getMessage());
+                .body("SYSTEM_ERROR: Lỗi tạo booking với service: " + e.getMessage());
         }
     }
 

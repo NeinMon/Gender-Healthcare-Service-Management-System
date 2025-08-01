@@ -44,9 +44,9 @@ public class ConsultantScheduleService {
         // Validate dữ liệu
         validateSchedule(schedule);
         
-        // Set trạng thái mặc định là NOT_YET nếu chưa được set
+        // Set trạng thái mặc định là AVAILABLE nếu chưa được set
         if (schedule.getStatus() == null) {
-            schedule.setStatus(ScheduleStatus.NOT_YET);
+            schedule.setStatus(ScheduleStatus.AVAILABLE);
         }
         
         // Kiểm tra trùng lặp
@@ -158,8 +158,8 @@ public class ConsultantScheduleService {
         List<ConsultantSchedule> schedules = new java.util.ArrayList<>();
         LocalDate currentDate = startDate;
         
-        // Sử dụng NOT_YET làm trạng thái mặc định nếu status là null
-        ScheduleStatus defaultStatus = (status != null) ? status : ScheduleStatus.NOT_YET;
+        // Sử dụng AVAILABLE làm trạng thái mặc định nếu status là null
+        ScheduleStatus defaultStatus = (status != null) ? status : ScheduleStatus.AVAILABLE;
         
         while (!currentDate.isAfter(endDate)) {
             // Bỏ qua chủ nhật
@@ -216,7 +216,7 @@ public class ConsultantScheduleService {
             throw new RuntimeException("Ca làm việc không được để trống");
         }
         
-        // Status sẽ được set mặc định là NOT_YET nếu null, không cần validate
+        // Status sẽ được set mặc định là AVAILABLE nếu null, không cần validate
         
         // Không cho phép tạo lịch trong quá khứ
         if (schedule.getWorkDate().isBefore(LocalDate.now())) {

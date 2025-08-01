@@ -43,7 +43,7 @@ public class ConsultantSchedule {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private ScheduleStatus status = ScheduleStatus.NOT_YET;
+    private ScheduleStatus status = ScheduleStatus.AVAILABLE;
 
     @Column(name = "notes", columnDefinition = "NVARCHAR(1000)")
     private String notes;
@@ -94,8 +94,7 @@ public class ConsultantSchedule {
      */
     public enum ScheduleStatus {
         AVAILABLE("Có đi làm"),
-        CANCELLED("Nghỉ"),
-        NOT_YET("Chưa tới");
+        CANCELLED("Nghỉ");
 
         private final String description;
 
@@ -116,7 +115,7 @@ public class ConsultantSchedule {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         if (this.status == null) {
-            this.status = ScheduleStatus.NOT_YET;
+            this.status = ScheduleStatus.AVAILABLE;
         }
         if (this.shift == null) {
             this.shift = WorkShift.MORNING;
@@ -150,13 +149,6 @@ public class ConsultantSchedule {
      */
     public void makeAvailable() {
         this.status = ScheduleStatus.AVAILABLE;
-    }
-
-    /**
-     * Đặt trạng thái chưa tới
-     */
-    public void setNotYet() {
-        this.status = ScheduleStatus.NOT_YET;
     }
 
     /**

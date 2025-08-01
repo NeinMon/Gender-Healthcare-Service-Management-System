@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import {
   fetchConsultants,
+  fetchAvailableConsultants,
+  fetchConsultantSchedule,
+  generateTimeSlotsByShift,
   fetchConsultationPrice,
   fetchUserInfo,
   fetchAvailableTimes,
@@ -37,6 +40,7 @@ const ConsultationBooking = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [consultantSchedule, setConsultantSchedule] = useState(null); // Thông tin ca làm việc của consultant
   const [error, setError] = useState('');
   const [loadingTimes, setLoadingTimes] = useState(false); // Thêm state loading cho khung giờ
   // New states for payment flow
@@ -57,6 +61,41 @@ const ConsultationBooking = () => {
     // Lấy thông tin user từ localStorage
     fetchUserInfo(setFormData);
   }, []);
+
+  // Lấy danh sách consultant có lịch làm việc khi chọn ngày
+  useEffect(() => {
+    if (formData.date) {
+      fetchAvailableConsultants(formData.date, setConsultants);
+      // Reset consultant selection khi đổi ngày
+      setFormData(prev => ({ ...prev, consultantId: '', time: '' }));
+      setConsultantSchedule(null);
+    } else {
+      // Nếu chưa chọn ngày, hiển thị tất cả consultant
+      fetchConsultants(setConsultants);
+      setConsultantSchedule(null);
+    }
+  }, [formData.date]);
+
+  // Lấy thông tin ca làm việc của consultant khi chọn consultant
+  useEffect(() => {
+    const fetchScheduleInfo = async () => {
+      if (formData.consultantId && formData.date) {
+        try {
+          const scheduleInfo = await fetchConsultantSchedule(formData.consultantId, formData.date);
+          setConsultantSchedule(scheduleInfo);
+          // Reset time selection khi đổi consultant
+          setFormData(prev => ({ ...prev, time: '' }));
+        } catch (error) {
+          console.error('Error fetching consultant schedule:', error);
+          setConsultantSchedule(null);
+        }
+      } else {
+        setConsultantSchedule(null);
+      }
+    };
+    
+    fetchScheduleInfo();
+  }, [formData.consultantId, formData.date]);
 
   // Lấy khung giờ rảnh từ backend khi chọn ngày và tư vấn viên
   useEffect(() => {
@@ -405,15 +444,23 @@ const ConsultationBooking = () => {
                     required
                     style={inputStyle}
                   >
-                    <option value="">-- Chọn tư vấn viên --</option>
-                    {consultants.map((consultant, idx) => (
-                      <option
-                        key={consultant.userID ?? idx}
-                        value={consultant.userID ?? ''}
-                      >
-                        {consultant.fullName || consultant.name} {consultant.specification ? `- ${consultant.specification}` : ""}
-                      </option>
-                    ))}
+                    {!formData.date ? (
+                      <option value="">-- Vui lòng chọn ngày trước --</option>
+                    ) : consultants.length === 0 ? (
+                      <option value="">-- Không có tư vấn viên nào có lịch làm việc trong ngày này --</option>
+                    ) : (
+                      <>
+                        <option value="">-- Chọn tư vấn viên --</option>
+                        {consultants.map((consultant, idx) => (
+                          <option
+                            key={consultant.userID ?? idx}
+                            value={consultant.userID ?? ''}
+                          >
+                            {consultant.fullName || consultant.name} {consultant.specification ? `- ${consultant.specification}` : ""}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -447,6 +494,35 @@ const ConsultationBooking = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Hiển thị thông tin ca làm việc */}
+              {consultantSchedule && (
+                <div style={{ 
+                  marginTop: "20px", 
+                  padding: "15px", 
+                  backgroundColor: "#f0f9ff", 
+                  borderRadius: "8px", 
+                  border: "1px solid #0891b2" 
+                }}>
+                  <h4 style={{ margin: "0 0 10px 0", color: "#0891b2" }}>
+                    Thông tin ca làm việc
+                  </h4>
+                  <p style={{ margin: "5px 0", color: "#0891b2" }}>
+                    <strong>Ca làm việc:</strong> {
+                      consultantSchedule.shift === 'MORNING' 
+                        ? 'Ca sáng (8:00 - 12:00)' 
+                        : 'Ca chiều (13:30 - 17:30)'
+                    }
+                  </p>
+                  <p style={{ margin: "5px 0", color: "#0891b2", fontSize: "14px" }}>
+                    Khung giờ có thể đặt: {
+                      consultantSchedule.shift === 'MORNING' 
+                        ? '8:00, 9:00, 10:00, 11:00' 
+                        : '13:30, 14:30, 15:30, 16:30'
+                    }
+                  </p>
+                </div>
+              )}
 
               <div style={{ display: "flex", flexDirection: "column", marginTop: "25px", width: "100%" }}>
                 <label style={labelStyle}>Triệu chứng/Mô tả vấn đề *</label>

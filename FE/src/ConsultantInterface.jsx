@@ -37,7 +37,7 @@ const ConsultantInterface = () => {
   const [existingAnswer, setExistingAnswer] = useState(null);
   const [answers, setAnswers] = useState({});
   const [loadingAnswer, setLoadingAnswer] = useState(false);
-  const [activeSection, setActiveSection] = useState('questions'); // Add state for active section
+  const [activeSection, setActiveSection] = useState('questions'); // Add state for active section: 'questions', 'online', 'leave'
   const [consultant, setConsultant] = useState({ fullName: 'Tư vấn viên' }); // Thêm state cho thông tin tư vấn viên
   // Booking states for online consult
   const [bookings, setBookings] = useState([]);
@@ -47,6 +47,19 @@ const ConsultantInterface = () => {
   const [videoChannel, setVideoChannel] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailData, setDetailData] = useState(null);
+  
+  // Leave request states
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loadingLeaveRequests, setLoadingLeaveRequests] = useState(false);
+  const [errorLeaveRequests, setErrorLeaveRequests] = useState('');
+  const [showAddLeaveModal, setShowAddLeaveModal] = useState(false);
+  const [showEditLeaveModal, setShowEditLeaveModal] = useState(false);
+  const [editingLeaveRequest, setEditingLeaveRequest] = useState(null);
+  const [leaveFormData, setLeaveFormData] = useState({
+    leaveDate: '',
+    shift: 'MORNING',
+    note: ''
+  });
 
   useEffect(() => {
     // Fetch thông tin tư vấn viên sử dụng helper
@@ -66,8 +79,205 @@ const ConsultantInterface = () => {
   useEffect(() => {
     if (activeSection === 'online') {
       fetchBookings(setLoadingBookings, setBookings, setBookingUserDetails);
+    } else if (activeSection === 'leave') {
+      fetchLeaveRequests();
     }
   }, [activeSection]);
+
+  // Leave request functions
+  const fetchLeaveRequests = async () => {
+    setLoadingLeaveRequests(true);
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || sessionStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID || loggedInUser.id;
+      
+      if (!consultantId) {
+        throw new Error('Không tìm thấy thông tin tư vấn viên');
+      }
+
+      const response = await fetch(`http://localhost:8080/api/leave-requests/consultant/${consultantId}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Sort by created date descending
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeaveRequests(sortedData);
+      } else {
+        throw new Error('Không thể tải danh sách đơn xin nghỉ');
+      }
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      alert('Lỗi khi tải danh sách đơn xin nghỉ: ' + error.message);
+    } finally {
+      setLoadingLeaveRequests(false);
+    }
+  };
+
+  const submitLeaveRequest = async () => {
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || sessionStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID || loggedInUser.id;
+      
+      if (!consultantId) {
+        alert('Không tìm thấy thông tin tư vấn viên');
+        return;
+      }
+
+      if (!leaveFormData.leaveDate || !leaveFormData.shift) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
+
+      // Check if date is in the past
+      const today = new Date().toISOString().split('T')[0];
+      if (leaveFormData.leaveDate < today) {
+        alert('Không thể xin nghỉ trong quá khứ');
+        return;
+      }
+
+      const requestData = {
+        consultantId: parseInt(consultantId),
+        leaveDate: leaveFormData.leaveDate,
+        shift: leaveFormData.shift,
+        note: leaveFormData.note.trim()
+      };
+
+      const response = await fetch('http://localhost:8080/api/leave-requests/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (response.ok) {
+        alert('Tạo đơn xin nghỉ thành công!');
+        setShowAddLeaveModal(false);
+        resetLeaveForm();
+        fetchLeaveRequests();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
+      alert('Lỗi khi tạo đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  const updateLeaveRequest = async () => {
+    try {
+      if (!editingLeaveRequest) return;
+
+      if (!leaveFormData.leaveDate || !leaveFormData.shift) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
+
+      // Check if date is in the past
+      const today = new Date().toISOString().split('T')[0];
+      if (leaveFormData.leaveDate < today) {
+        alert('Không thể xin nghỉ trong quá khứ');
+        return;
+      }
+
+      const requestData = {
+        consultantId: editingLeaveRequest.consultantId,
+        leaveDate: leaveFormData.leaveDate,
+        shift: leaveFormData.shift,
+        note: leaveFormData.note.trim()
+      };
+
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${editingLeaveRequest.leaveRequestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (response.ok) {
+        alert('Cập nhật đơn xin nghỉ thành công!');
+        setShowEditLeaveModal(false);
+        setEditingLeaveRequest(null);
+        resetLeaveForm();
+        fetchLeaveRequests();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error updating leave request:', error);
+      alert('Lỗi khi cập nhật đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  const deleteLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert('Xóa đơn xin nghỉ thành công!');
+        fetchLeaveRequests();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error deleting leave request:', error);
+      alert('Lỗi khi xóa đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  const resetLeaveForm = () => {
+    setLeaveFormData({
+      leaveDate: '',
+      shift: 'MORNING',
+      note: ''
+    });
+  };
+
+  const openEditLeaveModal = (request) => {
+    setEditingLeaveRequest(request);
+    setLeaveFormData({
+      leaveDate: request.leaveDate,
+      shift: request.shift,
+      note: request.note || ''
+    });
+    setShowEditLeaveModal(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'PENDING': return { bg: '#fef3c7', text: '#92400e' };
+      case 'APPROVED': return { bg: '#d1fae5', text: '#065f46' };
+      case 'REJECTED': return { bg: '#fee2e2', text: '#991b1b' };
+      default: return { bg: '#f3f4f6', text: '#374151' };
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PENDING': return 'Chờ duyệt';
+      case 'APPROVED': return 'Đã duyệt';
+      case 'REJECTED': return 'Từ chối';
+      default: return status;
+    }
+  };
+
+  const getShiftText = (shift) => {
+    switch (shift) {
+      case 'MORNING': return 'Ca sáng (08:00 - 12:00)';
+      case 'AFTERNOON': return 'Ca chiều (13:30 - 17:30)';
+      case 'FULL_DAY': return 'Cả ngày (08:00 - 17:30)';
+      default: return shift;
+    }
+  };
 
   return (
     <div style={{ 
@@ -221,6 +431,33 @@ const ConsultantInterface = () => {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
                 Tư vấn online
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveSection('leave');
+                  setFilterStatus('all'); // Reset filter khi chuyển section
+                }}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: activeSection === 'leave' ? "#0891b2" : "#e0f2fe",
+                  color: activeSection === 'leave' ? "#fff" : "#0891b2",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
+                  <line x1="8" y1="6" x2="8" y2="2"></line>
+                  <line x1="16" y1="6" x2="16" y2="2"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Đơn xin nghỉ
               </button>
             </div>
           </div>
@@ -538,7 +775,7 @@ const ConsultantInterface = () => {
                 </div>
               )}
             </>
-          ) : (
+          ) : activeSection === 'online' ? (
             <>
               <div style={{ 
                 display: 'flex', 
@@ -817,7 +1054,511 @@ const ConsultantInterface = () => {
                 </div>
               )}
             </>
-          )}
+          ) : activeSection === 'online' ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                backgroundColor: "#fff",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                marginBottom: "24px"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center", 
+                  gap: "12px"
+                }}>
+                  <label style={{ 
+                    fontWeight: 600, 
+                    color: '#0891b2' 
+                  }}>Lọc theo trạng thái: </label>
+                  <select 
+                    value={filterStatus} 
+                    onChange={e => handleFilterChange(e, setFilterStatus)} 
+                    style={{ 
+                      padding: "10px 16px", 
+                      borderRadius: "8px", 
+                      border: '1px solid #22d3ee', 
+                      outline: 'none', 
+                      fontWeight: 500, 
+                      color: '#0891b2', 
+                      background: '#fff',
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="Chờ bắt đầu">Chờ bắt đầu</option>
+                    <option value="Đang diễn ra">Đang diễn ra</option>
+                    <option value="Đã kết thúc">Đã kết thúc</option>
+                  </select>
+                </div>
+                <h2 style={{ 
+                  color: "#0891b2", 
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: 700
+                }}>Lịch hẹn tư vấn online</h2>
+              </div>
+              {loadingBookings ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 0",
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ 
+                    display: "inline-block", 
+                    border: "3px solid #22d3ee",
+                    borderTop: "3px solid transparent",
+                    borderRadius: "50%",
+                    width: "30px",
+                    height: "30px",
+                    animation: "spin 1s linear infinite",
+                    marginBottom: "15px"
+                  }}></div>
+                  <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách lịch hẹn...</p>
+                </div>
+              ) : paidFilteredBookings.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 20px",
+                  color: '#0891b2', 
+                  fontWeight: 600,
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
+                  <div>
+                    {filterStatus === 'all' 
+                      ? 'Không có lịch hẹn nào đã thanh toán.' 
+                      : `Không có lịch hẹn nào ở trạng thái "${filterStatus}".`
+                    }
+                  </div>
+                </div>
+              ) : (
+                <div style={{ 
+                  width: '100%', 
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ overflowX: 'auto', width: "100%" }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ 
+                          background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                          textAlign: "center"
+                        }}>
+                          <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Khách hàng</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Giờ bắt đầu</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paidFilteredBookings.map((booking, idx) => (
+                          <tr 
+                            key={booking.bookingId || idx} 
+                            style={{ 
+                              borderBottom: '1px solid #e0f2fe', 
+                              transition: "all 0.2s"
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                          >
+                            <td style={{ padding: '16px 24px', textAlign: "center" }}>
+                              <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 10,
+                                justifyContent: "center" 
+                              }}>
+                                <div style={{ 
+                                  width: "36px", 
+                                  height: "36px", 
+                                  borderRadius: "50%", 
+                                  backgroundColor: "#0891b2", 
+                                  color: "white", 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  justifyContent: "center", 
+                                  fontWeight: "bold",
+                                  fontSize: "16px"
+                                }}>
+                                  {(bookingUserDetails[booking.userId]?.fullName || '?').charAt(0).toUpperCase()
+                                  }
+                                </div>
+                                <span style={{ 
+                                  fontWeight: 600, 
+                                  color: '#0891b2' 
+                                }}>
+                                  {bookingUserDetails[booking.userId]?.fullName || 'Đang tải...'}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
+                              <div style={{ 
+                                overflow: "hidden", 
+                                textOverflow: "ellipsis", 
+                                whiteSpace: "nowrap", 
+                                maxWidth: "100%"
+                              }}>
+                                {booking.content || 'Không có nội dung'}
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.appointmentDate || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.startTime || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                              <div style={{ display: "flex", justifyContent: "center" }}>
+                                {(() => {
+                                  // Chuẩn hóa status từ backend
+                                  let status = booking.status;
+                                  let badgeColor = '#e0e0e0';
+                                  let textColor = '#64748b';
+                                  let label = status;
+                                  if (status === 'Chờ bắt đầu') {
+                                    badgeColor = '#fde68a'; // vàng nhạt
+                                    textColor = '#b45309';
+                                    label = 'Chờ bắt đầu';
+                                  } else if (status === 'Đang diễn ra') {
+                                    badgeColor = '#22d3ee'; // xanh cyan
+                                    textColor = '#fff';
+                                    label = 'Đang diễn ra';
+                                  } else if (status === 'Đã kết thúc') {
+                                    badgeColor = '#cbd5e1'; // xám nhạt
+                                    textColor = '#64748b';
+                                    label = 'Đã kết thúc';
+                                  }
+                                  return (
+                                    <span style={{
+                                      display: "inline-block",
+                                      padding: "6px 12px",
+                                      borderRadius: "20px",
+                                      fontWeight: 600,
+                                      fontSize: "13px",
+                                      color: textColor,
+                                      backgroundColor: badgeColor
+                                    }}>{label}</span>
+                                  );
+                                })()}
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                              {booking.status === 'Đang diễn ra' && (
+                                <button
+                                  style={{
+                                    background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: "8px",
+                                    padding: '10px 16px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    transition: "all 0.2s",
+                                    boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                                  }}
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = "translateY(-2px)";
+                                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = "translateY(0)";
+                                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                                  }}
+                                  onClick={() => {
+                                    const channelId = booking.bookingId?.toString();
+                                    const channelName = `booking_${channelId}`;
+                                    setVideoChannel(channelName);
+                                    setShowVideoCall(true);
+                                  }}
+                                >
+                                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span style={{ fontSize: "16px" }}>🎥</span> Tham gia tư vấn
+                                  </span>
+                                </button>
+                              )}
+                              {booking.status === 'Chờ bắt đầu' && (
+                                <span style={{ color: "#b45309", fontSize: "14px", fontWeight: "500" }}>
+                                  Chưa đến giờ tư vấn
+                                </span>
+                              )}
+                              {booking.status === 'Đã kết thúc' && (
+                                <button
+                                  style={{
+                                    background: '#e0f2fe',
+                                    color: '#0891b2',
+                                    border: '1px solid #22d3ee',
+                                    borderRadius: "8px",
+                                    padding: '8px 14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    marginLeft: 4,
+                                    transition: "all 0.2s"
+                                  }}
+                                  onClick={() => {
+                                    setDetailData({
+                                      user: bookingUserDetails[booking.userId]?.fullName || 'N/A',
+                                      content: booking.content || 'Không có',
+                                      date: booking.appointmentDate || 'N/A',
+                                      startTime: booking.startTime || 'N/A',
+                                      endTime: booking.endTime || 'N/A',
+                                      status: booking.status
+                                    });
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  Xem chi tiết cuộc gọi
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : activeSection === 'leave' ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                backgroundColor: "#fff",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                marginBottom: "24px"
+              }}>
+                <h2 style={{ 
+                  color: "#0891b2", 
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: 700
+                }}>Quản lý đơn xin nghỉ</h2>
+                <button
+                  onClick={() => setShowAddLeaveModal(true)}
+                  style={{
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    border: "none",
+                    backgroundColor: "#22d3ee",
+                    color: "#fff",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Tạo đơn xin nghỉ
+                </button>
+              </div>
+
+              {loadingLeaveRequests ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 0",
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ 
+                    display: "inline-block", 
+                    border: "3px solid #22d3ee",
+                    borderTop: "3px solid transparent",
+                    borderRadius: "50%",
+                    width: "30px",
+                    height: "30px",
+                    animation: "spin 1s linear infinite",
+                    marginBottom: "15px"
+                  }}></div>
+                  <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách đơn xin nghỉ...</p>
+                </div>
+              ) : leaveRequests.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 20px",
+                  color: '#0891b2', 
+                  fontWeight: 600,
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>📋</div>
+                  <div>Chưa có đơn xin nghỉ nào</div>
+                </div>
+              ) : (
+                <div style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                  overflow: "hidden"
+                }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "14px"
+                    }}>
+                      <thead style={{
+                        backgroundColor: "#f8fafc",
+                        borderBottom: "2px solid #e2e8f0"
+                      }}>
+                        <tr>
+                          <th style={{
+                            textAlign: "left",
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ngày nghỉ</th>
+                          <th style={{
+                            textAlign: "left", 
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ca làm việc</th>
+                          <th style={{
+                            textAlign: "left",
+                            padding: "16px", 
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ghi chú</th>
+                          <th style={{
+                            textAlign: "center",
+                            padding: "16px",
+                            fontWeight: "600", 
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Trạng thái</th>
+                          <th style={{
+                            textAlign: "center",
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2"
+                          }}>Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaveRequests.map((request, index) => (
+                          <tr key={request.leaveRequestId || index} style={{
+                            borderBottom: "1px solid #e2e8f0",
+                            transition: "background-color 0.2s ease"
+                          }}>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0",
+                              fontWeight: "500"
+                            }}>
+                              {new Date(request.leaveDate).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0"
+                            }}>
+                              {getShiftText(request.shift)}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0",
+                              maxWidth: "200px",
+                              wordWrap: "break-word"
+                            }}>
+                              {request.note || 'Không có ghi chú'}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              textAlign: "center",
+                              borderRight: "1px solid #e2e8f0"
+                            }}>
+                              <span style={{
+                                padding: "6px 12px",
+                                borderRadius: "20px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                                backgroundColor: getStatusColor(request.status).bg,
+                                color: getStatusColor(request.status).text
+                              }}>
+                                {getStatusText(request.status)}
+                              </span>
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              textAlign: "center"
+                            }}>
+                              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                {request.status === 'PENDING' && (
+                                  <>
+                                    <button
+                                      onClick={() => openEditLeaveModal(request)}
+                                      style={{
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        backgroundColor: "#fbbf24",
+                                        color: "#fff",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease"
+                                      }}
+                                    >
+                                      Sửa
+                                    </button>
+                                    <button
+                                      onClick={() => deleteLeaveRequest(request.leaveRequestId)}
+                                      style={{
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        backgroundColor: "#ef4444",
+                                        color: "#fff",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease"
+                                      }}
+                                    >
+                                      Xóa
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       </main>
       
@@ -916,6 +1657,249 @@ const ConsultantInterface = () => {
                 }}
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thêm đơn xin nghỉ */}
+      {showAddLeaveModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 400,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 20 }}>Tạo đơn xin nghỉ</h2>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ngày nghỉ:
+              </label>
+              <input
+                type="date"
+                value={leaveFormData.leaveDate}
+                onChange={(e) => setLeaveFormData({...leaveFormData, leaveDate: e.target.value})}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ca làm việc:
+              </label>
+              <select
+                value={leaveFormData.shift}
+                onChange={(e) => setLeaveFormData({...leaveFormData, shift: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                <option value="AFTERNOON">Ca chiều (13:30 - 17:30)</option>
+                <option value="FULL_DAY">Cả ngày (08:00 - 17:30)</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ghi chú:
+              </label>
+              <textarea
+                value={leaveFormData.note}
+                onChange={(e) => setLeaveFormData({...leaveFormData, note: e.target.value})}
+                placeholder="Lý do xin nghỉ (không bắt buộc)"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                onClick={() => {
+                  setShowAddLeaveModal(false);
+                  resetLeaveForm();
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={submitLeaveRequest}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Tạo đơn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal sửa đơn xin nghỉ */}
+      {showEditLeaveModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 400,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 20 }}>Chỉnh sửa đơn xin nghỉ</h2>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ngày nghỉ:
+              </label>
+              <input
+                type="date"
+                value={leaveFormData.leaveDate}
+                onChange={(e) => setLeaveFormData({...leaveFormData, leaveDate: e.target.value})}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ca làm việc:
+              </label>
+              <select
+                value={leaveFormData.shift}
+                onChange={(e) => setLeaveFormData({...leaveFormData, shift: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                <option value="AFTERNOON">Ca chiều (13:30 - 17:30)</option>
+                <option value="FULL_DAY">Cả ngày (08:00 - 17:30)</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ghi chú:
+              </label>
+              <textarea
+                value={leaveFormData.note}
+                onChange={(e) => setLeaveFormData({...leaveFormData, note: e.target.value})}
+                placeholder="Lý do xin nghỉ (không bắt buộc)"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                onClick={() => {
+                  setShowEditLeaveModal(false);
+                  setEditingLeaveRequest(null);
+                  resetLeaveForm();
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={updateLeaveRequest}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Cập nhật
               </button>
             </div>
           </div>

@@ -1,13 +1,13 @@
-// Utility functions for UserQuestions component
+// Các hàm tiện ích cho component UserQuestions
 
-// User management
+// Quản lý thông tin người dùng
 export const getUserInfo = () => {
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
   const userId = localStorage.getItem('userId') || loggedInUser.userID || loggedInUser.id;
   return { loggedInUser, userId };
 };
 
-// API calls
+// Các hàm gọi API
 export const fetchConsultantInfo = async (consultantId) => {
   try {
     const response = await fetch(`http://localhost:8080/api/users/${consultantId}`);
@@ -76,7 +76,7 @@ export const fetchUserQuestions = async (
           return null;
         }
         
-        // Format dữ liệu câu hỏi với fallback values
+        // Format dữ liệu câu hỏi với giá trị mặc định khi thiếu
         const formattedQuestion = {
           id: question?.id || question?.questionID || Math.random(),
           questionID: question?.id || question?.questionID || Math.random(),
@@ -87,9 +87,9 @@ export const fetchUserQuestions = async (
           title: question?.title || 'Câu hỏi tư vấn',
         };
 
-        // Map status từ backend sang frontend
+        // Chuyển đổi trạng thái từ backend sang frontend
         let isResolved = formattedQuestion.status === 'resolved';
-        // Nếu câu hỏi đã được giải quyết thì lấy câu trả lời
+        // Nếu câu hỏi đã được giải quyết thì lấy câu trả lời từ API
         if (isResolved && (question?.id || question?.questionID)) {
           try {
             const answerResponse = await fetch(`http://localhost:8080/api/answers/${question.id || question.questionID}`);
@@ -110,19 +110,19 @@ export const fetchUserQuestions = async (
       })
     );
     
-    // Lọc bỏ các câu hỏi null
+    // Lọc bỏ các câu hỏi có giá trị null
     const validQuestions = questionsWithAnswers.filter(q => q !== null);
     console.log('Dữ liệu đã xử lý với câu trả lời:', validQuestions);
     setQuestions(validQuestions);
     
-    // Lấy danh sách consultantId duy nhất từ những câu hỏi đã được trả lời
+    // Lấy danh sách ID tư vấn viên duy nhất từ những câu hỏi đã được trả lời
     const consultantIds = [...new Set(
       validQuestions
         .filter(q => q && q.consultantID)
         .map(q => q.consultantID)
     )];
     
-    // Fetch thông tin tư vấn viên cho từng consultantId nếu có
+    // Lấy thông tin chi tiết tư vấn viên cho từng consultantId nếu có
     const namesObj = {};
     if (consultantIds.length > 0) {
       await Promise.all(
@@ -142,7 +142,7 @@ export const fetchUserQuestions = async (
     console.error('Lỗi khi tải câu hỏi:', error);
     
     // Chỉ hiển thị lỗi cho những trường hợp thật sự có vấn đề
-    // Không hiển thị lỗi cho 404 hoặc database trống
+    // Không hiển thị lỗi cho 404 hoặc cơ sở dữ liệu trống
     if (error.message.includes('Status: 404')) {
       setError(null);
       setQuestions([]);
@@ -157,7 +157,7 @@ export const fetchUserQuestions = async (
   }
 };
 
-// Data formatting helpers
+// Các hàm hỗ trợ định dạng dữ liệu
 export const formatStatus = (status) => {
   switch (status) {
     case 'resolved':
@@ -192,7 +192,7 @@ export const formatDate = (dateString) => {
       minute: '2-digit'
     });
     
-    // Loại bỏ từ "lúc" trong chuỗi ngày tháng
+    // Loại bỏ từ "lúc" trong chuỗi ngày tháng tiếng Việt
     return formattedDate.replace('lúc ', '');
   } catch (e) {
     console.error('Lỗi khi format ngày:', e);
@@ -200,13 +200,13 @@ export const formatDate = (dateString) => {
   }
 };
 
-// Filtering helpers
+// Các hàm hỗ trợ lọc dữ liệu
 export const getFilteredQuestions = (questions, filterStatus) => {
   return (questions || []).filter(question => {
     if (!question) return false;
     if (filterStatus === 'all') return true;
     
-    // Map the backend status to our filter status
+    // Chuyển đổi trạng thái từ backend sang trạng thái bộ lọc
     if (filterStatus === 'Đã trả lời' && question?.status === 'resolved') return true;
     if (filterStatus === 'Đang chờ' && question?.status === 'pending') return true;
     
@@ -214,7 +214,7 @@ export const getFilteredQuestions = (questions, filterStatus) => {
   });
 };
 
-// Event handlers
+// Các hàm xử lý sự kiện
 export const handleFilterChange = (e, setFilterStatus) => {
   setFilterStatus(e.target.value);
 };
@@ -246,7 +246,7 @@ export const handleNavigateToAskQuestion = () => {
   window.location.href = "/ask-question";
 };
 
-// Validation helpers
+// Các hàm hỗ trợ xác thực dữ liệu
 export const validateQuestion = (question) => {
   return question && (question.id || question.questionID);
 };

@@ -1,11 +1,11 @@
-// Utility functions for PeriodTracking component
+// Các hàm tiện ích cho component PeriodTracking
 
-// Authentication and user management
+// Xác thực và quản lý người dùng
 export const getUserIdFromStorage = () => {
   return localStorage.getItem('userId');
 };
 
-// Cycle abnormalities analysis
+// Phân tích các bất thường trong chu kỳ kinh nguyệt
 export const analyzeCycleAbnormalities = (cycleLength, periodLength) => {
   const abnormalities = [];
   
@@ -80,7 +80,7 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength) => {
   return abnormalities;
 };
 
-// API calls
+// Các hàm gọi API
 export const checkUserGender = async (userid, setUserGender, setGenderCheckComplete) => {
   if (!userid) {
     console.log('No userid available for checking gender');

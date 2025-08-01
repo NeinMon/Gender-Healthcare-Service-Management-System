@@ -33,6 +33,7 @@ const App = () => {
   // Thêm state để theo dõi trạng thái đăng nhập
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userGender, setUserGender] = useState(null);
   const [showConsultationDropdown, setShowConsultationDropdown] = useState(false);
   const [showTestBookingDropdown, setShowTestBookingDropdown] = useState(false);
   const [showQuestionDropdown, setShowQuestionDropdown] = useState(false);
@@ -45,11 +46,18 @@ const App = () => {
   // Kiểm tra trạng thái đăng nhập khi component mount
   React.useEffect(() => {
     const loggedInUser = localStorage.getItem('loggedInUser');
+    const userId = localStorage.getItem('userId');
+    
     if (loggedInUser) {
       try {
         const userData = JSON.parse(loggedInUser);
         setCurrentUser(userData);
         setIsLoggedIn(true);
+        
+        // Kiểm tra giới tính nếu có userId
+        if (userId) {
+          checkUserGender(userId);
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('loggedInUser');
@@ -66,6 +74,55 @@ const App = () => {
     localStorage.removeItem('role');
     setCurrentUser(null);
     setIsLoggedIn(false);
+    setUserGender(null);
+  };
+
+  // Hàm kiểm tra giới tính của người dùng
+  const checkUserGender = async (userId) => {
+    if (!userId) return null;
+    
+    try {
+      const response = await fetch(`http://localhost:8080/api/users/${encodeURIComponent(userId)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        const gender = userData.gender;
+        setUserGender(gender);
+        return gender;
+      }
+    } catch (err) {
+      console.error('Error checking user gender:', err);
+    }
+    return null;
+  };
+
+  // Hàm xử lý navigation cho trang theo dõi chu kỳ
+  const handlePeriodTrackingClick = async (e) => {
+    e.preventDefault();
+    
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    
+    const userId = localStorage.getItem('userId');
+    let gender = userGender;
+    
+    // Nếu chưa có thông tin giới tính, kiểm tra lại
+    if (!gender && userId) {
+      gender = await checkUserGender(userId);
+    }
+    
+    if (gender === 'Nữ' || gender === 'nữ' || gender === 'NỮ') {
+      navigate('/period-tracking');
+    } else {
+      alert('Tính năng theo dõi chu kỳ kinh nguyệt chỉ dành cho người dùng nữ.');
+    }
   };
 
   // Animated counter for statistics
@@ -221,6 +278,9 @@ const App = () => {
     // Cập nhật state
     setCurrentUser(userData);
     setIsLoggedIn(true);
+    
+    // Kiểm tra giới tính sau khi đăng nhập
+    checkUserGender(userData.userID);
     
     alert("Đăng nhập thành công!");
     setShowLogin(false);
@@ -557,9 +617,9 @@ const App = () => {
             Giới thiệu
           </a>
           <a
-            href={isLoggedIn ? "/period-tracking" : "/login"}
+            href="#"
             style={{ color: "#fff", fontWeight: 600, fontSize: 16, textDecoration: "none", background: "rgba(255,255,255,0.4)", padding: "12px 32px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.6)", transition: "all 0.3s ease", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", minWidth: "140px", textAlign: "center" }}
-            onClick={e => { e.preventDefault(); navigate(isLoggedIn ? '/period-tracking' : '/login'); }}
+            onClick={handlePeriodTrackingClick}
             onMouseEnter={(e) => { e.target.style.background = "rgba(255,255,255,0.5)"; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)"; }}
             onMouseLeave={(e) => { e.target.style.background = "rgba(255,255,255,0.4)"; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)"; }}
           >

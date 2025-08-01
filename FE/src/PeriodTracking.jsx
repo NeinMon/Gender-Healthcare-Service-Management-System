@@ -18,9 +18,125 @@ const PeriodTracking = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [hasExistingCycle, setHasExistingCycle] = useState(false);
+  const [userGender, setUserGender] = useState(null);
+  const [genderCheckComplete, setGenderCheckComplete] = useState(false);
+  const [cycleAbnormalities, setCycleAbnormalities] = useState([]);
 
   // Lấy userid từ localStorage
   const userid = localStorage.getItem('userId');
+  
+  // Hàm phân tích bất thường chu kỳ kinh nguyệt
+  const analyzeCycleAbnormalities = (cycleLength, periodLength) => {
+    const abnormalities = [];
+    
+    // 1. Chu kỳ quá ngắn hoặc quá dài
+    if (cycleLength < 21 || cycleLength > 35) {
+      abnormalities.push({
+        type: 'cycle_length',
+        title: 'Chu kỳ kinh nguyệt bất thường',
+        description: `Chu kỳ ${cycleLength} ngày ${cycleLength < 21 ? 'quá ngắn' : 'quá dài'} so với bình thường (21-35 ngày). Điều này có thể ảnh hưởng đến khả năng sinh sản và sức khỏe tổng thể.`,
+        recommendations: [
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+          'Siêu âm tử cung và buồng trứng (Đánh giá cấu trúc, phát hiện u xơ, polyp, nang, dị dạng)',
+          'Xét nghiệm công thức máu đầy đủ (Hồng cầu, Hemoglobin, Hematocrit, Bạch cầu, Tiểu cầu)'
+        ],
+        severity: 'high',
+        advice: 'Chu kỳ bất thường có thể là dấu hiệu của rối loạn nội tiết tố hoặc các vấn đề về sức khỏe sinh sản khác.'
+      });
+    }
+    
+    // 2. Kinh nguyệt kéo dài bất thường
+    if (periodLength > 7 || periodLength < 2) {
+      abnormalities.push({
+        type: 'period_length',
+        title: 'Thời gian kinh nguyệt bất thường',
+        description: `Thời gian kinh nguyệt ${periodLength} ngày ${periodLength > 7 ? 'kéo dài quá mức' : 'quá ngắn'} so với bình thường (2-7 ngày). ${periodLength > 7 ? 'Kinh nguyệt kéo dài có thể gây thiếu máu và mệt mỏi.' : 'Kinh nguyệt quá ngắn có thể ảnh hưởng đến quá trình thải độc tự nhiên của cơ thể.'}`,
+        recommendations: [
+          'Xét nghiệm công thức máu đầy đủ (Hồng cầu, Hemoglobin, Hematocrit, Bạch cầu, Tiểu cầu)',
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+          'Siêu âm tử cung và buồng trứng (Đánh giá cấu trúc, phát hiện u xơ, polyp, nang, dị dạng)'
+        ],
+        severity: periodLength > 7 ? 'high' : 'medium',
+        advice: periodLength > 7 
+          ? 'Kinh nguyệt kéo dài có thể là dấu hiệu của u xơ tử cung, polyp, hoặc rối loạn đông máu.'
+          : 'Kinh nguyệt quá ngắn có thể liên quan đến thiếu hụt hormone hoặc vấn đề về lót tử cung.'
+      });
+    }
+    
+    // 3. Chu kỳ gần biên giới (cảnh báo nhẹ)
+    if ((cycleLength >= 21 && cycleLength <= 24) || (cycleLength >= 32 && cycleLength <= 35)) {
+      abnormalities.push({
+        type: 'cycle_borderline',
+        title: 'Chu kỳ gần biên giới bình thường',
+        description: `Chu kỳ ${cycleLength} ngày nằm ở biên giới của phạm vi bình thường. Cần theo dõi để phát hiện sớm những thay đổi bất thường.`,
+        recommendations: [
+          'Theo dõi chu kỳ thường xuyên trong 3-6 tháng',
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+          'Tham khảo ý kiến bác sĩ nếu chu kỳ tiếp tục thay đổi'
+        ],
+        severity: 'low',
+        advice: 'Hãy ghi chép chu kỳ hàng tháng để theo dõi xu hướng thay đổi.'
+      });
+    }
+    
+    // 4. Kinh nguyệt gần biên giới
+    if (periodLength === 2 || periodLength === 7) {
+      abnormalities.push({
+        type: 'period_borderline',
+        title: 'Thời gian kinh nguyệt cần theo dõi',
+        description: `Thời gian kinh nguyệt ${periodLength} ngày nằm ở biên giới của phạm vi bình thường. Cần quan sát để đảm bảo không có xu hướng xấu đi.`,
+        recommendations: [
+          'Theo dõi thời gian kinh nguyệt hàng tháng',
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+          'Tham khảo bác sĩ nếu có triệu chứng bất thường khác'
+        ],
+        severity: 'low',
+        advice: periodLength === 2 
+          ? 'Kinh nguyệt ngắn cần theo dõi để đảm bảo đủ quá trình thải độc tự nhiên.'
+          : 'Kinh nguyệt 7 ngày vẫn bình thường nhưng cần chú ý nếu kéo dài hơn.'
+      });
+    }
+    
+    return abnormalities;
+  };
+  
+  // Hàm kiểm tra giới tính của người dùng
+  const checkUserGender = async () => {
+    if (!userid) {
+      console.log('No userid available for checking gender');
+      setGenderCheckComplete(true);
+      return null;
+    }
+    
+    try {
+      console.log(`Checking gender for user ${userid}`);
+      const response = await fetch(`http://localhost:8080/api/users/${encodeURIComponent(userid)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Gender check response status:', response.status);
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('User data:', userData);
+        const gender = userData.gender;
+        setUserGender(gender);
+        setGenderCheckComplete(true);
+        return gender;
+      } else {
+        console.error('Error checking user gender:', response.status);
+        setGenderCheckComplete(true);
+        return null;
+      }
+    } catch (err) {
+      console.error('Network error checking user gender:', err);
+      setGenderCheckComplete(true);
+      return null;
+    }
+  };
+  
   // Hàm kiểm tra xem user đã có chu kỳ hay chưa
   const checkExistingCycle = async () => {
     if (!userid) {
@@ -125,6 +241,10 @@ const PeriodTracking = () => {
           });
           setIsSubmitted(true);
           
+          // Phân tích bất thường chu kỳ
+          const abnormalities = analyzeCycleAbnormalities(cycleLength, periodLength);
+          setCycleAbnormalities(abnormalities);
+          
           // Update form data with fetched values
           setFormData({
             startDate: data.startDate,
@@ -161,10 +281,22 @@ const PeriodTracking = () => {
         setLoading(false);
         setIsSubmitted(false);
         setResults(null);
+        setGenderCheckComplete(true);
         return;
       }
 
       try {
+        // Kiểm tra giới tính trước
+        const gender = await checkUserGender();
+        console.log('User gender:', gender);
+        
+        // Nếu giới tính không phải là "Nữ", dừng lại
+        if (gender !== 'Nữ' && gender !== 'nữ' && gender !== 'NỮ') {
+          console.log('User is not female, access denied');
+          setLoading(false);
+          return;
+        }
+        
         const hasCycle = await checkExistingCycle();
         console.log(`User ${userid} has existing cycle: ${hasCycle}`);
         setHasExistingCycle(hasCycle);
@@ -242,17 +374,22 @@ const PeriodTracking = () => {
       return;
     }
     
+    // Cho phép nhập từ 1-10, nhưng cảnh báo nếu ngoài 3-10
+    let warning = '';
     if (periodLength < 3 || periodLength > 10) {
-      setError('Thời gian kinh nguyệt phải từ 3-10 ngày!');
-      setLoading(false);
-      return;
+      warning = 'Lưu ý: Thời gian kinh nguyệt bình thường là từ 3-10 ngày. Nếu bạn nhập ngoài khoảng này, hãy kiểm tra lại với bác sĩ.';
     }
     
     if (periodLength >= cycleLength) {
       setError('Thời gian kinh nguyệt phải nhỏ hơn độ dài chu kỳ!');
       setLoading(false);
       return;
-    }try {
+    }
+    if (warning) {
+      setError(warning);
+      // Không return, chỉ hiển thị cảnh báo, vẫn cho phép lưu
+    }
+    try {
       // Kiểm tra xem người dùng đã có dữ liệu chu kỳ hay chưa
       const exists = await checkExistingCycle();
       console.log(`Before saving: User has existing cycle = ${exists}`);
@@ -315,6 +452,10 @@ const PeriodTracking = () => {
       }
       
       console.log('Menstrual cycle data saved successfully');
+      
+      // Phân tích bất thường chu kỳ trước khi cập nhật state
+      const abnormalities = analyzeCycleAbnormalities(cycleLength, periodLength);
+      setCycleAbnormalities(abnormalities);
       
       // Cập nhật state để phản ánh rằng người dùng giờ đã có chu kỳ
       setHasExistingCycle(true);
@@ -428,6 +569,78 @@ const PeriodTracking = () => {
         {!userid ? (
           <div style={{ textAlign: "center", padding: "50px", fontSize: "18px", color: "#dc2626" }}>
             Vui lòng đăng nhập để sử dụng tính năng theo dõi chu kỳ.
+          </div>
+        ) : !genderCheckComplete ? (
+          <div style={{ textAlign: "center", padding: "50px", fontSize: "18px", color: "#666" }}>
+            Đang kiểm tra thông tin tài khoản...
+          </div>
+        ) : userGender && userGender !== 'Nữ' && userGender !== 'nữ' && userGender !== 'NỮ' ? (
+          <div style={{ 
+            textAlign: "center", 
+            padding: "50px",
+            maxWidth: "600px",
+            margin: "0 auto"
+          }}>
+            <div style={{
+              background: "rgba(239, 68, 68, 0.1)",
+              borderRadius: "15px",
+              padding: "30px",
+              border: "2px solid rgba(239, 68, 68, 0.2)",
+              marginBottom: "20px"
+            }}>
+              <div style={{ fontSize: "48px", marginBottom: "15px" }}>🚫</div>
+              <h3 style={{ 
+                color: "#dc2626", 
+                marginBottom: "15px", 
+                fontSize: "20px",
+                fontWeight: "600"
+              }}>
+                Tính năng không khả dụng
+              </h3>
+              <p style={{ 
+                fontSize: "16px", 
+                color: "#6b7280",
+                lineHeight: "1.6",
+                marginBottom: "20px"
+              }}>
+                Tính năng theo dõi chu kỳ kinh nguyệt chỉ dành cho người dùng có giới tính là <strong>Nữ</strong>.
+                <br/>
+                Giới tính hiện tại của tài khoản: <strong>{userGender || 'Không xác định'}</strong>
+              </p>
+              <div style={{
+                background: "rgba(59, 130, 246, 0.1)",
+                borderRadius: "10px",
+                padding: "15px",
+                marginBottom: "20px"
+              }}>
+                <p style={{ 
+                  fontSize: "14px", 
+                  color: "#1e40af",
+                  margin: 0,
+                  lineHeight: "1.5"
+                }}>
+                  💡 <strong>Gợi ý:</strong> Bạn có thể cập nhật thông tin giới tính trong phần 
+                  <Link to="/user-account" style={{ color: "#1e40af", textDecoration: "underline" }}> Tài khoản của tôi</Link>
+                </p>
+              </div>
+              <Link
+                to="/"
+                style={{
+                  display: "inline-block",
+                  background: "linear-gradient(90deg, #6b7280 0%, #9ca3af 100%)",
+                  color: "#fff",
+                  textDecoration: "none",
+                  padding: "12px 25px",
+                  borderRadius: "25px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                  boxShadow: "0 4px 15px rgba(107, 114, 128, 0.3)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                ← Quay về trang chủ
+              </Link>
+            </div>
           </div>
         ) : loading ? (
           <div style={{ textAlign: "center", padding: "50px", fontSize: "18px", color: "#666" }}>
@@ -566,7 +779,245 @@ const PeriodTracking = () => {
                 </div>
               </div>
             </div>
-              {/* Thêm thông tin hướng dẫn */}
+            
+            {/* Hiển thị cảnh báo bất thường chu kỳ */}
+            {cycleAbnormalities.length > 0 && (() => {
+              // Xác định mức độ nghiêm trọng cao nhất
+              const maxSeverity = cycleAbnormalities.reduce((max, current) => {
+                const severityLevels = { low: 1, medium: 2, high: 3 };
+                return severityLevels[current.severity] > severityLevels[max] ? current.severity : max;
+              }, 'low');
+              
+              // Thiết lập màu sắc dựa trên mức độ nghiêm trọng
+              const severityColors = {
+                low: {
+                  bg: "rgba(251, 191, 36, 0.05)",
+                  border: "rgba(251, 191, 36, 0.3)",
+                  text: "#92400e",
+                  icon: "⚠️"
+                },
+                medium: {
+                  bg: "rgba(249, 115, 22, 0.05)",
+                  border: "rgba(249, 115, 22, 0.3)",
+                  text: "#c2410c",
+                  icon: "🔶"
+                },
+                high: {
+                  bg: "rgba(220, 38, 38, 0.05)",
+                  border: "rgba(220, 38, 38, 0.3)",
+                  text: "#dc2626",
+                  icon: "🚨"
+                }
+              };
+              
+              const colors = severityColors[maxSeverity];
+              
+              return (
+                <div style={{
+                  background: colors.bg,
+                  borderRadius: "15px",
+                  padding: "25px",
+                  border: `2px solid ${colors.border}`,
+                  marginBottom: "30px",
+                  textAlign: "left",
+                  maxWidth: "1000px",
+                  margin: "0 auto 30px auto"
+                }}>
+                  <div style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    marginBottom: "20px" 
+                  }}>
+                    <div style={{ fontSize: "24px", marginRight: "10px" }}>{colors.icon}</div>
+                    <h4 style={{ 
+                      color: colors.text, 
+                      margin: 0, 
+                      fontSize: "18px", 
+                      fontWeight: "700" 
+                    }}>
+                      {maxSeverity === 'high' 
+                        ? 'Phát hiện bất thường chu kỳ kinh nguyệt nghiêm trọng'
+                        : maxSeverity === 'medium'
+                        ? 'Phát hiện bất thường chu kỳ kinh nguyệt cần theo dõi'
+                        : 'Chu kỳ kinh nguyệt cần quan sát thêm'
+                      }
+                    </h4>
+                  </div>
+                
+                <div style={{
+                  background: "rgba(254, 226, 226, 0.8)",
+                  borderRadius: "10px",
+                  padding: "20px",
+                  marginBottom: "20px"
+                }}>
+                  <p style={{ 
+                    fontSize: "15px", 
+                    color: "#7f1d1d",
+                    margin: "0 0 15px 0",
+                    lineHeight: "1.6",
+                    fontWeight: "500"
+                  }}>
+                    🔍 <strong>Kết quả phân tích:</strong> Chu kỳ kinh nguyệt của bạn có những dấu hiệu bất thường cần được quan tâm và theo dõi.
+                  </p>
+                  
+                  {cycleAbnormalities.map((abnormality, index) => (
+                    <div key={index} style={{
+                      background: "#fff",
+                      borderRadius: "8px",
+                      padding: "15px",
+                      marginBottom: index < cycleAbnormalities.length - 1 ? "15px" : "0",
+                      border: "1px solid rgba(220, 38, 38, 0.2)"
+                    }}>
+                      <h5 style={{ 
+                        color: "#dc2626", 
+                        margin: "0 0 8px 0", 
+                        fontSize: "16px",
+                        fontWeight: "600"
+                      }}>
+                        🚨 {abnormality.title}
+                      </h5>
+                      <p style={{ 
+                        color: "#374151", 
+                        margin: "0 0 12px 0", 
+                        fontSize: "14px",
+                        lineHeight: "1.5"
+                      }}>
+                        {abnormality.description}
+                      </p>
+                      
+                      {abnormality.advice && (
+                        <div style={{ 
+                          background: "rgba(251, 191, 36, 0.1)",
+                          borderRadius: "6px",
+                          padding: "10px",
+                          marginBottom: "12px",
+                          border: "1px solid rgba(251, 191, 36, 0.3)"
+                        }}>
+                          <p style={{ 
+                            color: "#92400e", 
+                            margin: 0, 
+                            fontSize: "13px",
+                            lineHeight: "1.4",
+                            fontStyle: "italic"
+                          }}>
+                            💡 <strong>Lời khuyên:</strong> {abnormality.advice}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div style={{ 
+                        background: "rgba(59, 130, 246, 0.05)",
+                        borderRadius: "6px",
+                        padding: "12px",
+                        border: "1px solid rgba(59, 130, 246, 0.2)"
+                      }}>
+                        <p style={{ 
+                          color: "#1e40af", 
+                          margin: "0 0 8px 0", 
+                          fontSize: "14px",
+                          fontWeight: "600"
+                        }}>
+                          🩺 Xét nghiệm được đề xuất:
+                        </p>
+                        <ul style={{ 
+                          margin: 0, 
+                          paddingLeft: "20px",
+                          color: "#374151",
+                          fontSize: "13px",
+                          lineHeight: "1.4"
+                        }}>
+                          {abnormality.recommendations.map((recommendation, idx) => (
+                            <li key={idx} style={{ marginBottom: "4px" }}>
+                              {recommendation}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div style={{
+                  background: "linear-gradient(90deg, #dc2626 0%, #ef4444 100%)",
+                  borderRadius: "10px",
+                  padding: "20px",
+                  textAlign: "center"
+                }}>
+                  <h5 style={{ 
+                    color: "#fff", 
+                    margin: "0 0 12px 0", 
+                    fontSize: "16px",
+                    fontWeight: "600"
+                  }}>
+                    🏥 Khuyến nghị của chúng tôi
+                  </h5>
+                  <p style={{ 
+                    color: "#fef2f2", 
+                    margin: "0 0 15px 0", 
+                    fontSize: "14px",
+                    lineHeight: "1.5"
+                  }}>
+                    Để đảm bảo sức khỏe sinh sản, bạn nên thực hiện các xét nghiệm được đề xuất và tham khảo ý kiến bác sĩ chuyên khoa.
+                  </p>
+                  <Link
+                    to="/test-booking"
+                    style={{
+                      display: "inline-block",
+                      background: "#fff",
+                      color: "#dc2626",
+                      textDecoration: "none",
+                      padding: "12px 25px",
+                      borderRadius: "25px",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
+                      transition: "all 0.3s ease",
+                      marginRight: "15px"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+                    }}
+                  >
+                    🧪 Đặt lịch xét nghiệm ngay
+                  </Link>
+                  <Link
+                    to="/consultation-booking"
+                    style={{
+                      display: "inline-block",
+                      background: "#fff",
+                      color: "#dc2626",
+                      textDecoration: "none",
+                      padding: "12px 25px",
+                      borderRadius: "25px",
+                      fontWeight: "600",
+                      fontSize: "14px",
+                      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
+                      transition: "all 0.3s ease",
+                      marginRight: "0"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = "translateY(-2px)";
+                      e.target.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+                    }}
+                  >
+                    💬 Đặt lịch tư vấn với bác sĩ
+                  </Link>
+                </div>
+              </div>
+              );
+            })()}
+              
+            {/* Thêm thông tin hướng dẫn */}
             <div style={{
               background: "rgba(255, 193, 7, 0.08)",
               borderRadius: "15px",
@@ -670,6 +1121,7 @@ const PeriodTracking = () => {
                   setIsSubmitted(false);
                   setResults(null);
                   setError('');
+                  setCycleAbnormalities([]); // Reset abnormalities khi cập nhật
                   // Giữ nguyên dữ liệu hiện tại trong form để người dùng có thể chỉnh sửa
                   // Không reset form về giá trị mặc định
                 }}
@@ -809,7 +1261,7 @@ const PeriodTracking = () => {
                     name="periodLength"
                     value={formData.periodLength}
                     onChange={handleChange}
-                    min="3"
+                    min="1"
                     max="10"
                     required
                     style={inputStyle}

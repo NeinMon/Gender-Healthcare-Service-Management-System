@@ -591,7 +591,6 @@ const MyTestBookings = () => {
                               borderRadius: "20px",
                               fontWeight: 600,
                               fontSize: "13px",
-                              color: "#fff",
                               backgroundColor: getStatusColor(booking.testStatus).bg,
                               color: getStatusColor(booking.testStatus).color
                             }}>

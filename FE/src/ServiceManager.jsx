@@ -6,6 +6,7 @@ const ServiceManager = () => {
   const [services, setServices] = useState([]);
   const [users, setUsers] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -19,7 +20,7 @@ const ServiceManager = () => {
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [userId, setUserId] = useState(null);
-  const [activeTab, setActiveTab] = useState('services'); // 'services', 'users', 'schedules'
+  const [activeTab, setActiveTab] = useState('services'); // 'services', 'users', 'schedules', 'leave-requests'
   const [formData, setFormData] = useState({
     serviceName: '',
     description: '',
@@ -70,6 +71,7 @@ const ServiceManager = () => {
     fetchServices();
     fetchUsers();
     fetchSchedules();
+    fetchLeaveRequests();
   }, []);
 
   // Lấy danh sách services từ API
@@ -99,8 +101,10 @@ const ServiceManager = () => {
         fetchServices();
       } else if (activeTab === 'users') {
         fetchUsers();
-      } else {
+      } else if (activeTab === 'schedules') {
         fetchSchedules();
+      } else if (activeTab === 'leave-requests') {
+        fetchLeaveRequests();
       }
       return;
     }
@@ -231,6 +235,82 @@ const ServiceManager = () => {
       showAlert('error', 'Lỗi kết nối khi tải danh sách lịch làm việc');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Lấy danh sách đơn xin nghỉ từ API
+  const fetchLeaveRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/leave-requests/all');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort by created date (newest first)
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeaveRequests(sortedData);
+      } else {
+        console.error('Failed to fetch leave requests');
+        showAlert('error', 'Không thể tải danh sách đơn xin nghỉ');
+      }
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách đơn xin nghỉ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Duyệt đơn xin nghỉ
+  const approveLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn duyệt đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/approve?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã duyệt đơn xin nghỉ thành công!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error approving leave request:', error);
+      showAlert('error', 'Lỗi khi duyệt đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  // Từ chối đơn xin nghỉ
+  const rejectLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn từ chối đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/reject?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã từ chối đơn xin nghỉ!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error rejecting leave request:', error);
+      showAlert('error', 'Lỗi khi từ chối đơn xin nghỉ: ' + error.message);
     }
   };
 
@@ -957,13 +1037,33 @@ const ServiceManager = () => {
               color: activeTab === 'schedules' ? "#fff" : "#6b7280",
               fontSize: "16px",
               fontWeight: "600",
-              borderRadius: activeTab === 'schedules' ? "0 12px 0 0" : "0",
+              borderRadius: "0",
               cursor: "pointer",
               transition: "all 0.3s",
               borderBottom: activeTab === 'schedules' ? "none" : "1px solid #e5e7eb"
             }}
           >
             � Quản lý Lịch làm việc
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('leave-requests');
+              setSearchTerm(''); // Clear search when switching tabs
+            }}
+            style={{
+              padding: "20px 30px",
+              border: "none",
+              backgroundColor: activeTab === 'leave-requests' ? "#0891b2" : "transparent",
+              color: activeTab === 'leave-requests' ? "#fff" : "#6b7280",
+              fontSize: "16px",
+              fontWeight: "600",
+              borderRadius: activeTab === 'leave-requests' ? "0 12px 0 0" : "0",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              borderBottom: activeTab === 'leave-requests' ? "none" : "1px solid #e5e7eb"
+            }}
+          >
+            📄 Quản lý Đơn xin nghỉ
           </button>
         </div>
       </div>
@@ -1024,7 +1124,8 @@ const ServiceManager = () => {
                   placeholder={
                     activeTab === 'services' ? "Tìm kiếm dịch vụ..." : 
                     activeTab === 'users' ? "Tìm kiếm tài khoản..." : 
-                    "Tìm kiếm lịch làm việc..."
+                    activeTab === 'schedules' ? "Tìm kiếm lịch làm việc..." :
+                    "Tìm kiếm đơn xin nghỉ..."
                   }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -1060,7 +1161,8 @@ const ServiceManager = () => {
                   onClick={
                     activeTab === 'services' ? fetchServices : 
                     activeTab === 'users' ? fetchUsers : 
-                    fetchSchedules
+                    activeTab === 'schedules' ? fetchSchedules :
+                    fetchLeaveRequests
                   }
                   style={{
                     background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
@@ -1087,9 +1189,11 @@ const ServiceManager = () => {
                 } else if (activeTab === 'users') {
                   resetUserForm();
                   setShowAddUserModal(true);
-                } else {
+                } else if (activeTab === 'schedules') {
                   resetScheduleForm();
                   setShowAddScheduleModal(true);
+                } else if (activeTab === 'leave-requests') {
+                  fetchLeaveRequests(); // Just refresh for leave requests
                 }
               }}
               style={{
@@ -1106,7 +1210,8 @@ const ServiceManager = () => {
             >
               {activeTab === 'services' ? '➕ Thêm dịch vụ mới' : 
                activeTab === 'users' ? '➕ Thêm tài khoản mới' : 
-               '➕ Thêm lịch làm việc'}
+               activeTab === 'schedules' ? '➕ Thêm lịch làm việc' :
+               '📋 Xem đơn xin nghỉ'}
             </button>
           </div>
 
@@ -1611,6 +1716,217 @@ const ServiceManager = () => {
                     fontWeight: 600
                   }}>
                     <span>Tổng số lịch làm việc: <strong style={{ color: "#0891b2" }}>{schedules.length}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Leave Requests Table */}
+        {activeTab === 'leave-requests' && (
+          <>
+            {loading ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: "60px 0",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ 
+                  display: "inline-block", 
+                  border: "3px solid #22d3ee",
+                  borderTop: "3px solid transparent",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "15px"
+                }}></div>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải dữ liệu...</p>
+              </div>
+            ) : (
+              <div style={{ 
+                width: '100%', 
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ overflowX: 'auto', width: "100%" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ 
+                        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                        textAlign: "center"
+                      }}>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày nghỉ</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ca làm việc</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày tạo</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveRequests.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" style={{ textAlign: "center", padding: "30px 0", color: "#0891b2", fontWeight: 500 }}>
+                            {searchTerm ? `Không tìm thấy đơn xin nghỉ nào với từ khóa "${searchTerm}"` : "Không có đơn xin nghỉ nào"}
+                          </td>
+                        </tr>
+                      ) : (
+                        leaveRequests.map((request, index) => {
+                          // Tìm thông tin consultant từ users array
+                          const consultant = users.find(user => user.userID === request.consultantId);
+                          const consultantName = consultant ? consultant.fullName : `Consultant ${request.consultantId}`;
+                          
+                          return (
+                            <tr 
+                              key={request.leaveRequestId || index} 
+                              style={{ 
+                                borderBottom: '1px solid #e0f2fe', 
+                                transition: "all 0.2s"
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                            >
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#0891b2" }}>
+                                  {consultantName}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#374151" }}>
+                                  {new Date(request.leaveDate).toLocaleDateString('vi-VN')}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: request.shift === 'MORNING' ? "#dbeafe" : 
+                                                  request.shift === 'AFTERNOON' ? "#fef3c7" : "#f3e8ff",
+                                  color: request.shift === 'MORNING' ? "#1d4ed8" : 
+                                         request.shift === 'AFTERNOON' ? "#92400e" : "#7c3aed"
+                                }}>
+                                  {request.shift === 'MORNING' ? 'Ca sáng (8:00-12:00)' : 
+                                   request.shift === 'AFTERNOON' ? 'Ca chiều (13:30-17:30)' :
+                                   request.shift === 'FULL_DAY' ? 'Cả ngày (8:00-17:30)' : request.shift}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ 
+                                  maxWidth: "150px", 
+                                  overflow: "hidden", 
+                                  textOverflow: "ellipsis", 
+                                  whiteSpace: "nowrap",
+                                  margin: "0 auto"
+                                }}>
+                                  {request.note || <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Không có ghi chú</span>}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: request.status === 'PENDING' ? "#fef3c7" : 
+                                                  request.status === 'APPROVED' ? "#d1fae5" : "#fee2e2",
+                                  color: request.status === 'PENDING' ? "#92400e" : 
+                                         request.status === 'APPROVED' ? "#065f46" : "#991b1b"
+                                }}>
+                                  {request.status === 'PENDING' ? 'Chờ duyệt' : 
+                                   request.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "500", color: "#6b7280" }}>
+                                  {request.createdAt ? new Date(request.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                  {request.status === 'PENDING' && (
+                                    <>
+                                      <button
+                                        onClick={() => approveLeaveRequest(request.leaveRequestId)}
+                                        style={{
+                                          background: "linear-gradient(90deg, #16a34a 0%, #22c55e 100%)",
+                                          color: "#fff",
+                                          border: "none",
+                                          padding: "8px 12px",
+                                          borderRadius: "8px",
+                                          fontSize: "12px",
+                                          cursor: "pointer",
+                                          fontWeight: 600
+                                        }}
+                                      >
+                                        ✅ Duyệt
+                                      </button>
+                                      <button
+                                        onClick={() => rejectLeaveRequest(request.leaveRequestId)}
+                                        style={{
+                                          background: "#ef4444",
+                                          color: "#fff",
+                                          border: "none",
+                                          padding: "8px 12px",
+                                          borderRadius: "8px",
+                                          fontSize: "12px",
+                                          cursor: "pointer",
+                                          fontWeight: 600
+                                        }}
+                                      >
+                                        ❌ Từ chối
+                                      </button>
+                                    </>
+                                  )}
+                                  {request.status !== 'PENDING' && (
+                                    <span style={{ 
+                                      color: "#6b7280", 
+                                      fontSize: "12px", 
+                                      fontStyle: "italic" 
+                                    }}>
+                                      Đã xử lý
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Footer with count */}
+                {leaveRequests.length > 0 && (
+                  <div style={{ 
+                    padding: "16px", 
+                    backgroundColor: "#f0f9ff", 
+                    borderTop: "1px solid #e0f2fe",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    color: "#0891b2",
+                    fontWeight: 600
+                  }}>
+                    <span>Tổng số đơn xin nghỉ: <strong style={{ color: "#0891b2" }}>{leaveRequests.length}</strong></span>
                   </div>
                 )}
               </div>

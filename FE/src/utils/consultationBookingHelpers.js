@@ -15,6 +15,73 @@ export const fetchConsultants = async (setConsultants) => {
   }
 };
 
+// Fetch consultants available on a specific date
+export const fetchAvailableConsultants = async (date, setConsultants) => {
+  try {
+    if (!date) {
+      // Nếu không có ngày, load tất cả consultant
+      return fetchConsultants(setConsultants);
+    }
+    
+    const res = await fetch(`http://localhost:8080/api/users/consultants/available?date=${date}`);
+    if (res.ok) {
+      const data = await res.json();
+      setConsultants(data);
+    } else {
+      // Nếu API lỗi, fallback về tất cả consultant
+      console.warn('Failed to fetch available consultants, falling back to all consultants');
+      return fetchConsultants(setConsultants);
+    }
+  } catch (error) {
+    console.error('Error fetching available consultants:', error);
+    // Nếu có lỗi, fallback về tất cả consultant
+    return fetchConsultants(setConsultants);
+  }
+};
+
+// Fetch consultant work shifts for a specific date
+export const fetchConsultantSchedule = async (consultantId, date) => {
+  try {
+    if (!consultantId || !date) {
+      return null;
+    }
+    
+    const res = await fetch(`http://localhost:8080/api/consultant-schedules/consultant/${consultantId}`);
+    if (res.ok) {
+      const schedules = await res.json();
+      // Tìm lịch làm việc của consultant trong ngày cụ thể
+      const daySchedule = schedules.find(schedule => 
+        schedule.workDate === date && schedule.status === 'AVAILABLE'
+      );
+      return daySchedule;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching consultant schedule:', error);
+    return null;
+  }
+};
+
+// Generate time slots based on work shift
+export const generateTimeSlotsByShift = (shift) => {
+  const slots = [];
+  
+  if (shift === 'MORNING') {
+    // Ca sáng: 8:00-12:00
+    for (let hour = 8; hour < 12; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`);
+    }
+  } else if (shift === 'AFTERNOON') {
+    // Ca chiều: 13:30-17:30
+    slots.push('13:30 - 14:30');
+    slots.push('14:30 - 15:30');
+    slots.push('15:30 - 16:30');
+    slots.push('16:30 - 17:30');
+  }
+  
+  return slots;
+};
+
 export const fetchConsultationPrice = async (setConsultationPrice) => {
   try {
     const res = await fetch('http://localhost:8080/api/services/1');
@@ -61,11 +128,34 @@ export const fetchAvailableTimes = async (consultantId, date, setAvailableTimes,
   if (consultantId && date) {
     setLoadingTimes(true);
     try {
+      // Bước 1: Lấy thông tin ca làm việc của consultant
+      const scheduleInfo = await fetchConsultantSchedule(consultantId, date);
+      
+      if (!scheduleInfo) {
+        // Nếu consultant không có lịch làm việc trong ngày này
+        setAvailableTimes([]);
+        setLoadingTimes(false);
+        return;
+      }
+      
+      // Bước 2: Tạo danh sách khung giờ theo ca làm việc
+      const allTimeSlots = generateTimeSlotsByShift(scheduleInfo.shift);
+      
+      // Bước 3: Lấy khung giờ đã được đặt từ backend
       const res = await fetch(`http://localhost:8080/api/bookings/available-times?consultantId=${consultantId}&date=${date}`);
-      const data = await res.json();
-      setAvailableTimes(data);
+      if (res.ok) {
+        const availableSlots = await res.json();
+        // Lọc chỉ những slot thuộc ca làm việc và còn trống
+        const filteredSlots = allTimeSlots.filter(slot => availableSlots.includes(slot));
+        setAvailableTimes(filteredSlots);
+      } else {
+        // Nếu API lỗi, hiển thị tất cả slot theo ca làm việc
+        setAvailableTimes(allTimeSlots);
+      }
+      
       setLoadingTimes(false);
     } catch (error) {
+      console.error('Error fetching available times:', error);
       setAvailableTimes([]);
       setLoadingTimes(false);
     }

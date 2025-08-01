@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import java.util.List;
-
 /**
  * API Controller xử lý các yêu cầu theo dõi chu kỳ kinh nguyệt
  * Quản lý thông tin chu kỳ kinh nguyệt của phụ nữ để hỗ trợ tư vấn sức khỏe
@@ -131,6 +129,17 @@ public class MenstrualCycleAPI {
      */
     @PostMapping
     public ResponseEntity<MenstrualCycle> createMenstrualCycle(@Valid @RequestBody MenstrualCycleRequest request) {
+        // Debug logging
+        System.out.println("=== CREATE MENSTRUAL CYCLE API ===");
+        System.out.println("Request data:");
+        System.out.println("UserId: " + request.getUserId());
+        System.out.println("StartDate: " + request.getStartDate());
+        System.out.println("EndDate: " + request.getEndDate());
+        System.out.println("CycleLength: " + request.getCycleLength());
+        System.out.println("PeriodLength: " + request.getPeriodLength());
+        System.out.println("FlowLevel: " + request.getFlowLevel());
+        System.out.println("====================================");
+        
         try {
             MenstrualCycle createdCycle = menstrualCycleService.createMenstrualCycle(request);
             return new ResponseEntity<>(createdCycle, HttpStatus.CREATED);
@@ -180,6 +189,18 @@ public class MenstrualCycleAPI {
     public ResponseEntity<MenstrualCycle> updateMenstrualCycleByUserId(
             @PathVariable Long userId,
             @Valid @RequestBody MenstrualCycleRequest request) {
+        // Debug logging
+        System.out.println("=== UPDATE MENSTRUAL CYCLE API ===");
+        System.out.println("UserId: " + userId);
+        System.out.println("Request data:");
+        System.out.println("UserId in body: " + request.getUserId());
+        System.out.println("StartDate: " + request.getStartDate());
+        System.out.println("EndDate: " + request.getEndDate());
+        System.out.println("CycleLength: " + request.getCycleLength());
+        System.out.println("PeriodLength: " + request.getPeriodLength());
+        System.out.println("FlowLevel: " + request.getFlowLevel());
+        System.out.println("====================================");
+        
         try {
             // Use our new service method that handles both update and create cases
             MenstrualCycle cycle = menstrualCycleService.updateOrCreateMenstrualCycleForUser(userId, request);

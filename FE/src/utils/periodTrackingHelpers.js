@@ -6,7 +6,7 @@ export const getUserIdFromStorage = () => {
 };
 
 // Phân tích các bất thường trong chu kỳ kinh nguyệt
-export const analyzeCycleAbnormalities = (cycleLength, periodLength) => {
+export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel = '') => {
   const abnormalities = [];
   
   // 1. Chu kỳ quá ngắn hoặc quá dài
@@ -75,6 +75,40 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength) => {
         ? 'Kinh nguyệt ngắn cần theo dõi để đảm bảo đủ quá trình thải độc tự nhiên.'
         : 'Kinh nguyệt 7 ngày vẫn bình thường nhưng cần chú ý nếu kéo dài hơn.'
     });
+  }
+
+  // 5. Phân tích mức độ máu kinh
+  if (flowLevel) {
+    if (flowLevel === 'nhiều') {
+      abnormalities.push({
+        type: 'heavy_flow',
+        title: 'Lượng máu kinh nhiều',
+        description: 'Lượng máu kinh nhiều (5+ băng vệ sinh/ngày) có thể dẫn đến thiếu máu và ảnh hưởng đến chất lượng cuộc sống.',
+        recommendations: [
+          'Xét nghiệm công thức máu đầy đủ (đặc biệt chú ý Hemoglobin và Hematocrit)',
+          'Xét nghiệm đông máu (PT, PTT, INR)',
+          'Siêu âm tử cung và buồng trứng (tìm u xơ, polyp)',
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, TSH)',
+          'Xét nghiệm vitamin B12, Folate, Ferritin'
+        ],
+        severity: 'high',
+        advice: 'Lượng máu kinh nhiều có thể là dấu hiệu của u xơ tử cung, rối loạn đông máu hoặc mất cân bằng hormone.'
+      });
+    } else if (flowLevel === 'ít') {
+      abnormalities.push({
+        type: 'light_flow',
+        title: 'Lượng máu kinh ít',
+        description: 'Lượng máu kinh ít (1-2 băng vệ sinh/ngày) có thể liên quan đến thiếu hụt hormone hoặc vấn đề về lót tử cung.',
+        recommendations: [
+          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, AMH, TSH)',
+          'Siêu âm tử cung đánh giá độ dày nội mạc tử cung',
+          'Kiểm tra cân nặng và chỉ số BMI',
+          'Đánh giá stress và chế độ dinh dưỡng'
+        ],
+        severity: 'medium',
+        advice: 'Kinh nguyệt ít có thể do stress, giảm cân quá mức, hoặc rối loạn nội tiết tố.'
+      });
+    }
   }
   
   return abnormalities;
@@ -182,6 +216,8 @@ export const fetchLatestCycle = async (
     if (res.ok) {
       const data = await res.json();
       console.log('Fetched cycle data:', data);
+      console.log('FlowLevel from API:', data.flowLevel);
+      console.log('Symptoms from API:', data.symptoms);
       
       if (data) {
         // Validate data structure
@@ -231,15 +267,26 @@ export const fetchLatestCycle = async (
         });
         setIsSubmitted(true);
         
-        // Phân tích bất thường chu kỳ
-        const abnormalities = analyzeCycleAbnormalities(cycleLength, periodLength);
+        // Phân tích bất thường chu kỳ với đầy đủ thông tin
+        console.log('Analyzing abnormalities with:', {
+          cycleLength,
+          periodLength,
+          flowLevel: data.flowLevel || ''
+        });
+        const abnormalities = analyzeCycleAbnormalities(
+          cycleLength, 
+          periodLength, 
+          data.flowLevel || ''
+        );
+        console.log('Detected abnormalities:', abnormalities);
         setCycleAbnormalities(abnormalities);
         
         // Update form data with fetched values
         setFormData({
           startDate: data.startDate,
           cycleLength: cycleLength,
-          periodLength: periodLength
+          periodLength: periodLength,
+          flowLevel: data.flowLevel || ''
         });
       } else {
         console.log('No cycle data found');
@@ -381,7 +428,9 @@ export const handleFormSubmit = async (
       startDate: formData.startDate, // YYYY-MM-DD format
       endDate: endDateString, // End date of menstrual period (not entire cycle)
       cycleLength: cycleLength,
-      periodLength: periodLength
+      periodLength: periodLength,
+      flowLevel: formData.flowLevel || null,
+      symptoms: null // Bỏ symptoms
     };
     
     console.log('Payload for API:', payload);
@@ -425,7 +474,7 @@ export const handleFormSubmit = async (
     console.log('Menstrual cycle data saved successfully');
     
     // Phân tích bất thường chu kỳ trước khi cập nhật state
-    const abnormalities = analyzeCycleAbnormalities(cycleLength, periodLength);
+    const abnormalities = analyzeCycleAbnormalities(cycleLength, periodLength, formData.flowLevel);
     setCycleAbnormalities(abnormalities);
     
     // Cập nhật state để phản ánh rằng người dùng giờ đã có chu kỳ

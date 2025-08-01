@@ -41,5 +41,7 @@ public class MenstrualCycle {
     @Min(value = 1, message = "Period length must be at least 1 day")
     private Integer periodLength;
 
+    @Column(name = "flow_level", columnDefinition = "NVARCHAR(50)")
+    private String flowLevel; // "ít", "trung bình", "nhiều"
 
 }

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import {
-  getUserIdFromStorage,
+import { 
+  getUserIdFromStorage, 
   analyzeCycleAbnormalities,
   checkUserGender,
   checkExistingCycle,
@@ -14,9 +14,7 @@ import {
   initializeData,
   labelStyle,
   inputStyle
-} from './utils/periodTrackingHelpers';
-
-/**
+} from './utils/periodTrackingHelpers';/**
  * PeriodTracking Component
  * This component allows users to track and visualize their menstrual cycle.
  * It integrates with the Menstrual Cycle API endpoints.
@@ -25,7 +23,8 @@ const PeriodTracking = () => {
   const [formData, setFormData] = useState({
     startDate: '',
     cycleLength: 28,
-    periodLength: 5
+    periodLength: 5,
+    flowLevel: '' // Mức độ máu kinh: ít/trung bình/nhiều
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [results, setResults] = useState(null);
@@ -885,6 +884,21 @@ const PeriodTracking = () => {
                     placeholder="5"
                   />
                 </div>
+
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <label style={labelStyle}>Mức độ máu kinh (tùy chọn)</label>
+                  <select
+                    name="flowLevel"
+                    value={formData.flowLevel}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  >
+                    <option value="">-- Chọn mức độ --</option>
+                    <option value="ít">Ít (1-2 băng vệ sinh/ngày)</option>
+                    <option value="trung bình">Trung bình (3-4 băng vệ sinh/ngày)</option>
+                    <option value="nhiều">Nhiều (5+ băng vệ sinh/ngày)</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ marginTop: "35px", textAlign: "center" }}>
@@ -900,7 +914,8 @@ const PeriodTracking = () => {
                     fontWeight: "600",
                     cursor: "pointer",
                     transition: "all 0.3s ease"
-                  }}                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
                   onMouseOut={(e) => e.target.style.transform = "scale(1)"}
                 >
                   {hasExistingCycle ? "Cập nhật chu kỳ" : "Tính toán chu kỳ"}

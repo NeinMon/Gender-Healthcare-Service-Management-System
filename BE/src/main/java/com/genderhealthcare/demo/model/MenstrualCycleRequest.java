@@ -26,4 +26,7 @@ public class MenstrualCycleRequest {
     @NotNull(message = "Period length cannot be null")
     @Min(value = 1, message = "Period length must be at least 1 day")
     private Integer periodLength;
+    
+    // Tùy chọn: Mức độ máu kinh
+    private String flowLevel; // "ít", "trung bình", "nhiều"
 }

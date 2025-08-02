@@ -62,12 +62,22 @@ public class MenstrualCycleService {
         // Validate dates
         validateDates(request.getStartDate(), request.getEndDate());
 
+        // Debug logging
+        System.out.println("Creating menstrual cycle with data:");
+        System.out.println("UserId: " + request.getUserId());
+        System.out.println("StartDate: " + request.getStartDate());
+        System.out.println("EndDate: " + request.getEndDate());
+        System.out.println("CycleLength: " + request.getCycleLength());
+        System.out.println("PeriodLength: " + request.getPeriodLength());
+        System.out.println("FlowLevel: " + request.getFlowLevel());
+
         MenstrualCycle menstrualCycle = new MenstrualCycle();
         menstrualCycle.setUser(user);
         menstrualCycle.setStartDate(request.getStartDate());
         menstrualCycle.setEndDate(request.getEndDate());
         menstrualCycle.setCycleLength(request.getCycleLength());
         menstrualCycle.setPeriodLength(request.getPeriodLength());
+        menstrualCycle.setFlowLevel(request.getFlowLevel());
 
         return menstrualCycleRepository.save(menstrualCycle);
     }
@@ -136,6 +146,13 @@ public class MenstrualCycleService {
             }
             existingCycle.setPeriodLength(request.getPeriodLength());
         }
+        
+        // Debug logging for update
+        System.out.println("Updating menstrual cycle with data:");
+        System.out.println("FlowLevel: " + request.getFlowLevel());
+        
+        // Cập nhật thông tin mới (có thể null)
+        existingCycle.setFlowLevel(request.getFlowLevel());
 
         return menstrualCycleRepository.save(existingCycle);
     }
@@ -277,6 +294,11 @@ public class MenstrualCycleService {
                     existingCycle.setPeriodLength(request.getPeriodLength());
                 }
                 
+                // Add flowLevel update
+                if (request.getFlowLevel() != null) {
+                    existingCycle.setFlowLevel(request.getFlowLevel());
+                }
+                
                 return menstrualCycleRepository.save(existingCycle);
             } else {
                 // If no, create a new one
@@ -288,6 +310,11 @@ public class MenstrualCycleService {
                 menstrualCycle.setEndDate(request.getEndDate());
                 menstrualCycle.setCycleLength(request.getCycleLength());
                 menstrualCycle.setPeriodLength(request.getPeriodLength());
+                
+                // Add flowLevel for new records
+                if (request.getFlowLevel() != null) {
+                    menstrualCycle.setFlowLevel(request.getFlowLevel());
+                }
                 
                 return menstrualCycleRepository.save(menstrualCycle);
             }

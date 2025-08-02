@@ -28,6 +28,9 @@ public class BookingService {
     @Autowired
     private com.genderhealthcare.demo.service.ServiceService serviceService;
 
+    @Autowired
+    private ConsultantScheduleService consultantScheduleService;
+
     @Transactional
     public Booking createBooking(Booking booking) {
         // Đặt trạng thái mặc định nếu chưa có
@@ -43,6 +46,13 @@ public class BookingService {
         // Validation bổ sung: Nếu serviceId = 1 thì consultantId phải có
         if (booking.getServiceId().equals(1) && booking.getConsultantId() == null) {
             throw new IllegalArgumentException("Consultant ID is required when Service ID is 1");
+        }
+        
+        // Kiểm tra lịch làm việc của consultant trước khi tạo booking
+        if (booking.getServiceId().equals(1) && booking.getConsultantId() != null && booking.getAppointmentDate() != null) {
+            if (!isConsultantAvailableForBooking(booking.getConsultantId(), booking.getAppointmentDate(), booking.getStartTime())) {
+                throw new IllegalArgumentException("Tư vấn viên không có lịch làm việc trong ngày này hoặc chưa có mặt. Vui lòng chọn ngày khác.");
+            }
         }
         
         // CreatedAt sẽ được tự động thiết lập bởi @PrePersist
@@ -374,5 +384,50 @@ public class BookingService {
             throw new IllegalArgumentException("Service not found");
         }
         return getBookingsByServiceIdAndStatus(service.getServiceId(), status);
+    }
+
+    /**
+     * Kiểm tra tư vấn viên có thể nhận booking trong ngày cụ thể hay không
+     * Kiểm tra xem consultant có lịch làm việc và đang có mặt (status = AVAILABLE)
+     * 
+     * @param consultantId ID của tư vấn viên
+     * @param appointmentDate Ngày đặt lịch
+     * @param startTime Giờ bắt đầu booking (để xác định ca làm việc)
+     * @return true nếu consultant có thể nhận booking, false nếu không
+     */
+    private boolean isConsultantAvailableForBooking(Integer consultantId, LocalDate appointmentDate, LocalTime startTime) {
+        try {
+            // Xác định ca làm việc dựa trên giờ booking
+            com.genderhealthcare.demo.entity.ConsultantSchedule.WorkShift shift = determineWorkShift(startTime);
+            
+            // Kiểm tra consultant có lịch làm việc trong ca này không và có status AVAILABLE
+            boolean isAvailable = consultantScheduleService.isConsultantAvailable(consultantId, appointmentDate, shift);
+            
+            return isAvailable;
+        } catch (Exception e) {
+            // Nếu có lỗi, mặc định là không available để đảm bảo an toàn
+            System.err.println("Error checking consultant availability: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Xác định ca làm việc dựa trên giờ bắt đầu booking
+     * 
+     * @param startTime Giờ bắt đầu booking
+     * @return WorkShift tương ứng
+     */
+    private com.genderhealthcare.demo.entity.ConsultantSchedule.WorkShift determineWorkShift(LocalTime startTime) {
+        if (startTime == null) {
+            return com.genderhealthcare.demo.entity.ConsultantSchedule.WorkShift.MORNING; // Default
+        }
+        
+        // Ca sáng: 8:00-12:00
+        // Ca chiều: 13:30-17:30
+        if (startTime.isBefore(LocalTime.of(13, 0))) {
+            return com.genderhealthcare.demo.entity.ConsultantSchedule.WorkShift.MORNING;
+        } else {
+            return com.genderhealthcare.demo.entity.ConsultantSchedule.WorkShift.AFTERNOON;
+        }
     }
 }

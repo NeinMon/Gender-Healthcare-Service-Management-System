@@ -5,17 +5,22 @@ import UserAvatar from './UserAvatar';
 const ServiceManager = () => {
   const [services, setServices] = useState([]);
   const [users, setUsers] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [showAddScheduleModal, setShowAddScheduleModal] = useState(false);
+  const [showEditScheduleModal, setShowEditScheduleModal] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [editingSchedule, setEditingSchedule] = useState(null);
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [userId, setUserId] = useState(null);
-  const [activeTab, setActiveTab] = useState('services'); // 'services' hoặc 'users'
+  const [activeTab, setActiveTab] = useState('services'); // 'services', 'users', 'schedules', 'leave-requests'
   const [formData, setFormData] = useState({
     serviceName: '',
     description: '',
@@ -32,6 +37,14 @@ const ServiceManager = () => {
     address: '',
     role: 'CUSTOMER', // Mặc định là customer
     specification: ''
+  });
+  
+  const [scheduleFormData, setScheduleFormData] = useState({
+    consultantID: '',
+    workDate: '',
+    shift: 'MORNING',
+    status: 'AVAILABLE',
+    notes: ''
   });
 
   // Load services khi component mount
@@ -57,6 +70,8 @@ const ServiceManager = () => {
     
     fetchServices();
     fetchUsers();
+    fetchSchedules();
+    fetchLeaveRequests();
   }, []);
 
   // Lấy danh sách services từ API
@@ -84,8 +99,12 @@ const ServiceManager = () => {
     if (!searchTerm.trim()) {
       if (activeTab === 'services') {
         fetchServices();
-      } else {
+      } else if (activeTab === 'users') {
         fetchUsers();
+      } else if (activeTab === 'schedules') {
+        fetchSchedules();
+      } else if (activeTab === 'leave-requests') {
+        fetchLeaveRequests();
       }
       return;
     }
@@ -101,7 +120,7 @@ const ServiceManager = () => {
           console.error('Failed to search services');
           showAlert('error', 'Không thể tìm kiếm dịch vụ');
         }
-      } else {
+      } else if (activeTab === 'users') {
         // Search users by name, email, or phone
         const response = await fetch('http://localhost:8080/api/users');
         if (response.ok) {
@@ -117,10 +136,44 @@ const ServiceManager = () => {
           console.error('Failed to search users');
           showAlert('error', 'Không thể tìm kiếm tài khoản');
         }
+      } else {
+        // Search schedules by consultant name or date
+        const response = await fetch('http://localhost:8080/api/consultant-schedules/all');
+        if (response.ok) {
+          const data = await response.json();
+          const filteredSchedules = data.filter(schedule => 
+            schedule.workDate?.includes(searchTerm) ||
+            schedule.shift?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            schedule.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          // Sort filtered schedules by workDate and shift
+          const sortedFilteredSchedules = filteredSchedules.sort((a, b) => {
+            // First sort by date (oldest first)
+            const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+            if (dateComparison !== 0) {
+              return dateComparison;
+            }
+            // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+            if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+              return -1;
+            } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+              return 1;
+            }
+            return 0;
+          });
+          setSchedules(sortedFilteredSchedules);
+        } else {
+          console.error('Failed to search schedules');
+          showAlert('error', 'Không thể tìm kiếm lịch làm việc');
+        }
       }
     } catch (error) {
       console.error('Error searching:', error);
-      showAlert('error', activeTab === 'services' ? 'Lỗi kết nối khi tìm kiếm dịch vụ' : 'Lỗi kết nối khi tìm kiếm tài khoản');
+      showAlert('error', 
+        activeTab === 'services' ? 'Lỗi kết nối khi tìm kiếm dịch vụ' : 
+        activeTab === 'users' ? 'Lỗi kết nối khi tìm kiếm tài khoản' : 
+        'Lỗi kết nối khi tìm kiếm lịch làm việc');
     } finally {
       setLoading(false);
     }
@@ -148,6 +201,318 @@ const ServiceManager = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Lấy danh sách schedules từ API
+  const fetchSchedules = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/consultant-schedules/all');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort schedules by workDate (oldest first) and then by shift
+        const sortedData = data.sort((a, b) => {
+          // First sort by date (oldest first)
+          const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+          if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+            return -1;
+          } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+            return 1;
+          }
+          return 0;
+        });
+        setSchedules(sortedData);
+      } else {
+        console.error('Failed to fetch schedules');
+        showAlert('error', 'Không thể tải danh sách lịch làm việc');
+      }
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách lịch làm việc');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Lấy danh sách đơn xin nghỉ từ API
+  const fetchLeaveRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/leave-requests/all');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort by created date (newest first)
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeaveRequests(sortedData);
+      } else {
+        console.error('Failed to fetch leave requests');
+        showAlert('error', 'Không thể tải danh sách đơn xin nghỉ');
+      }
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách đơn xin nghỉ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Duyệt đơn xin nghỉ
+  const approveLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn duyệt đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/approve?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã duyệt đơn xin nghỉ thành công!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error approving leave request:', error);
+      showAlert('error', 'Lỗi khi duyệt đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  // Từ chối đơn xin nghỉ
+  const rejectLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn từ chối đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/reject?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã từ chối đơn xin nghỉ!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error rejecting leave request:', error);
+      showAlert('error', 'Lỗi khi từ chối đơn xin nghỉ: ' + error.message);
+    }
+  };
+
+  // Reset schedule form
+  const resetScheduleForm = () => {
+    setScheduleFormData({
+      consultantID: '',
+      workDate: '',
+      shift: 'MORNING',
+      status: 'AVAILABLE',
+      notes: ''
+    });
+  };
+
+  // Xử lý thay đổi input schedule form
+  const handleScheduleInputChange = (e) => {
+    const { name, value } = e.target;
+    setScheduleFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Thêm schedule mới
+  const handleAddSchedule = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!scheduleFormData.consultantID) {
+      showAlert('error', 'Vui lòng chọn tư vấn viên');
+      return;
+    }
+    
+    if (!scheduleFormData.workDate) {
+      showAlert('error', 'Vui lòng chọn ngày làm việc');
+      return;
+    }
+
+    try {
+      const scheduleData = {
+        consultantID: parseInt(scheduleFormData.consultantID),
+        workDate: scheduleFormData.workDate,
+        shift: scheduleFormData.shift,
+        status: scheduleFormData.status,
+        notes: scheduleFormData.notes.trim() || ""
+      };
+
+      const response = await fetch('http://localhost:8080/api/consultant-schedules/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData)
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Thêm lịch làm việc thành công!');
+        setShowAddScheduleModal(false);
+        resetScheduleForm();
+        fetchSchedules();
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to add schedule:', errorText);
+        
+        // Xử lý lỗi cụ thể
+        let errorMessage = 'Không thể thêm lịch làm việc';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error && errorData.error.includes('quá khứ')) {
+            errorMessage = 'Không thể tạo lịch làm việc trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else if (errorData.error && errorData.error.includes('trùng lặp')) {
+            errorMessage = 'Tư vấn viên đã có lịch làm việc trong ca này. Vui lòng chọn ca khác hoặc ngày khác.';
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // Nếu không parse được JSON, sử dụng text thô
+          if (errorText.includes('quá khứ')) {
+            errorMessage = 'Không thể tạo lịch làm việc trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else {
+            errorMessage = errorText;
+          }
+        }
+        
+        showAlert('error', errorMessage);
+      }
+    } catch (error) {
+      console.error('Error adding schedule:', error);
+      showAlert('error', 'Lỗi kết nối khi thêm lịch làm việc');
+    }
+  };
+
+  // Sửa schedule
+  const handleEditSchedule = async (e) => {
+    e.preventDefault();
+    
+    if (!editingSchedule) return;
+
+    // Validation
+    if (!scheduleFormData.consultantID) {
+      showAlert('error', 'Vui lòng chọn tư vấn viên');
+      return;
+    }
+    
+    if (!scheduleFormData.workDate) {
+      showAlert('error', 'Vui lòng chọn ngày làm việc');
+      return;
+    }
+
+    try {
+      const scheduleData = {
+        consultantID: parseInt(scheduleFormData.consultantID),
+        workDate: scheduleFormData.workDate,
+        shift: scheduleFormData.shift,
+        status: scheduleFormData.status,
+        notes: scheduleFormData.notes.trim() || ""
+      };
+
+      const response = await fetch(`http://localhost:8080/api/consultant-schedules/update/${editingSchedule.scheduleID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData)
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Cập nhật lịch làm việc thành công!');
+        setShowEditScheduleModal(false);
+        setEditingSchedule(null);
+        resetScheduleForm();
+        fetchSchedules();
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to update schedule:', errorText);
+        
+        // Xử lý lỗi cụ thể
+        let errorMessage = 'Không thể cập nhật lịch làm việc';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error && errorData.error.includes('quá khứ')) {
+            errorMessage = 'Không thể thay đổi ngày làm việc thành ngày trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else if (errorData.error && errorData.error.includes('trùng lặp')) {
+            errorMessage = 'Tư vấn viên đã có lịch làm việc trong ca này. Vui lòng chọn ca khác hoặc ngày khác.';
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // Nếu không parse được JSON, sử dụng text thô
+          if (errorText.includes('quá khứ')) {
+            errorMessage = 'Không thể thay đổi ngày làm việc thành ngày trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else {
+            errorMessage = errorText;
+          }
+        }
+        
+        showAlert('error', errorMessage);
+      }
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      showAlert('error', 'Lỗi kết nối khi cập nhật lịch làm việc');
+    }
+  };
+
+  // Xóa schedule
+  const handleDeleteSchedule = async (scheduleID, consultantName) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa lịch làm việc của "${consultantName}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/consultant-schedules/delete/${scheduleID}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Xóa lịch làm việc thành công!');
+        fetchSchedules();
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to delete schedule:', errorText);
+        showAlert('error', 'Không thể xóa lịch làm việc: ' + errorText);
+      }
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      showAlert('error', 'Lỗi kết nối khi xóa lịch làm việc');
+    }
+  };
+
+  // Mở modal edit schedule
+  const openEditScheduleModal = (schedule) => {
+    setEditingSchedule(schedule);
+    setScheduleFormData({
+      consultantID: schedule.consultantID.toString(),
+      workDate: schedule.workDate,
+      shift: schedule.shift,
+      status: schedule.status,
+      notes: schedule.notes || ''
+    });
+    setShowEditScheduleModal(true);
   };
 
   // Reset user form
@@ -604,7 +969,7 @@ const ServiceManager = () => {
             letterSpacing: "0.5px",
             textShadow: "0 2px 4px rgba(0,0,0,0.1)"
           }}>
-            Quản lý Dịch vụ & Tài khoản
+            Quản lý Dịch vụ, Tài khoản & Lịch làm việc
           </h1>
         </div>
       </header>
@@ -652,13 +1017,53 @@ const ServiceManager = () => {
               color: activeTab === 'users' ? "#fff" : "#6b7280",
               fontSize: "16px",
               fontWeight: "600",
-              borderRadius: activeTab === 'users' ? "0 12px 0 0" : "0",
+              borderRadius: "0",
               cursor: "pointer",
               transition: "all 0.3s",
               borderBottom: activeTab === 'users' ? "none" : "1px solid #e5e7eb"
             }}
           >
             👥 Quản lý Tài khoản
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('schedules');
+              setSearchTerm(''); // Clear search when switching tabs
+            }}
+            style={{
+              padding: "20px 30px",
+              border: "none",
+              backgroundColor: activeTab === 'schedules' ? "#0891b2" : "transparent",
+              color: activeTab === 'schedules' ? "#fff" : "#6b7280",
+              fontSize: "16px",
+              fontWeight: "600",
+              borderRadius: "0",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              borderBottom: activeTab === 'schedules' ? "none" : "1px solid #e5e7eb"
+            }}
+          >
+            � Quản lý Lịch làm việc
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('leave-requests');
+              setSearchTerm(''); // Clear search when switching tabs
+            }}
+            style={{
+              padding: "20px 30px",
+              border: "none",
+              backgroundColor: activeTab === 'leave-requests' ? "#0891b2" : "transparent",
+              color: activeTab === 'leave-requests' ? "#fff" : "#6b7280",
+              fontSize: "16px",
+              fontWeight: "600",
+              borderRadius: activeTab === 'leave-requests' ? "0 12px 0 0" : "0",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              borderBottom: activeTab === 'leave-requests' ? "none" : "1px solid #e5e7eb"
+            }}
+          >
+            📄 Quản lý Đơn xin nghỉ
           </button>
         </div>
       </div>
@@ -716,7 +1121,12 @@ const ServiceManager = () => {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <input
                   type="text"
-                  placeholder={activeTab === 'services' ? "Tìm kiếm dịch vụ..." : "Tìm kiếm tài khoản..."}
+                  placeholder={
+                    activeTab === 'services' ? "Tìm kiếm dịch vụ..." : 
+                    activeTab === 'users' ? "Tìm kiếm tài khoản..." : 
+                    activeTab === 'schedules' ? "Tìm kiếm lịch làm việc..." :
+                    "Tìm kiếm đơn xin nghỉ..."
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{
@@ -748,7 +1158,12 @@ const ServiceManager = () => {
                   🔍 Tìm kiếm
                 </button>
                 <button
-                  onClick={activeTab === 'services' ? fetchServices : fetchUsers}
+                  onClick={
+                    activeTab === 'services' ? fetchServices : 
+                    activeTab === 'users' ? fetchUsers : 
+                    activeTab === 'schedules' ? fetchSchedules :
+                    fetchLeaveRequests
+                  }
                   style={{
                     background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
                     color: "#fff",
@@ -771,9 +1186,14 @@ const ServiceManager = () => {
                 if (activeTab === 'services') {
                   resetForm();
                   setShowAddModal(true);
-                } else {
+                } else if (activeTab === 'users') {
                   resetUserForm();
                   setShowAddUserModal(true);
+                } else if (activeTab === 'schedules') {
+                  resetScheduleForm();
+                  setShowAddScheduleModal(true);
+                } else if (activeTab === 'leave-requests') {
+                  fetchLeaveRequests(); // Just refresh for leave requests
                 }
               }}
               style={{
@@ -788,7 +1208,10 @@ const ServiceManager = () => {
                 boxShadow: "0 2px 8px rgba(34,197,94,0.25)"
               }}
             >
-              {activeTab === 'services' ? '➕ Thêm dịch vụ mới' : '➕ Thêm tài khoản mới'}
+              {activeTab === 'services' ? '➕ Thêm dịch vụ mới' : 
+               activeTab === 'users' ? '➕ Thêm tài khoản mới' : 
+               activeTab === 'schedules' ? '➕ Thêm lịch làm việc' :
+               '📋 Xem đơn xin nghỉ'}
             </button>
           </div>
 
@@ -1107,6 +1530,403 @@ const ServiceManager = () => {
                     fontWeight: 600
                   }}>
                     <span>Tổng số tài khoản: <strong style={{ color: "#0891b2" }}>{users.length}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Schedules Table */}
+        {activeTab === 'schedules' && (
+          <>
+            {loading ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: "60px 0",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ 
+                  display: "inline-block", 
+                  border: "3px solid #22d3ee",
+                  borderTop: "3px solid transparent",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "15px"
+                }}></div>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải dữ liệu...</p>
+              </div>
+            ) : (
+              <div style={{ 
+                width: '100%', 
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ overflowX: 'auto', width: "100%" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ 
+                        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                        textAlign: "center"
+                      }}>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày làm việc</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ca làm việc</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {schedules.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: "center", padding: "30px 0", color: "#0891b2", fontWeight: 500 }}>
+                            {searchTerm ? `Không tìm thấy lịch làm việc nào với từ khóa "${searchTerm}"` : "Không có lịch làm việc nào"}
+                          </td>
+                        </tr>
+                      ) : (
+                        schedules.map((schedule, index) => {
+                          // Tìm thông tin consultant từ users array
+                          const consultant = users.find(user => user.userID === schedule.consultantID);
+                          const consultantName = consultant ? consultant.fullName : `Consultant ${schedule.consultantID}`;
+                          
+                          return (
+                            <tr 
+                              key={schedule.scheduleID} 
+                              style={{ 
+                                borderBottom: '1px solid #e0f2fe', 
+                                transition: "all 0.2s"
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                            >
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#0891b2" }}>
+                                  {consultantName}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#374151" }}>
+                                  {new Date(schedule.workDate).toLocaleDateString('vi-VN')}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: schedule.shift === 'MORNING' ? "#dbeafe" : "#fef3c7",
+                                  color: schedule.shift === 'MORNING' ? "#1d4ed8" : "#92400e"
+                                }}>
+                                  {schedule.shift === 'MORNING' ? 'Ca sáng (8:00-12:00)' : 'Ca chiều (13:30-17:30)'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: schedule.status === 'AVAILABLE' ? "#d1fae5" : "#fee2e2",
+                                  color: schedule.status === 'AVAILABLE' ? "#065f46" : "#991b1b"
+                                }}>
+                                  {schedule.status === 'AVAILABLE' ? 'Có đi làm' : 
+                                   schedule.status === 'CANCELLED' ? 'Nghỉ làm' : schedule.status}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ 
+                                  maxWidth: "150px", 
+                                  overflow: "hidden", 
+                                  textOverflow: "ellipsis", 
+                                  whiteSpace: "nowrap",
+                                  margin: "0 auto"
+                                }}>
+                                  {schedule.notes || <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Không có ghi chú</span>}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                  <button
+                                    onClick={() => openEditScheduleModal(schedule)}
+                                    style={{
+                                      background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                                      color: "#fff",
+                                      border: "none",
+                                      padding: "8px 12px",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                      cursor: "pointer",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    ✏️ Sửa
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSchedule(schedule.scheduleID, consultantName)}
+                                    style={{
+                                      background: "#ef4444",
+                                      color: "#fff",
+                                      border: "none",
+                                      padding: "8px 12px",
+                                      borderRadius: "8px",
+                                      fontSize: "12px",
+                                      cursor: "pointer",
+                                      fontWeight: 600
+                                    }}
+                                  >
+                                    🗑️ Xóa
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Total schedules count */}
+                {schedules.length > 0 && (
+                  <div style={{ 
+                    padding: "16px", 
+                    backgroundColor: "#f0f9ff", 
+                    borderTop: "1px solid #e0f2fe",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    color: "#0891b2",
+                    fontWeight: 600
+                  }}>
+                    <span>Tổng số lịch làm việc: <strong style={{ color: "#0891b2" }}>{schedules.length}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Leave Requests Table */}
+        {activeTab === 'leave-requests' && (
+          <>
+            {loading ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: "60px 0",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ 
+                  display: "inline-block", 
+                  border: "3px solid #22d3ee",
+                  borderTop: "3px solid transparent",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "15px"
+                }}></div>
+                <style>{`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}</style>
+                <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải dữ liệu...</p>
+              </div>
+            ) : (
+              <div style={{ 
+                width: '100%', 
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+              }}>
+                <div style={{ overflowX: 'auto', width: "100%" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ 
+                        background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                        textAlign: "center"
+                      }}>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Tư vấn viên</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày nghỉ</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ca làm việc</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ghi chú</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày tạo</th>
+                        <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaveRequests.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" style={{ textAlign: "center", padding: "30px 0", color: "#0891b2", fontWeight: 500 }}>
+                            {searchTerm ? `Không tìm thấy đơn xin nghỉ nào với từ khóa "${searchTerm}"` : "Không có đơn xin nghỉ nào"}
+                          </td>
+                        </tr>
+                      ) : (
+                        leaveRequests.map((request, index) => {
+                          // Tìm thông tin consultant từ users array
+                          const consultant = users.find(user => user.userID === request.consultantId);
+                          const consultantName = consultant ? consultant.fullName : `Consultant ${request.consultantId}`;
+                          
+                          return (
+                            <tr 
+                              key={request.leaveRequestId || index} 
+                              style={{ 
+                                borderBottom: '1px solid #e0f2fe', 
+                                transition: "all 0.2s"
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                            >
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#0891b2" }}>
+                                  {consultantName}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "600", color: "#374151" }}>
+                                  {new Date(request.leaveDate).toLocaleDateString('vi-VN')}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: request.shift === 'MORNING' ? "#dbeafe" : 
+                                                  request.shift === 'AFTERNOON' ? "#fef3c7" : "#f3e8ff",
+                                  color: request.shift === 'MORNING' ? "#1d4ed8" : 
+                                         request.shift === 'AFTERNOON' ? "#92400e" : "#7c3aed"
+                                }}>
+                                  {request.shift === 'MORNING' ? 'Ca sáng (8:00-12:00)' : 
+                                   request.shift === 'AFTERNOON' ? 'Ca chiều (13:30-17:30)' :
+                                   request.shift === 'FULL_DAY' ? 'Cả ngày (8:00-17:30)' : request.shift}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ 
+                                  maxWidth: "150px", 
+                                  overflow: "hidden", 
+                                  textOverflow: "ellipsis", 
+                                  whiteSpace: "nowrap",
+                                  margin: "0 auto"
+                                }}>
+                                  {request.note || <span style={{ color: "#9ca3af", fontStyle: "italic" }}>Không có ghi chú</span>}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <span style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  borderRadius: "20px",
+                                  fontWeight: 600,
+                                  fontSize: "13px",
+                                  backgroundColor: request.status === 'PENDING' ? "#fef3c7" : 
+                                                  request.status === 'APPROVED' ? "#d1fae5" : "#fee2e2",
+                                  color: request.status === 'PENDING' ? "#92400e" : 
+                                         request.status === 'APPROVED' ? "#065f46" : "#991b1b"
+                                }}>
+                                  {request.status === 'PENDING' ? 'Chờ duyệt' : 
+                                   request.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ fontWeight: "500", color: "#6b7280" }}>
+                                  {request.createdAt ? new Date(request.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                  {request.status === 'PENDING' && (
+                                    <>
+                                      <button
+                                        onClick={() => approveLeaveRequest(request.leaveRequestId)}
+                                        style={{
+                                          background: "linear-gradient(90deg, #16a34a 0%, #22c55e 100%)",
+                                          color: "#fff",
+                                          border: "none",
+                                          padding: "8px 12px",
+                                          borderRadius: "8px",
+                                          fontSize: "12px",
+                                          cursor: "pointer",
+                                          fontWeight: 600
+                                        }}
+                                      >
+                                        ✅ Duyệt
+                                      </button>
+                                      <button
+                                        onClick={() => rejectLeaveRequest(request.leaveRequestId)}
+                                        style={{
+                                          background: "#ef4444",
+                                          color: "#fff",
+                                          border: "none",
+                                          padding: "8px 12px",
+                                          borderRadius: "8px",
+                                          fontSize: "12px",
+                                          cursor: "pointer",
+                                          fontWeight: 600
+                                        }}
+                                      >
+                                        ❌ Từ chối
+                                      </button>
+                                    </>
+                                  )}
+                                  {request.status !== 'PENDING' && (
+                                    <span style={{ 
+                                      color: "#6b7280", 
+                                      fontSize: "12px", 
+                                      fontStyle: "italic" 
+                                    }}>
+                                      Đã xử lý
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Footer with count */}
+                {leaveRequests.length > 0 && (
+                  <div style={{ 
+                    padding: "16px", 
+                    backgroundColor: "#f0f9ff", 
+                    borderTop: "1px solid #e0f2fe",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    color: "#0891b2",
+                    fontWeight: 600
+                  }}>
+                    <span>Tổng số đơn xin nghỉ: <strong style={{ color: "#0891b2" }}>{leaveRequests.length}</strong></span>
                   </div>
                 )}
               </div>
@@ -1593,6 +2413,249 @@ const ServiceManager = () => {
                     setShowEditUserModal(false);
                     setEditingUser(null);
                     resetUserForm();
+                  }}
+                  style={{
+                    background: '#e0f2fe',
+                    color: '#0891b2',
+                    border: '1px solid #22d3ee',
+                    borderRadius: 32,
+                    padding: '12px 24px',
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 32,
+                    padding: '12px 32px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: 16,
+                    boxShadow: '0 4px 24px rgba(34,211,238,0.18)'
+                  }}
+                >
+                  Cập nhật
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Schedule Modal */}
+      {showAddScheduleModal && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ marginTop: 0, marginBottom: "20px", color: "#0891b2", fontWeight: 700, fontSize: 24 }}>Thêm lịch làm việc mới</h3>
+            <form onSubmit={handleAddSchedule}>
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Tư vấn viên *</label>
+                <select
+                  name="consultantID"
+                  value={scheduleFormData.consultantID}
+                  onChange={handleScheduleInputChange}
+                  required
+                  style={inputStyle}
+                >
+                  <option value="">Chọn tư vấn viên</option>
+                  {users.filter(user => user.role === 'CONSULTANT').map(consultant => (
+                    <option key={consultant.userID} value={consultant.userID}>
+                      {consultant.fullName} (ID: {consultant.userID})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Ngày làm việc *</label>
+                <input
+                  type="date"
+                  name="workDate"
+                  value={scheduleFormData.workDate}
+                  onChange={handleScheduleInputChange}
+                  required
+                  style={inputStyle}
+                  min={new Date().toISOString().split('T')[0]} // Không cho chọn ngày trong quá khứ
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "15px" }}>
+                <div style={{ ...formGroupStyle, flex: 1 }}>
+                  <label style={labelStyle}>Ca làm việc *</label>
+                  <select
+                    name="shift"
+                    value={scheduleFormData.shift}
+                    onChange={handleScheduleInputChange}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="MORNING">Ca sáng (8:00-12:00)</option>
+                    <option value="AFTERNOON">Ca chiều (13:30-17:30)</option>
+                  </select>
+                </div>
+                
+                <div style={{ ...formGroupStyle, flex: 1 }}>
+                  <label style={labelStyle}>Trạng thái *</label>
+                  <select
+                    name="status"
+                    value={scheduleFormData.status}
+                    onChange={handleScheduleInputChange}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="AVAILABLE">Có đi làm</option>
+                    <option value="CANCELLED">Nghỉ làm</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Ghi chú</label>
+                <textarea
+                  name="notes"
+                  value={scheduleFormData.notes}
+                  onChange={handleScheduleInputChange}
+                  style={{ ...inputStyle, height: "80px" }}
+                  placeholder="Nhập ghi chú (tùy chọn)"
+                />
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginTop: "30px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddScheduleModal(false);
+                    resetScheduleForm();
+                  }}
+                  style={{
+                    background: '#e0f2fe',
+                    color: '#0891b2',
+                    border: '1px solid #22d3ee',
+                    borderRadius: 32,
+                    padding: '12px 24px',
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 32,
+                    padding: '12px 32px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: 16,
+                    boxShadow: '0 4px 24px rgba(34,211,238,0.18)'
+                  }}
+                >
+                  Thêm lịch làm việc
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Schedule Modal */}
+      {showEditScheduleModal && editingSchedule && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ marginTop: 0, marginBottom: "20px", color: "#0891b2", fontWeight: 700, fontSize: 24 }}>
+              Sửa lịch làm việc
+            </h3>
+            <form onSubmit={handleEditSchedule}>
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Tư vấn viên *</label>
+                <select
+                  name="consultantID"
+                  value={scheduleFormData.consultantID}
+                  onChange={handleScheduleInputChange}
+                  required
+                  style={inputStyle}
+                >
+                  <option value="">Chọn tư vấn viên</option>
+                  {users.filter(user => user.role === 'CONSULTANT').map(consultant => (
+                    <option key={consultant.userID} value={consultant.userID}>
+                      {consultant.fullName} (ID: {consultant.userID})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Ngày làm việc *</label>
+                <input
+                  type="date"
+                  name="workDate"
+                  value={scheduleFormData.workDate}
+                  onChange={handleScheduleInputChange}
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "15px" }}>
+                <div style={{ ...formGroupStyle, flex: 1 }}>
+                  <label style={labelStyle}>Ca làm việc *</label>
+                  <select
+                    name="shift"
+                    value={scheduleFormData.shift}
+                    onChange={handleScheduleInputChange}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="MORNING">Ca sáng (8:00-12:00)</option>
+                    <option value="AFTERNOON">Ca chiều (13:30-17:30)</option>
+                  </select>
+                </div>
+                
+                <div style={{ ...formGroupStyle, flex: 1 }}>
+                  <label style={labelStyle}>Trạng thái *</label>
+                  <select
+                    name="status"
+                    value={scheduleFormData.status}
+                    onChange={handleScheduleInputChange}
+                    required
+                    style={inputStyle}
+                  >
+                    <option value="AVAILABLE">Có đi làm</option>
+                    <option value="CANCELLED">Nghỉ làm</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={formGroupStyle}>
+                <label style={labelStyle}>Ghi chú</label>
+                <textarea
+                  name="notes"
+                  value={scheduleFormData.notes}
+                  onChange={handleScheduleInputChange}
+                  style={{ ...inputStyle, height: "80px" }}
+                  placeholder="Nhập ghi chú (tùy chọn)"
+                />
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginTop: "30px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditScheduleModal(false);
+                    setEditingSchedule(null);
+                    resetScheduleForm();
                   }}
                   style={{
                     background: '#e0f2fe',

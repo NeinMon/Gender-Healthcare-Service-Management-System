@@ -2,6 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
 import VideoCall from './components/VideoCall';
+import {
+  formatDate,
+  getStatusBadge,
+  fetchConsultantInfo,
+  fetchQuestions,
+  fetchExistingAnswer,
+  fetchBookings,
+  fetchUserDetailsForQuestions,
+  handleQuestionClick,
+  handleAnswerChange,
+  handleFilterChange,
+  submitAnswer,
+  updateBookingStatus,
+  confirmBooking,
+  rejectBooking,
+  endBooking,
+  getFilteredQuestions,
+  getFilteredBookings,
+  statusOptions,
+  handleVideoCallLeave,
+  startVideoCall
+} from './utils/consultantHelpers.jsx';
 
 const ConsultantInterface = () => {
   const [questions, setQuestions] = useState([]);
@@ -16,7 +38,7 @@ const ConsultantInterface = () => {
   const [existingAnswer, setExistingAnswer] = useState(null);
   const [answers, setAnswers] = useState({});
   const [loadingAnswer, setLoadingAnswer] = useState(false);
-  const [activeSection, setActiveSection] = useState('questions'); // Add state for active section
+  const [activeSection, setActiveSection] = useState('questions'); // Add state for active section: 'questions', 'online', 'leave'
   const [consultant, setConsultant] = useState({ fullName: 'Tư vấn viên' }); // Thêm state cho thông tin tư vấn viên
   // Booking states for online consult
   const [bookings, setBookings] = useState([]);
@@ -26,464 +48,243 @@ const ConsultantInterface = () => {
   const [videoChannel, setVideoChannel] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailData, setDetailData] = useState(null);
+  
+  // Leave request states
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loadingLeaveRequests, setLoadingLeaveRequests] = useState(false);
+  const [errorLeaveRequests, setErrorLeaveRequests] = useState('');
+  const [showAddLeaveModal, setShowAddLeaveModal] = useState(false);
+  const [showEditLeaveModal, setShowEditLeaveModal] = useState(false);
+  const [editingLeaveRequest, setEditingLeaveRequest] = useState(null);
+  const [leaveFormData, setLeaveFormData] = useState({
+    leaveDate: '',
+    shift: 'MORNING',
+    note: ''
+  });
 
   useEffect(() => {
-    // Fetch thông tin tư vấn viên
-    const fetchConsultantInfo = async () => {
-      try {
-        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-        
-        if (!userId) {
-          console.error('Không tìm thấy userId trong storage');
-          return;
-        }
-        
-        const response = await fetch(`http://localhost:8080/api/users/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setConsultant(data);
-        } else {
-          console.error('Không thể lấy thông tin tư vấn viên');
-        }
-      } catch (err) {
-        console.error('Lỗi khi lấy thông tin tư vấn viên:', err);
-      }
-    };
-
-    fetchConsultantInfo();
+    // Fetch thông tin tư vấn viên sử dụng helper
+    fetchConsultantInfo(setConsultant);
   }, []);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:8080/api/questions');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch questions');
-        }
-
-        const data = await response.json();
-        setQuestions(data);
-        
-        // Fetch user details for each question
-        const uniqueUserIds = [...new Set(data.map(question => question.userID))];
-        const userDetailsMap = {};
-        
-        await Promise.all(uniqueUserIds.map(async (userId) => {
-          try {
-            const userResponse = await fetch(`http://localhost:8080/api/users/${userId}`);
-            if (userResponse.ok) {
-              const userData = await userResponse.json();
-              userDetailsMap[userId] = userData;
-            } else {
-              userDetailsMap[userId] = { fullName: 'Unknown User' };
-            }
-          } catch (error) {
-            console.error(`Error fetching user ${userId}:`, error);
-            userDetailsMap[userId] = { fullName: 'Unknown User' };
-          }
-        }));
-        
-        setUserDetails(userDetailsMap);
-      } catch (err) {
-        setError('Error fetching questions: ' + err.message);
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchQuestions();
+    // Fetch questions sử dụng helper
+    fetchQuestions(setQuestions, setLoading, setError);
   }, []);
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Không có ngày';
-    
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
-  };  const getStatusBadge = (status, id) => {
-    let badgeStyle = {
-      padding: '6px 12px',
-      borderRadius: '20px',
-      fontSize: '14px',
-      fontWeight: '500',
-      display: 'inline-block'
-    };
-
-    // Map status values to show only two states: Đã trả lời and Chờ trả lời
-    switch(status?.toLowerCase()) {
-      case 'resolved':
-        return <span key={`status-${id || 'resolved'}`} style={{...badgeStyle, backgroundColor: '#d0f7ea', color: '#0f766e'}}>Đã trả lời</span>;
-      case 'pending':
-      default:
-        return <span key={`status-${id || 'pending'}`} style={{...badgeStyle, backgroundColor: '#fef9c3', color: '#ca8a04'}}>Chờ trả lời</span>;
+  
+  // Fetch user details when questions are loaded
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      fetchUserDetailsForQuestions(questions, setUserDetails);
     }
-  };
+  }, [questions]);
+  
+  // Filter data sử dụng helper functions
+  const filteredQuestions = getFilteredQuestions(questions, filterStatus);
+  const paidFilteredBookings = getFilteredBookings(bookings, filterStatus);
 
-  // Fetch the existing answer when selecting a question
-  const fetchExistingAnswer = async (questionId) => {
+  // Fetch bookings sử dụng helper khi chuyển tab
+  useEffect(() => {
+    if (activeSection === 'online') {
+      fetchBookings(setLoadingBookings, setBookings, setBookingUserDetails);
+    } else if (activeSection === 'leave') {
+      fetchLeaveRequests();
+    }
+  }, [activeSection]);
+
+  // Leave request functions
+  const fetchLeaveRequests = async () => {
+    setLoadingLeaveRequests(true);
     try {
-      setLoadingAnswer(true);
-      const response = await fetch(`http://localhost:8080/api/answers/${questionId}`);
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || sessionStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID || loggedInUser.id;
       
+      if (!consultantId) {
+        throw new Error('Không tìm thấy thông tin tư vấn viên');
+      }
+
+      const response = await fetch(`http://localhost:8080/api/leave-requests/consultant/${consultantId}`);
       if (response.ok) {
         const data = await response.json();
-        setExistingAnswer(data);
-        
-        // Store the answer in the answers cache
-        setAnswers(prev => ({
-          ...prev,
-          [questionId]: data
-        }));
-        
-        // Không điền sẵn vào ô trả lời để tránh hiển thị câu trả lời hai lần
-        // Chỉ hiển thị câu trả lời đã có trong phần existingAnswer
-        setAnswerText('');
+        // Sort by created date descending
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeaveRequests(sortedData);
       } else {
-        // No answer exists or other error
-        setExistingAnswer(null);
-        setAnswerText('');
+        throw new Error('Không thể tải danh sách đơn xin nghỉ');
       }
     } catch (error) {
-      console.error('Error fetching answer:', error);
-      setExistingAnswer(null);
+      console.error('Error fetching leave requests:', error);
+      alert('Lỗi khi tải danh sách đơn xin nghỉ: ' + error.message);
     } finally {
-      setLoadingAnswer(false);
+      setLoadingLeaveRequests(false);
     }
   };
-  const handleQuestionClick = (question) => {
-    // Xác định ID câu hỏi (hỗ trợ cả questionID và id)
-    const questionId = question.questionID || question.id;
-    const selectedId = selectedQuestion ? (selectedQuestion.questionID || selectedQuestion.id) : null;
-    
-    const isSameQuestion = selectedQuestion && selectedId === questionId;
-    
-    if (!isSameQuestion) {
-      setSelectedQuestion(question);
-      setAnswerText('');
+
+  const submitLeaveRequest = async () => {
+    try {
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || sessionStorage.getItem('loggedInUser') || '{}');
+      const consultantId = loggedInUser.userID || loggedInUser.id;
       
-      // Nếu câu hỏi đã có câu trả lời (resolved) thì hiển thị câu trả lời đó
-      if (question.status?.toLowerCase() === 'resolved') {
-        // Sử dụng ID chính xác để truy vấn câu trả lời
-        fetchExistingAnswer(questionId);
-      } else {
-        // Không phải câu hỏi đã trả lời, không hiển thị phần câu trả lời cũ
-        setExistingAnswer(null);
+      if (!consultantId) {
+        alert('Không tìm thấy thông tin tư vấn viên');
+        return;
       }
-    } else {
-      // Clicking the same question again closes it
-      setSelectedQuestion(null);
-      setAnswerText('');
-      setExistingAnswer(null);
-    }
-  };
 
-  const handleAnswerChange = (e) => {
-    setAnswerText(e.target.value);
-  };
+      if (!leaveFormData.leaveDate || !leaveFormData.shift) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
 
-  const handleFilterChange = (e) => {
-    setFilterStatus(e.target.value);
-  };
-  // Status options with only 'Đã trả lời' and 'Chờ trả lời'
-  const statusOptions = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'pending', label: 'Chờ trả lời' },
-    { value: 'resolved', label: 'Đã trả lời' }
-  ];
+      // Check if date is in the past
+      const today = new Date().toISOString().split('T')[0];
+      if (leaveFormData.leaveDate < today) {
+        alert('Không thể xin nghỉ trong quá khứ');
+        return;
+      }
 
-  const filteredQuestions = questions.filter(question => {
-    if (filterStatus === 'all') return true;
-    
-    // Filter based on the two states: 'resolved' (Đã trả lời) and 'pending' (Chờ trả lời)
-    if (filterStatus === 'pending' && (!question.status || question.status.toLowerCase() === 'pending')) {
-      return true;
-    }
-    if (filterStatus === 'resolved' && question.status?.toLowerCase() === 'resolved') {
-      return true;
-    }
-    
-    return false;
-  });  
-  // Lọc booking theo trạng thái
-  const filteredBookings = filterStatus === 'all'
-    ? bookings
-    : bookings.filter(b => b.status === filterStatus);
+      const requestData = {
+        consultantId: parseInt(consultantId),
+        leaveDate: leaveFormData.leaveDate,
+        shift: leaveFormData.shift,
+        note: leaveFormData.note.trim()
+      };
 
-  // Lọc booking chỉ hiển thị các lịch đã PAID và theo filter status
-  const paidFilteredBookings = filteredBookings.filter(b => b.payment?.status === 'PAID');
-
-  // Hàm submitAnswer không cần nhận tham số vì đã có selectedQuestion
-  const submitAnswer = async () => {
-    if (!answerText.trim()) {
-      alert('Vui lòng nhập câu trả lời');
-      return;
-    }    if (!selectedQuestion) {
-      alert('Không tìm thấy câu hỏi. Vui lòng chọn câu hỏi khác.');
-      console.error('selectedQuestion không tồn tại', selectedQuestion);
-      return;
-    }
-    
-    // Kiểm tra xem ID câu hỏi nằm ở field nào (id hoặc questionID)
-    const questionId = selectedQuestion.questionID || selectedQuestion.id;
-    if (!questionId) {
-      alert('Không tìm thấy ID câu hỏi. Vui lòng chọn câu hỏi khác.');
-      console.error('Không tìm thấy ID trong câu hỏi', selectedQuestion);
-      return;
-    }try {
-      setSubmitting(true);
-      // Lấy ID của consultant từ localStorage hoặc sessionStorage
-      const consultantIdStr = localStorage.getItem('userId') || 
-                          sessionStorage.getItem('userId') || 
-                          '1073741824'; // Sử dụng ID đã được chỉ định từ yêu cầu API
-      
-      // Đảm bảo ID được chuyển sang số nguyên
-      const consultantId = parseInt(consultantIdStr, 10);
-        // Đối với questionId, sử dụng questionID (viết hoa) hoặc id (viết thường) tùy thuộc vào API
-      const rawQuestionId = selectedQuestion.questionID || selectedQuestion.id;
-      const questionId = parseInt(rawQuestionId, 10);
-      
-      // Kiểm tra và ghi log để debug
-      console.log('Selected question:', selectedQuestion);
-      console.log('Question ID field availability:', { 
-        'id': selectedQuestion.id !== undefined ? 'exists' : 'missing',
-        'questionID': selectedQuestion.questionID !== undefined ? 'exists' : 'missing'
-      });
-      console.log('Question ID (raw):', rawQuestionId);
-      console.log('Question ID (used):', questionId);
-      console.log('Consultant ID (used):', consultantId);
-      
-      // Chuẩn bị dữ liệu theo đúng định dạng API yêu cầu
-      const answerData = {
-        questionId: questionId, // Đã chuyển sang số nguyên
-        consultantId: consultantId, // Đã chuyển sang số nguyên
-        content: answerText.trim() // Nội dung câu trả lời (đã loại bỏ khoảng trắng thừa)
-      };      console.log('Gửi câu trả lời với dữ liệu:', answerData);
-      
-      // Kiểm tra một lần nữa trước khi gọi API
-      console.log('Request body (stringified):', JSON.stringify(answerData));
-      
-      // Gọi API để gửi câu trả lời
-      const response = await fetch('http://localhost:8080/api/answers/reply', {
+      const response = await fetch('http://localhost:8080/api/leave-requests/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
-        body: JSON.stringify(answerData)
+        body: JSON.stringify(requestData)
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response statusText:', response.statusText);
-      
-      // Log headers
-      const headers = {};
-      response.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
-      console.log('Response headers:', headers);
-      
-      let responseData;
-      try {
-        const text = await response.text();
-        console.log('Raw response text:', text);
-        
-        // Nếu text không rỗng, thử parse thành JSON
-        if (text && text.trim()) {
-          try {
-            responseData = JSON.parse(text);
-            console.log('Parsed response data:', responseData);
-          } catch (jsonError) {
-            console.error('Error parsing JSON:', jsonError);
-            responseData = { message: 'Invalid JSON response' };
-          }
-        } else {
-          responseData = { message: 'Empty response from server' };
-        }
-      } catch (e) {
-        console.error('Failed to read response text:', e);
-        responseData = { message: 'Không thể đọc phản hồi từ server' };
-      }      // Kiểm tra phản hồi dựa trên status code
-      if (!response.ok) {
-        let errorMessage = 'Unknown error occurred';
-        
-        // Xử lý các mã lỗi phổ biến
-        if (response.status === 400) {
-          errorMessage = `Bad Request: ${responseData.message || 'Invalid question or consultant ID format'}`;
-        } else if (response.status === 404) {
-          errorMessage = 'Not Found: Question or consultant not found';
-        } else if (response.status === 500) {
-          errorMessage = 'Server Error: Please try again later';
-        } else if (responseData && responseData.message) {
-          errorMessage = responseData.message;
-        }
-        
-        throw new Error(`Failed to submit answer: ${errorMessage}`);
-      }
-      
-      console.log('Câu trả lời đã được gửi thành công:', responseData);
-        // Cập nhật trạng thái câu hỏi trong UI - sử dụng ID phù hợp (questionID hoặc id)
-      const updateId = selectedQuestion.questionID || selectedQuestion.id;
-      setQuestions(questions.map(q => {
-        // Kiểm tra cả hai trường id có thể có
-        const qId = q.questionID || q.id;
-        return qId === parseInt(updateId, 10) ? { ...q, status: 'resolved' } : q;
-      }));
-
-      // Đóng phần trả lời
-      setSelectedQuestion(null);
-      setAnswerText('');
-      
-      alert('Câu trả lời đã được gửi thành công!');    } catch (err) {
-      console.error('Error submitting answer:', err);
-      console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        selectedQuestionId: selectedQuestion?.id,
-        answerTextLength: answerText.length,
-        consultantId: consultantId
-      });
-      
-      // Hiện thông báo lỗi chi tiết hơn
-      let errorMsg = err.message;
-      if (errorMsg.includes('400')) {
-        errorMsg = 'Lỗi dữ liệu: ID câu hỏi hoặc ID tư vấn viên không hợp lệ. Vui lòng kiểm tra lại.';
-      } else if (errorMsg.includes('server')) {
-        errorMsg = 'Lỗi kết nối với máy chủ. Vui lòng thử lại sau.';
-      }
-      
-      alert('Lỗi khi gửi câu trả lời: ' + errorMsg);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Fetch bookings for consultant when switching to 'online' tab
-  useEffect(() => {
-    const fetchBookings = async () => {
-      setLoadingBookings(true);
-      const consultantId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-      if (!consultantId) {
-        setBookings([]);
-        setLoadingBookings(false);
-        return;
-      }
-      try {
-        const res = await fetch(`http://localhost:8080/api/bookings/consultant/${consultantId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setBookings(data);
-          // Fetch user info for each booking
-          const uniqueUserIds = [...new Set(data.map(b => b.userId))];
-          const userMap = {};
-          await Promise.all(uniqueUserIds.map(async (userId) => {
-            try {
-              const userRes = await fetch(`http://localhost:8080/api/users/${userId}`);
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                userMap[userId] = userData;
-              } else {
-                userMap[userId] = { fullName: 'Không rõ' };
-              }
-            } catch {
-              userMap[userId] = { fullName: 'Không rõ' };
-            }
-          }));
-          setBookingUserDetails(userMap);
-        } else {
-          setBookings([]);
-        }
-      } catch {
-        setBookings([]);
-      }
-      setLoadingBookings(false);
-    };
-    if (activeSection === 'online') fetchBookings();
-  }, [activeSection]);
-
-  // Confirm booking status
-  const updateBookingStatus = async (bookingId, newStatus, endTime = null) => {
-    try {
-      let apiUrl = `http://localhost:8080/api/bookings/${bookingId}/status?status=${encodeURIComponent(newStatus)}`;
-      if (newStatus === 'Đã kết thúc') {
-        // Truyền endTime dạng HH:mm nếu có
-        const now = new Date();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const endTimeStr = endTime || `${hh}:${mm}`;
-        apiUrl += `&endTime=${encodeURIComponent(endTimeStr)}`;
-      }
-      console.log(`API URL: ${apiUrl}`);
-      const res = await fetch(apiUrl, { 
-        method: 'PUT',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (res.ok) {
-        console.log(`✅ API cập nhật trạng thái thành công cho booking ID ${bookingId}`);
-        
-        // Cập nhật lại UI
-        setBookings(prev => prev.map(b => 
-          b.bookingId === bookingId || b.bookingId === parseInt(bookingId) 
-            ? { ...b, status: newStatus } 
-            : b
-        ));
-        
-        // Hiện thông báo nếu cần (không hiện cho "Đã kết thúc" khi đang trong VideoCall)
-        const isFromVideoCall = newStatus === 'Đã kết thúc' && showVideoCall;
-        
-        if (!isFromVideoCall) {
-          if (newStatus === 'Đã duyệt') {
-            alert('Đã xác nhận lịch hẹn!');
-          } else if (newStatus === 'Không được duyệt') {
-            alert('Đã từ chối lịch hẹn!');
-          } else if (newStatus === 'Đã kết thúc') {
-            alert('Đã kết thúc lịch hẹn!');
-          }
-        }
-        
-        return true;
+      if (response.ok) {
+        alert('Tạo đơn xin nghỉ thành công!');
+        setShowAddLeaveModal(false);
+        resetLeaveForm();
+        fetchLeaveRequests();
       } else {
-        const errorText = await res.text();
-        console.error(`❌ Lỗi từ API (HTTP ${res.status}): ${errorText}`);
-        
-        // Chỉ hiển thị alert nếu không phải từ VideoCall để tránh gián đoạn UX
-        if (!showVideoCall) {
-          alert(`Lỗi cập nhật trạng thái lịch hẹn (HTTP ${res.status}): ${newStatus}`);
-        }
-        return false;
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
     } catch (error) {
-      console.error(`❌ Lỗi khi cập nhật trạng thái: ${error.message}`, error);
-      
-      // Chỉ hiển thị alert nếu không phải từ VideoCall để tránh gián đoạn UX
-      if (!showVideoCall) {
-        alert(`Lỗi kết nối máy chủ: ${error.message}`);
-      }
-      return false;
+      console.error('Error submitting leave request:', error);
+      alert('Lỗi khi tạo đơn xin nghỉ: ' + error.message);
     }
   };
-  
-  // Wrapper functions for specific status updates
-  const confirmBooking = async (bookingId) => {
-    await updateBookingStatus(bookingId, 'Đã duyệt');
+
+  const updateLeaveRequest = async () => {
+    try {
+      if (!editingLeaveRequest) return;
+
+      if (!leaveFormData.leaveDate || !leaveFormData.shift) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
+
+      // Check if date is in the past
+      const today = new Date().toISOString().split('T')[0];
+      if (leaveFormData.leaveDate < today) {
+        alert('Không thể xin nghỉ trong quá khứ');
+        return;
+      }
+
+      const requestData = {
+        consultantId: editingLeaveRequest.consultantId,
+        leaveDate: leaveFormData.leaveDate,
+        shift: leaveFormData.shift,
+        note: leaveFormData.note.trim()
+      };
+
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${editingLeaveRequest.leaveRequestId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (response.ok) {
+        alert('Cập nhật đơn xin nghỉ thành công!');
+        setShowEditLeaveModal(false);
+        setEditingLeaveRequest(null);
+        resetLeaveForm();
+        fetchLeaveRequests();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error updating leave request:', error);
+      alert('Lỗi khi cập nhật đơn xin nghỉ: ' + error.message);
+    }
   };
-  
-  const rejectBooking = async (bookingId) => {
-    await updateBookingStatus(bookingId, 'Không được duyệt');
+
+  const deleteLeaveRequest = async (requestId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa đơn xin nghỉ này?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert('Xóa đơn xin nghỉ thành công!');
+        fetchLeaveRequests();
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+    } catch (error) {
+      console.error('Error deleting leave request:', error);
+      alert('Lỗi khi xóa đơn xin nghỉ: ' + error.message);
+    }
   };
-  
-  const endBooking = async (bookingId) => {
-    await updateBookingStatus(bookingId, 'Đã kết thúc');
+
+  const resetLeaveForm = () => {
+    setLeaveFormData({
+      leaveDate: '',
+      shift: 'MORNING',
+      note: ''
+    });
+  };
+
+  const openEditLeaveModal = (request) => {
+    setEditingLeaveRequest(request);
+    setLeaveFormData({
+      leaveDate: request.leaveDate,
+      shift: request.shift,
+      note: request.note || ''
+    });
+    setShowEditLeaveModal(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'PENDING': return { bg: '#fef3c7', text: '#92400e' };
+      case 'APPROVED': return { bg: '#d1fae5', text: '#065f46' };
+      case 'REJECTED': return { bg: '#fee2e2', text: '#991b1b' };
+      default: return { bg: '#f3f4f6', text: '#374151' };
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PENDING': return 'Chờ duyệt';
+      case 'APPROVED': return 'Đã duyệt';
+      case 'REJECTED': return 'Từ chối';
+      default: return status;
+    }
+  };
+
+  const getShiftText = (shift) => {
+    switch (shift) {
+      case 'MORNING': return 'Ca sáng (08:00 - 12:00)';
+      case 'AFTERNOON': return 'Ca chiều (13:30 - 17:30)';
+      case 'FULL_DAY': return 'Cả ngày (08:00 - 17:30)';
+      default: return shift;
+    }
   };
 
   return (
@@ -499,40 +300,7 @@ const ConsultantInterface = () => {
         <VideoCall 
           channelName={videoChannel} 
           onLeave={async (endCall = false) => { 
-            // Xử lý cập nhật trạng thái TRƯỚC khi ẩn UI cuộc gọi
-            console.log(`🔄 [ConsultantInterface] Cuộc gọi kết thúc với endCall=${endCall}`);
-            console.log(`🔄 [ConsultantInterface] Channel: ${videoChannel}`);
-            
-            if (endCall && videoChannel) {
-              try {
-                // Extract bookingId from the channelName
-                const bookingId = videoChannel.includes('_') 
-                  ? videoChannel.split('_')[1] 
-                  : videoChannel;
-                
-                console.log(`📝 [ConsultantInterface] Lịch hẹn ID: ${bookingId} - Đang cập nhật trạng thái thành "Đã kết thúc"`);
-                
-                // Update booking status to "Đã kết thúc"
-                if (bookingId) {
-                  setBookings(prev => prev.map(b => 
-                    b.bookingId === parseInt(bookingId) ? { ...b, status: 'Đã kết thúc' } : b
-                  ));
-                  // Gửi endTime thực tế lên backend
-                  const now = new Date();
-                  const hh = String(now.getHours()).padStart(2, '0');
-                  const mm = String(now.getMinutes()).padStart(2, '0');
-                  const endTimeStr = `${hh}:${mm}`;
-                  await updateBookingStatus(bookingId, 'Đã kết thúc', endTimeStr);
-                }
-              } catch (err) {
-                console.error('❌ [ConsultantInterface] Lỗi khi cập nhật trạng thái:', err);
-                alert('Đã có lỗi khi cập nhật trạng thái. Vui lòng kiểm tra và thử lại.');
-              }
-            }
-            
-            // Sau khi xử lý xong, mới ẩn UI cuộc gọi
-            setShowVideoCall(false);
-            setVideoChannel(''); 
+            await handleVideoCallLeave(endCall, videoChannel, setBookings, updateBookingStatus, setShowVideoCall, setVideoChannel);
           }} 
           userRole="host"
         />
@@ -672,6 +440,33 @@ const ConsultantInterface = () => {
                 </svg>
                 Tư vấn online
               </button>
+              <button 
+                onClick={() => {
+                  setActiveSection('leave');
+                  setFilterStatus('all'); // Reset filter khi chuyển section
+                }}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "8px",
+                  border: "none",
+                  backgroundColor: activeSection === 'leave' ? "#0891b2" : "#e0f2fe",
+                  color: activeSection === 'leave' ? "#fff" : "#0891b2",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"></path>
+                  <line x1="8" y1="6" x2="8" y2="2"></line>
+                  <line x1="16" y1="6" x2="16" y2="2"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Đơn xin nghỉ
+              </button>
             </div>
           </div>
 
@@ -698,7 +493,7 @@ const ConsultantInterface = () => {
                   }}>Lọc theo trạng thái: </label>
                   <select 
                     value={filterStatus} 
-                    onChange={e => setFilterStatus(e.target.value)} 
+                    onChange={e => handleFilterChange(e, setFilterStatus)} 
                     style={{ 
                       padding: "10px 16px", 
                       borderRadius: "8px", 
@@ -801,7 +596,7 @@ const ConsultantInterface = () => {
                           }}
                         >
                           <div 
-                            onClick={() => handleQuestionClick(question)}
+                            onClick={() => handleQuestionClick(question, selectedQuestion, setSelectedQuestion, setAnswerText, setExistingAnswer, () => fetchExistingAnswer(question.id || question.questionID, setLoadingAnswer, setExistingAnswer, setAnswers, setAnswerText))}
                             style={{
                               cursor: "pointer"
                             }}
@@ -910,7 +705,7 @@ const ConsultantInterface = () => {
                                 <>
                                   <textarea
                                     value={answerText}
-                                    onChange={handleAnswerChange}
+                                    onChange={(e) => handleAnswerChange(e, setAnswerText)}
                                     placeholder="Nhập câu trả lời của bạn..."
                                     disabled={submitting}
                                     style={{
@@ -941,7 +736,7 @@ const ConsultantInterface = () => {
                                       Hủy
                                     </button>
                                     <button 
-                                      onClick={() => submitAnswer()}
+                                      onClick={() => submitAnswer(selectedQuestion, answerText, setSubmitting, setQuestions, setSelectedQuestion, setAnswerText)}
                                       disabled={submitting || !answerText.trim()}
                                       style={{
                                         padding: "10px 20px",
@@ -988,7 +783,7 @@ const ConsultantInterface = () => {
                 </div>
               )}
             </>
-          ) : (
+          ) : activeSection === 'online' ? (
             <>
               <div style={{ 
                 display: 'flex', 
@@ -1011,7 +806,7 @@ const ConsultantInterface = () => {
                   }}>Lọc theo trạng thái: </label>
                   <select 
                     value={filterStatus} 
-                    onChange={e => setFilterStatus(e.target.value)} 
+                    onChange={e => handleFilterChange(e, setFilterStatus)} 
                     style={{ 
                       padding: "10px 16px", 
                       borderRadius: "8px", 
@@ -1267,7 +1062,511 @@ const ConsultantInterface = () => {
                 </div>
               )}
             </>
-          )}
+          ) : activeSection === 'online' ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                backgroundColor: "#fff",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                marginBottom: "24px"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center", 
+                  gap: "12px"
+                }}>
+                  <label style={{ 
+                    fontWeight: 600, 
+                    color: '#0891b2' 
+                  }}>Lọc theo trạng thái: </label>
+                  <select 
+                    value={filterStatus} 
+                    onChange={e => handleFilterChange(e, setFilterStatus)} 
+                    style={{ 
+                      padding: "10px 16px", 
+                      borderRadius: "8px", 
+                      border: '1px solid #22d3ee', 
+                      outline: 'none', 
+                      fontWeight: 500, 
+                      color: '#0891b2', 
+                      background: '#fff',
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <option value="all">Tất cả</option>
+                    <option value="Chờ bắt đầu">Chờ bắt đầu</option>
+                    <option value="Đang diễn ra">Đang diễn ra</option>
+                    <option value="Đã kết thúc">Đã kết thúc</option>
+                  </select>
+                </div>
+                <h2 style={{ 
+                  color: "#0891b2", 
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: 700
+                }}>Lịch hẹn tư vấn online</h2>
+              </div>
+              {loadingBookings ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 0",
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ 
+                    display: "inline-block", 
+                    border: "3px solid #22d3ee",
+                    borderTop: "3px solid transparent",
+                    borderRadius: "50%",
+                    width: "30px",
+                    height: "30px",
+                    animation: "spin 1s linear infinite",
+                    marginBottom: "15px"
+                  }}></div>
+                  <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách lịch hẹn...</p>
+                </div>
+              ) : paidFilteredBookings.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 20px",
+                  color: '#0891b2', 
+                  fontWeight: 600,
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>📅</div>
+                  <div>
+                    {filterStatus === 'all' 
+                      ? 'Không có lịch hẹn nào đã thanh toán.' 
+                      : `Không có lịch hẹn nào ở trạng thái "${filterStatus}".`
+                    }
+                  </div>
+                </div>
+              ) : (
+                <div style={{ 
+                  width: '100%', 
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ overflowX: 'auto', width: "100%" }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ 
+                          background: "linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)",
+                          textAlign: "center"
+                        }}>
+                          <th style={{ padding: '16px 24px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Khách hàng</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Nội dung</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Ngày đặt lịch</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Giờ bắt đầu</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Trạng thái</th>
+                          <th style={{ padding: '16px 20px', color: '#fff', fontWeight: 600, fontSize: "15px", textAlign: "center" }}>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paidFilteredBookings.map((booking, idx) => (
+                          <tr 
+                            key={booking.bookingId || idx} 
+                            style={{ 
+                              borderBottom: '1px solid #e0f2fe', 
+                              transition: "all 0.2s"
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#f0f9ff"}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                          >
+                            <td style={{ padding: '16px 24px', textAlign: "center" }}>
+                              <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 10,
+                                justifyContent: "center" 
+                              }}>
+                                <div style={{ 
+                                  width: "36px", 
+                                  height: "36px", 
+                                  borderRadius: "50%", 
+                                  backgroundColor: "#0891b2", 
+                                  color: "white", 
+                                  display: "flex", 
+                                  alignItems: "center", 
+                                  justifyContent: "center", 
+                                  fontWeight: "bold",
+                                  fontSize: "16px"
+                                }}>
+                                  {(bookingUserDetails[booking.userId]?.fullName || '?').charAt(0).toUpperCase()
+                                  }
+                                </div>
+                                <span style={{ 
+                                  fontWeight: 600, 
+                                  color: '#0891b2' 
+                                }}>
+                                  {bookingUserDetails[booking.userId]?.fullName || 'Đang tải...'}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, maxWidth: "300px", textAlign: "center" }}>
+                              <div style={{ 
+                                overflow: "hidden", 
+                                textOverflow: "ellipsis", 
+                                whiteSpace: "nowrap", 
+                                maxWidth: "100%"
+                              }}>
+                                {booking.content || 'Không có nội dung'}
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.appointmentDate || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', fontWeight: 500, textAlign: "center" }}>
+                              {booking.startTime || 'N/A'}
+                            </td>
+                            <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                              <div style={{ display: "flex", justifyContent: "center" }}>
+                                {(() => {
+                                  // Chuẩn hóa status từ backend
+                                  let status = booking.status;
+                                  let badgeColor = '#e0e0e0';
+                                  let textColor = '#64748b';
+                                  let label = status;
+                                  if (status === 'Chờ bắt đầu') {
+                                    badgeColor = '#fde68a'; // vàng nhạt
+                                    textColor = '#b45309';
+                                    label = 'Chờ bắt đầu';
+                                  } else if (status === 'Đang diễn ra') {
+                                    badgeColor = '#22d3ee'; // xanh cyan
+                                    textColor = '#fff';
+                                    label = 'Đang diễn ra';
+                                  } else if (status === 'Đã kết thúc') {
+                                    badgeColor = '#cbd5e1'; // xám nhạt
+                                    textColor = '#64748b';
+                                    label = 'Đã kết thúc';
+                                  }
+                                  return (
+                                    <span style={{
+                                      display: "inline-block",
+                                      padding: "6px 12px",
+                                      borderRadius: "20px",
+                                      fontWeight: 600,
+                                      fontSize: "13px",
+                                      color: textColor,
+                                      backgroundColor: badgeColor
+                                    }}>{label}</span>
+                                  );
+                                })()}
+                              </div>
+                            </td>
+                            <td style={{ padding: '16px 20px', textAlign: "center" }}>
+                              {booking.status === 'Đang diễn ra' && (
+                                <button
+                                  style={{
+                                    background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: "8px",
+                                    padding: '10px 16px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    transition: "all 0.2s",
+                                    boxShadow: "0 2px 6px rgba(34,211,238,0.3)"
+                                  }}
+                                  onMouseOver={(e) => {
+                                    e.currentTarget.style.transform = "translateY(-2px)";
+                                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,211,238,0.4)";
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.currentTarget.style.transform = "translateY(0)";
+                                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(34,211,238,0.3)";
+                                  }}
+                                  onClick={() => {
+                                    const channelId = booking.bookingId?.toString();
+                                    const channelName = `booking_${channelId}`;
+                                    setVideoChannel(channelName);
+                                    setShowVideoCall(true);
+                                  }}
+                                >
+                                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span style={{ fontSize: "16px" }}>🎥</span> Tham gia tư vấn
+                                  </span>
+                                </button>
+                              )}
+                              {booking.status === 'Chờ bắt đầu' && (
+                                <span style={{ color: "#b45309", fontSize: "14px", fontWeight: "500" }}>
+                                  Chưa đến giờ tư vấn
+                                </span>
+                              )}
+                              {booking.status === 'Đã kết thúc' && (
+                                <button
+                                  style={{
+                                    background: '#e0f2fe',
+                                    color: '#0891b2',
+                                    border: '1px solid #22d3ee',
+                                    borderRadius: "8px",
+                                    padding: '8px 14px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: "14px",
+                                    marginLeft: 4,
+                                    transition: "all 0.2s"
+                                  }}
+                                  onClick={() => {
+                                    setDetailData({
+                                      user: bookingUserDetails[booking.userId]?.fullName || 'N/A',
+                                      content: booking.content || 'Không có',
+                                      date: booking.appointmentDate || 'N/A',
+                                      startTime: booking.startTime || 'N/A',
+                                      endTime: booking.endTime || 'N/A',
+                                      status: booking.status
+                                    });
+                                    setShowDetailModal(true);
+                                  }}
+                                >
+                                  Xem chi tiết cuộc gọi
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : activeSection === 'leave' ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                backgroundColor: "#fff",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                marginBottom: "24px"
+              }}>
+                <h2 style={{ 
+                  color: "#0891b2", 
+                  margin: 0,
+                  fontSize: "18px",
+                  fontWeight: 700
+                }}>Quản lý đơn xin nghỉ</h2>
+                <button
+                  onClick={() => setShowAddLeaveModal(true)}
+                  style={{
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    border: "none",
+                    backgroundColor: "#22d3ee",
+                    color: "#fff",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Tạo đơn xin nghỉ
+                </button>
+              </div>
+
+              {loadingLeaveRequests ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 0",
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ 
+                    display: "inline-block", 
+                    border: "3px solid #22d3ee",
+                    borderTop: "3px solid transparent",
+                    borderRadius: "50%",
+                    width: "30px",
+                    height: "30px",
+                    animation: "spin 1s linear infinite",
+                    marginBottom: "15px"
+                  }}></div>
+                  <p style={{ color: '#0891b2', fontWeight: 600, fontSize: 16, margin: 0 }}>Đang tải danh sách đơn xin nghỉ...</p>
+                </div>
+              ) : leaveRequests.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: "60px 20px",
+                  color: '#0891b2', 
+                  fontWeight: 600,
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+                }}>
+                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>📋</div>
+                  <div>Chưa có đơn xin nghỉ nào</div>
+                </div>
+              ) : (
+                <div style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "12px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                  overflow: "hidden"
+                }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: "14px"
+                    }}>
+                      <thead style={{
+                        backgroundColor: "#f8fafc",
+                        borderBottom: "2px solid #e2e8f0"
+                      }}>
+                        <tr>
+                          <th style={{
+                            textAlign: "left",
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ngày nghỉ</th>
+                          <th style={{
+                            textAlign: "left", 
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ca làm việc</th>
+                          <th style={{
+                            textAlign: "left",
+                            padding: "16px", 
+                            fontWeight: "600",
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Ghi chú</th>
+                          <th style={{
+                            textAlign: "center",
+                            padding: "16px",
+                            fontWeight: "600", 
+                            color: "#0891b2",
+                            borderRight: "1px solid #e2e8f0"
+                          }}>Trạng thái</th>
+                          <th style={{
+                            textAlign: "center",
+                            padding: "16px",
+                            fontWeight: "600",
+                            color: "#0891b2"
+                          }}>Thao tác</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaveRequests.map((request, index) => (
+                          <tr key={request.leaveRequestId || index} style={{
+                            borderBottom: "1px solid #e2e8f0",
+                            transition: "background-color 0.2s ease"
+                          }}>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0",
+                              fontWeight: "500"
+                            }}>
+                              {new Date(request.leaveDate).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0"
+                            }}>
+                              {getShiftText(request.shift)}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              borderRight: "1px solid #e2e8f0",
+                              maxWidth: "200px",
+                              wordWrap: "break-word"
+                            }}>
+                              {request.note || 'Không có ghi chú'}
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              textAlign: "center",
+                              borderRight: "1px solid #e2e8f0"
+                            }}>
+                              <span style={{
+                                padding: "6px 12px",
+                                borderRadius: "20px",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px",
+                                backgroundColor: getStatusColor(request.status).bg,
+                                color: getStatusColor(request.status).text
+                              }}>
+                                {getStatusText(request.status)}
+                              </span>
+                            </td>
+                            <td style={{
+                              padding: "16px",
+                              textAlign: "center"
+                            }}>
+                              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                                {request.status === 'PENDING' && (
+                                  <>
+                                    <button
+                                      onClick={() => openEditLeaveModal(request)}
+                                      style={{
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        backgroundColor: "#fbbf24",
+                                        color: "#fff",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease"
+                                      }}
+                                    >
+                                      Sửa
+                                    </button>
+                                    <button
+                                      onClick={() => deleteLeaveRequest(request.leaveRequestId)}
+                                      style={{
+                                        padding: "6px 12px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        backgroundColor: "#ef4444",
+                                        color: "#fff",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease"
+                                      }}
+                                    >
+                                      Xóa
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       </main>
       
@@ -1366,6 +1665,249 @@ const ConsultantInterface = () => {
                 }}
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal thêm đơn xin nghỉ */}
+      {showAddLeaveModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 400,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 20 }}>Tạo đơn xin nghỉ</h2>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ngày nghỉ:
+              </label>
+              <input
+                type="date"
+                value={leaveFormData.leaveDate}
+                onChange={(e) => setLeaveFormData({...leaveFormData, leaveDate: e.target.value})}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ca làm việc:
+              </label>
+              <select
+                value={leaveFormData.shift}
+                onChange={(e) => setLeaveFormData({...leaveFormData, shift: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                <option value="AFTERNOON">Ca chiều (13:30 - 17:30)</option>
+                <option value="FULL_DAY">Cả ngày (08:00 - 17:30)</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ghi chú:
+              </label>
+              <textarea
+                value={leaveFormData.note}
+                onChange={(e) => setLeaveFormData({...leaveFormData, note: e.target.value})}
+                placeholder="Lý do xin nghỉ (không bắt buộc)"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                onClick={() => {
+                  setShowAddLeaveModal(false);
+                  resetLeaveForm();
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={submitLeaveRequest}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Tạo đơn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal sửa đơn xin nghỉ */}
+      {showEditLeaveModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: 32,
+            minWidth: 400,
+            maxWidth: '90vw',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)'
+          }}>
+            <h2 style={{ color: '#0891b2', marginBottom: 20 }}>Chỉnh sửa đơn xin nghỉ</h2>
+            
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ngày nghỉ:
+              </label>
+              <input
+                type="date"
+                value={leaveFormData.leaveDate}
+                onChange={(e) => setLeaveFormData({...leaveFormData, leaveDate: e.target.value})}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ca làm việc:
+              </label>
+              <select
+                value={leaveFormData.shift}
+                onChange={(e) => setLeaveFormData({...leaveFormData, shift: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                <option value="AFTERNOON">Ca chiều (13:30 - 17:30)</option>
+                <option value="FULL_DAY">Cả ngày (08:00 - 17:30)</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 8, fontWeight: 600, color: '#374151' }}>
+                Ghi chú:
+              </label>
+              <textarea
+                value={leaveFormData.note}
+                onChange={(e) => setLeaveFormData({...leaveFormData, note: e.target.value})}
+                placeholder="Lý do xin nghỉ (không bắt buộc)"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                onClick={() => {
+                  setShowEditLeaveModal(false);
+                  setEditingLeaveRequest(null);
+                  resetLeaveForm();
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={updateLeaveRequest}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Cập nhật
               </button>
             </div>
           </div>

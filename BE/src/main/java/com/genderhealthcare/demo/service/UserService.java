@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 /**
  * Service xử lý logic nghiệp vụ cho quản lý người dùng
@@ -23,6 +24,9 @@ public class UserService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    private ConsultantScheduleService consultantScheduleService;
 
     @Transactional(readOnly = true)
     public List<Users> getAllUser(){
@@ -132,6 +136,38 @@ public class UserService {
                 .orElseThrow(() -> new AccountNotFoundException("Không tìm thấy người dùng với ID: " + userId));
         
         userRepository.delete(existingUser);
+    }
+
+    /**
+     * Lấy danh sách consultant có lịch làm việc trong ngày cụ thể
+     * Chỉ trả về những consultant có status AVAILABLE trong ngày đó
+     * 
+     * @param date Ngày cần kiểm tra
+     * @return List<Users> danh sách consultant có lịch làm việc
+     */
+    @Transactional(readOnly = true)
+    public List<Users> getAvailableConsultantsByDate(LocalDate date) {
+        // Lấy tất cả consultant
+        List<Users> allConsultants = getUsersByRole(Role.CONSULTANT);
+        
+        // Lọc những consultant có lịch làm việc và available trong ngày
+        return allConsultants.stream()
+                .filter(consultant -> {
+                    try {
+                        // Kiểm tra có lịch làm việc trong ngày này không (cả 2 ca)
+                        List<com.genderhealthcare.demo.entity.ConsultantSchedule> schedules = 
+                            consultantScheduleService.getSchedulesByDate(date);
+                        
+                        return schedules.stream()
+                                .anyMatch(schedule -> 
+                                    schedule.getConsultantID().equals(consultant.getUserID()) &&
+                                    schedule.getStatus() == com.genderhealthcare.demo.entity.ConsultantSchedule.ScheduleStatus.AVAILABLE
+                                );
+                    } catch (Exception e) {
+                        return false; // Nếu có lỗi, loại bỏ consultant này
+                    }
+                })
+                .toList();
     }
 
 }

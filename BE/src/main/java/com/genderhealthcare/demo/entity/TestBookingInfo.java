@@ -54,15 +54,6 @@ public class TestBookingInfo {
     // Nhân viên thực hiện checkin/checkout
     @Column(name = "staff_id")
     private Integer staffId;
-
-    
-    // Kết quả xét nghiệm
-    @Column(name = "test_results", columnDefinition = "NTEXT")
-    private String testResults;
-    
-    // Ghi chú kết quả xét nghiệm
-    @Column(name = "result_note", columnDefinition = "NTEXT")
-    private String resultNote;
     
     // Thời gian tạo và cập nhật
     @Column(name = "created_at")
@@ -83,10 +74,12 @@ public class TestBookingInfo {
         this.staffId = staffId;
     }
 
-    public void performCheckout(String testResults, String resultNote) {
+    public void performCheckout() {
         this.testStatus = "Đã check-out";
         this.checkoutTime = LocalDateTime.now();
-        this.testResults = testResults;
-        this.resultNote = resultNote;
+    }
+    
+    public void completeTest() {
+        this.testStatus = "Đã kết thúc";
     }
 }

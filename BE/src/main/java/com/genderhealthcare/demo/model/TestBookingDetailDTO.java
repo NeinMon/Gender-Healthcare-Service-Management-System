@@ -27,12 +27,12 @@ public class TestBookingDetailDTO {
     private LocalDateTime checkoutTime;
     private Integer staffId;
     private String staffName;
-    private String testResults;
-    private String resultNote;
     private String createdAt;
     private String updatedAt;
     // Object Payment trả về cho FE
     private com.genderhealthcare.demo.entity.Payment payment;
+    
+    // Ghi chú: testResults và resultNote hiện được quản lý trong bảng test_result riêng
     
     // Thông tin từ Users
     private String fullName;

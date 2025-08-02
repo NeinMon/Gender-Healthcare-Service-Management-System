@@ -118,6 +118,8 @@ const MyTestBookings = () => {
     setResultData(null);
     
     try {
+      console.log("Fetching test results for booking ID:", booking.id);
+      
       // Lấy thông tin chi tiết booking từ API
       const bookingDetailResponse = await fetch(`http://localhost:8080/api/test-bookings/${booking.id}/detail`);
       if (!bookingDetailResponse.ok) {
@@ -143,6 +145,64 @@ const MyTestBookings = () => {
         const serviceData = await serviceResponse.json();
         servicePrice = serviceData.price;
         serviceType = serviceData.serviceName || serviceData.name;
+      }
+      
+      // Lấy kết quả xét nghiệm chi tiết từ API
+      let testResults = [];
+      let parameterNames = {}; // Để map ID tham số với tên tham số
+      try {
+        console.log("Fetching detailed test results for booking ID:", booking.id);
+        const testResultsResponse = await fetch(`http://localhost:8080/api/test-results/test-booking/${booking.id}`);
+        console.log("Test results response status:", testResultsResponse.status);
+        
+        if (testResultsResponse.ok) {
+          testResults = await testResultsResponse.json();
+          console.log("Test results:", testResults);
+          
+          // Lấy thông tin tên tham số từ API service-test-parameters
+          if (testResults.length > 0) {
+            try {
+              const serviceId = booking.serviceId || bookingDetail.serviceId;
+              if (serviceId) {
+                console.log("Fetching parameter names for service:", serviceId);
+                const parametersResponse = await fetch(`http://localhost:8080/api/service-test-parameters/service/${serviceId}`);
+                if (parametersResponse.ok) {
+                  const parameters = await parametersResponse.json();
+                  console.log("Service parameters:", parameters);
+                  
+                  // Tạo map từ parameterId sang parameterName
+                  parameters.forEach(param => {
+                    parameterNames[param.parameterId] = param.parameterName;
+                  });
+                }
+              }
+            } catch (paramError) {
+              console.log("Error fetching parameter names:", paramError);
+            }
+          }
+        } else if (testResultsResponse.status === 404) {
+          console.log("No detailed test results found for this booking");
+          testResults = [];
+        }
+      } catch (testResultError) {
+        console.log("Error fetching detailed test results:", testResultError);
+      }
+      
+      // Lấy kết quả tổng quát (summary) từ API
+      let summaryData = null;
+      try {
+        console.log("Fetching summary for booking ID:", booking.id);
+        const summaryResponse = await fetch(`http://localhost:8080/api/test-result-summary/test-booking/${booking.id}`);
+        console.log("Summary response status:", summaryResponse.status);
+        
+        if (summaryResponse.ok) {
+          summaryData = await summaryResponse.json();
+          console.log("Summary data:", summaryData);
+        } else if (summaryResponse.status === 404) {
+          console.log("No summary found for this booking");
+        }
+      } catch (summaryError) {
+        console.log("Error fetching summary:", summaryError);
       }
       
       // Cập nhật dữ liệu modal với thông tin từ API
@@ -175,14 +235,20 @@ const MyTestBookings = () => {
           
           return dateTimeString;
         })(),
-        testResult: bookingDetail.testResults || booking.testResults || 'Chưa có kết quả',
-        resultNote: bookingDetail.resultNote || booking.resultNote || '',
+        // Kết quả xét nghiệm chi tiết và tổng quát
+        testResults: testResults,
+        parameterNames: parameterNames, // Thêm map tên tham số
+        summary: summaryData,
+        // Fallback cho compatibility
+        testResult: summaryData?.overallResult || bookingDetail.testResults || booking.testResults || 'Chưa có kết quả',
+        resultNote: summaryData?.note || bookingDetail.resultNote || booking.resultNote || '',
         notes: bookingDetail.notes || booking.notes,
-        lastUpdated: bookingDetail.updatedAt || bookingDetail.createdAt || 'Không có thông tin'
+        lastUpdated: summaryData?.updatedAt || bookingDetail.updatedAt || bookingDetail.createdAt || 'Không có thông tin'
       });
       
       setResultLoading(false);
     } catch (err) {
+      console.error("Error in handleShowResult:", err);
       setResultError('Không thể tải thông tin chi tiết: ' + err.message);
       setResultLoading(false);
     }
@@ -212,11 +278,15 @@ const MyTestBookings = () => {
             background: '#fff',
             borderRadius: 12,
             minWidth: 350,
-            maxWidth: 500,
+            maxWidth: 600,
+            maxHeight: '85vh',
             padding: 32,
             boxShadow: '0 4px 24px rgba(8,145,178,0.15)',
             position: 'relative',
             textAlign: 'left',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             <button onClick={() => setShowResultModal(false)} style={{
               position: 'absolute',
@@ -226,9 +296,16 @@ const MyTestBookings = () => {
               fontSize: 22,
               color: '#0891b2',
               cursor: 'pointer',
-              fontWeight: 700
+              fontWeight: 700,
+              zIndex: 10
             }} title="Đóng">×</button>
-            <h2 style={{ color: '#0891b2', marginTop: 0, marginBottom: 18, fontWeight: 700, fontSize: 22 }}>Kết quả xét nghiệm</h2>
+            <h2 style={{ color: '#0891b2', marginTop: 0, marginBottom: 18, fontWeight: 700, fontSize: 22, flexShrink: 0 }}>Kết quả xét nghiệm</h2>
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              paddingRight: '8px',
+              marginRight: '-8px'
+            }}>
             {resultLoading ? (
               <div style={{ color: '#0891b2', fontWeight: 600 }}>Đang tải kết quả...</div>
             ) : resultError ? (
@@ -240,37 +317,113 @@ const MyTestBookings = () => {
                 <div style={{ marginBottom: 12 }}><strong>Loại xét nghiệm:</strong> {resultData.testType || 'Không có dữ liệu'}</div>
                 <div style={{ marginBottom: 12 }}><strong>Giá tiền:</strong> {resultData.price ? resultData.price.toLocaleString() + ' VNĐ' : 'Không có dữ liệu'}</div>
                 <div style={{ marginBottom: 12 }}><strong>Ngày giờ hẹn:</strong> {resultData.appointmentDateTime || 'Không có dữ liệu'}</div>
-                <div style={{ marginBottom: 12 }}>
-                  <strong>Kết quả xét nghiệm:</strong> 
-                  {resultData.testResult ? (
-                    <span style={{
-                      display: "inline-block",
-                      marginLeft: "8px",
-                      padding: "6px 12px",
-                      borderRadius: "16px",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      backgroundColor: getResultColor(resultData.testResult).bg,
-                      color: getResultColor(resultData.testResult).color,
-                      border: `2px solid ${getResultColor(resultData.testResult).border}`
+                
+                {/* Hiển thị kết quả tổng quát nếu có */}
+                {resultData.summary && (
+                  <div style={{ marginBottom: 20, padding: 16, backgroundColor: '#f0f9ff', borderRadius: 8, border: '1px solid #22d3ee' }}>
+                    <strong style={{ display: 'block', marginBottom: 12, color: '#0891b2', fontSize: 16 }}>Kết quả tổng quát:</strong>
+                    
+                    {resultData.summary.overallResult && (
+                      <div style={{ marginBottom: 10 }}>
+                        <strong>Kết luận:</strong> 
+                        <div style={{ marginTop: 4, color: '#374151', fontStyle: 'italic' }}>
+                          {resultData.summary.overallResult}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div style={{ marginBottom: 10 }}>
+                      <strong>Trạng thái tổng quát:</strong> 
+                      <span style={{ 
+                        fontWeight: 600, 
+                        color: resultData.summary.overallStatus === 'NORMAL' ? '#059669' : '#dc2626',
+                        backgroundColor: resultData.summary.overallStatus === 'NORMAL' ? '#f0fdf4' : '#fef2f2',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        marginLeft: '8px',
+                        border: `1px solid ${resultData.summary.overallStatus === 'NORMAL' ? '#bbf7d0' : '#fecaca'}`
+                      }}>
+                        {resultData.summary.overallStatus === 'NORMAL' ? 'Bình thường' : 'Bất thường'}
+                      </span>
+                    </div>
+                    
+                    {resultData.summary.note && (
+                      <div style={{ marginTop: 10 }}>
+                        <strong>Ghi chú tổng quát:</strong>
+                        <div style={{ marginTop: 4, color: '#374151' }}>{resultData.summary.note}</div>
+                      </div>
+                    )}
+                    
+                    <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
+                      <strong>Cập nhật lần cuối:</strong> {new Date(resultData.summary.updatedAt).toLocaleString('vi-VN')}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hiển thị kết quả chi tiết theo tham số nếu có */}
+                <div style={{ marginBottom: 16 }}>
+                  <strong style={{ display: 'block', marginBottom: 8, color: '#0891b2' }}>Kết quả chi tiết theo tham số:</strong>
+                  {resultData.testResults && resultData.testResults.length > 0 ? (
+                    <div style={{ 
+                      backgroundColor: '#f8f9fa', 
+                      padding: 12, 
+                      borderRadius: 6,
+                      border: '1px solid #e5e7eb'
                     }}>
-                      {resultData.testResult}
-                    </span>
+                      {resultData.testResults.map((tr, index) => (
+                        <div key={index} style={{ marginBottom: 12, paddingBottom: 8, borderBottom: index < resultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                          <div><strong>Tham số:</strong> {resultData.parameterNames[tr.parameterId] || tr.parameterId}</div>
+                          <div><strong>Kết quả:</strong> {tr.resultValue} {tr.unit || ''}</div>
+                          <div><strong>Trạng thái:</strong> <span style={{
+                            color: tr.status === 'NORMAL' ? '#059669' : '#dc2626',
+                            fontWeight: 600
+                          }}>{tr.status === 'NORMAL' ? 'Bình thường' : tr.status}</span></div>
+                          {tr.note && <div><strong>Ghi chú:</strong> {tr.note}</div>}
+                        </div>
+                      ))}
+                    </div>
                   ) : (
-                    <span style={{ color: '#9ca3af', fontStyle: 'italic', marginLeft: "8px" }}>Chưa có kết quả</span>
+                    <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Chưa có kết quả chi tiết</div>
                   )}
                 </div>
-                {resultData.resultNote && (
+                
+                {/* Fallback hiển thị kết quả cũ nếu không có summary và testResults */}
+                {!resultData.summary && (!resultData.testResults || resultData.testResults.length === 0) && (
+                  <div style={{ marginBottom: 12 }}>
+                    <strong>Kết quả xét nghiệm:</strong> 
+                    {resultData.testResult ? (
+                      <span style={{
+                        display: "inline-block",
+                        marginLeft: "8px",
+                        padding: "6px 12px",
+                        borderRadius: "16px",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        backgroundColor: getResultColor(resultData.testResult).bg,
+                        color: getResultColor(resultData.testResult).color,
+                        border: `2px solid ${getResultColor(resultData.testResult).border}`
+                      }}>
+                        {resultData.testResult}
+                      </span>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontStyle: 'italic', marginLeft: "8px" }}>Chưa có kết quả</span>
+                    )}
+                  </div>
+                )}
+                
+                {resultData.resultNote && !resultData.summary && (
                   <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#f0f9ff', borderRadius: 6, border: '1px solid #e0f2fe' }}>
                     <strong style={{ color: '#0891b2' }}>Ghi chú kết quả:</strong>
                     <div style={{ marginTop: 6, color: '#374151' }}>{resultData.resultNote}</div>
                   </div>
                 )}
+                
                 {resultData.notes && (
                   <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 6 }}>
                     <strong>Ghi chú booking:</strong> {resultData.notes}
                   </div>
                 )}
+                
                 {resultData.lastUpdated && (
                   <div style={{ marginTop: 16, fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>
                     <strong>Cập nhật lần cuối:</strong> {new Date(resultData.lastUpdated).toLocaleString('vi-VN') || resultData.lastUpdated}
@@ -280,6 +433,7 @@ const MyTestBookings = () => {
             ) : (
               <div style={{ color: '#757575' }}>Không có dữ liệu kết quả.</div>
             )}
+            </div>
           </div>
         </div>
       )}

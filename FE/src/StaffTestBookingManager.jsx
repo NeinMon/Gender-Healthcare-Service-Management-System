@@ -27,18 +27,22 @@ const StaffTestBookingManager = () => {
   const [showAccount, setShowAccount] = useState(false);
   const [showResultPopup, setShowResultPopup] = useState(false);
   const [pendingCheckoutId, setPendingCheckoutId] = useState(null);
-  const [selectedResult, setSelectedResult] = useState("");
+  const [selectedParameters, setSelectedParameters] = useState({});
   const [resultNote, setResultNote] = useState("");
   const [showViewResultModal, setShowViewResultModal] = useState(false);
   const [viewResultData, setViewResultData] = useState(null);
   const [showEditResultModal, setShowEditResultModal] = useState(false);
   const [editResultData, setEditResultData] = useState(null);
-  const [editingResult, setEditingResult] = useState("");
+  const [editingParameters, setEditingParameters] = useState({});
   const [editingResultNote, setEditingResultNote] = useState("");
+  const [testParameters, setTestParameters] = useState([]);
+  const [currentBooking, setCurrentBooking] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
   const [testTypeFilter, setTestTypeFilter] = useState("");
   const [serviceNames, setServiceNames] = useState({});
   const [serviceNamesLoaded, setServiceNamesLoaded] = useState(false);
+  const [overallResult, setOverallResult] = useState("");
+  const [overallStatus, setOverallStatus] = useState("NORMAL"); // Mặc định là bình thường
   const navigate = useNavigate();
 
   // Hàm helper cho màu sắc trạng thái
@@ -214,40 +218,159 @@ const StaffTestBookingManager = () => {
   };
 
   // Hàm mở popup để gửi kết quả
-  const openResultPopup = (id) => {
-    setPendingCheckoutId(id);
-    setShowResultPopup(true);
+  const openResultPopup = async (id) => {
+    const booking = bookings.find(b => b.id === id);
+    if (!booking) {
+      alert("Không tìm thấy thông tin booking!");
+      return;
+    }
+    
+    console.log("Opening result popup for booking:", booking);
+    console.log("Service ID:", booking.serviceId);
+    
+    try {
+      setCurrentBooking(booking);
+      setPendingCheckoutId(id);
+      setShowResultPopup(true);
+      
+      // Lấy test parameters cho service này
+      const parametersUrl = `http://localhost:8080/api/service-test-parameters/service/${booking.serviceId}`;
+      console.log("Fetching parameters from:", parametersUrl);
+      
+      const parametersResponse = await fetch(parametersUrl);
+      console.log("Parameters response status:", parametersResponse.status);
+      
+      if (parametersResponse.ok) {
+        const parameters = await parametersResponse.json();
+        console.log("Parameters received:", parameters);
+        
+        if (parameters && parameters.length > 0) {
+          setTestParameters(parameters);
+          
+          // Khởi tạo selectedParameters với giá trị rỗng
+          const initialParams = {};
+          parameters.forEach(param => {
+            initialParams[param.parameterId] = '';
+          });
+          setSelectedParameters(initialParams);
+        } else {
+          console.warn("No parameters found for service", booking.serviceId);
+          // Khởi tạo với parameters mặc định cho testing
+          const defaultParams = [
+            { parameterId: 'temp1', parameterName: 'Kết quả chung', unit: '', normalRange: 'Âm tính/Dương tính' }
+          ];
+          setTestParameters(defaultParams);
+          setSelectedParameters({ 'temp1': '' });
+        }
+      } else {
+        const errorText = await parametersResponse.text();
+        console.error("Error fetching parameters:", errorText);
+        
+        // Fallback: tạo parameters mặc định
+        const fallbackParams = [
+          { parameterId: 'fallback1', parameterName: 'Kết quả xét nghiệm', unit: '', normalRange: 'Âm tính/Dương tính' },
+          { parameterId: 'fallback2', parameterName: 'Ghi chú bổ sung', unit: '', normalRange: 'Tùy chọn' }
+        ];
+        setTestParameters(fallbackParams);
+        setSelectedParameters({ 'fallback1': '', 'fallback2': '' });
+        
+        console.warn("Using fallback parameters due to API error");
+      }
+      
+    } catch (error) {
+      console.error("Error loading test parameters:", error);
+      
+      // Fallback parameters kể cả khi có exception
+      const emergencyParams = [
+        { parameterId: 'emergency1', parameterName: 'Kết quả', unit: '', normalRange: 'Nhập kết quả' }
+      ];
+      setTestParameters(emergencyParams);
+      setSelectedParameters({ 'emergency1': '' });
+      
+      alert("Không thể tải thông tin tham số xét nghiệm từ server. Sử dụng form đơn giản.");
+    }
   };
 
   // Xác nhận và gửi kết quả xét nghiệm (chuyển từ "Đã check-out" thành "Đã kết thúc")
   const handleConfirmResult = async () => {
-    if (!selectedResult) {
-      alert("Vui lòng chọn kết quả xét nghiệm!");
+    // Kiểm tra có tham số nào được nhập chưa
+    const hasValues = Object.values(selectedParameters).some(value => value && value.trim() !== '');
+    if (!hasValues && (!overallResult || overallResult.trim() === '')) {
+      alert("Vui lòng nhập ít nhất một giá trị tham số hoặc kết quả tổng quát!");
       return;
     }
     
     try {
-      // Chuyển trạng thái thành "Đã kết thúc" với kết quả
-      const completeParams = new URLSearchParams({
-        status: "Đã kết thúc",
-        testResult: selectedResult,
-        resultNote: resultNote || "",
-        staffName: staff.fullName || ""
-      }).toString();
-      
+      // Lặp qua từng parameter và gửi từng thông số một với kết quả tổng quát
+      const parameterEntries = Object.entries(selectedParameters)
+        .filter(([_, value]) => value && value.trim() !== '');
+
+      // Nếu có kết quả chi tiết, gửi từng thông số
+      if (parameterEntries.length > 0) {
+        let summaryCreated = false;
+        for (const [parameterId, value] of parameterEntries) {
+          const isNumericId = !isNaN(parseInt(parameterId));
+          const testResultObj = {
+            testBookingInfoId: pendingCheckoutId,
+            parameterId: isNumericId ? parseInt(parameterId) : parameterId,
+            resultValue: value.trim(),
+            note: resultNote || "",
+            status: overallStatus || "NORMAL",
+            // Chỉ gửi kết quả tổng quát với parameter đầu tiên để tránh trùng lặp
+            overallResult: !summaryCreated && overallResult ? overallResult.trim() : null,
+            overallStatus: !summaryCreated ? (overallStatus || "NORMAL") : null,
+            overallNote: !summaryCreated ? resultNote : null
+          };
+          
+          // Gửi từng thông số với endpoint mới
+          const res = await fetch('http://localhost:8080/api/test-results/with-summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(testResultObj)
+          });
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Gửi kết quả cho tham số ${parameterId} thất bại: ${errorText}`);
+          }
+          summaryCreated = true; // Đánh dấu đã tạo summary
+        }
+      } else {
+        // Nếu chỉ có kết quả tổng quát, chỉ lưu summary
+        const summaryObj = {
+          testBookingInfoId: pendingCheckoutId,
+          overallResult: overallResult.trim(),
+          overallStatus: overallStatus || "NORMAL",
+          note: resultNote || ""
+        };
+        
+        const summaryRes = await fetch('http://localhost:8080/api/test-result-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(summaryObj)
+        });
+        if (!summaryRes.ok) {
+          const errorText = await summaryRes.text();
+          throw new Error(`Gửi kết quả tổng quát thất bại: ${errorText}`);
+        }
+      }
+
+      // Chuyển trạng thái thành "Đã kết thúc"
       const completeRes = await fetch(
-        `http://localhost:8080/api/test-bookings/${pendingCheckoutId}/status?${completeParams}`,
+        `http://localhost:8080/api/test-bookings/${pendingCheckoutId}/status?status=${encodeURIComponent("Đã kết thúc")}`,
         { method: "PUT" }
       );
-      
       if (!completeRes.ok) {
         throw new Error(`Không thể hoàn thành xét nghiệm. Mã lỗi: ${completeRes.status}`);
       }
-      
+
       setShowResultPopup(false);
       setPendingCheckoutId(null);
-      setSelectedResult("");
+      setSelectedParameters({});
       setResultNote("");
+      setOverallResult("");
+      setOverallStatus("NORMAL");
+      setTestParameters([]);
+      setCurrentBooking(null);
       fetchBookings();
       alert("Đã gửi kết quả xét nghiệm thành công!");
     } catch (error) {
@@ -259,12 +382,64 @@ const StaffTestBookingManager = () => {
   // Hàm xem kết quả xét nghiệm đã hoàn thành
   const handleViewResult = async (booking) => {
     try {
-      // Lấy thông tin chi tiết từ API
-      const response = await fetch(`http://localhost:8080/api/test-bookings/${booking.id}/detail`);
-      if (!response.ok) {
-        throw new Error('Không thể lấy thông tin chi tiết');
+      console.log("Fetching test results for booking ID:", booking.id);
+      
+      // Lấy test result từ API mới (dùng testBookingInfoId)
+      const response = await fetch(`http://localhost:8080/api/test-results/test-booking/${booking.id}`);
+      console.log("Test results response status:", response.status);
+      
+      let testResults = [];
+      let parameterNames = {}; // Để map ID tham số với tên tham số
+      if (response.ok) {
+        testResults = await response.json();
+        console.log("Test results:", testResults);
+        
+        // Lấy thông tin tên tham số từ API service-test-parameters
+        if (testResults.length > 0) {
+          try {
+            const serviceId = booking.serviceId;
+            if (serviceId) {
+              console.log("Fetching parameter names for service:", serviceId);
+              const parametersResponse = await fetch(`http://localhost:8080/api/service-test-parameters/service/${serviceId}`);
+              if (parametersResponse.ok) {
+                const parameters = await parametersResponse.json();
+                console.log("Service parameters:", parameters);
+                
+                // Tạo map từ parameterId sang parameterName
+                parameters.forEach(param => {
+                  parameterNames[param.parameterId] = param.parameterName;
+                });
+              }
+            }
+          } catch (paramError) {
+            console.log("Error fetching parameter names:", paramError);
+          }
+        }
+      } else if (response.status === 404) {
+        console.log("No test results found for this booking");
+        testResults = [];
+      } else {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error('Không thể lấy thông tin kết quả chi tiết');
       }
-      const detail = await response.json();
+      
+      // Lấy kết quả tổng quát
+      let summaryData = null;
+      try {
+        console.log("Fetching summary for booking ID:", booking.id);
+        const summaryResponse = await fetch(`http://localhost:8080/api/test-result-summary/test-booking/${booking.id}`);
+        console.log("Summary response status:", summaryResponse.status);
+        
+        if (summaryResponse.ok) {
+          summaryData = await summaryResponse.json();
+          console.log("Summary data:", summaryData);
+        } else if (summaryResponse.status === 404) {
+          console.log("No summary found for this booking");
+        }
+      } catch (summaryError) {
+        console.log("Error fetching summary:", summaryError);
+      }
       
       setViewResultData({
         customerName: booking.fullName,
@@ -272,12 +447,14 @@ const StaffTestBookingManager = () => {
         serviceName: booking.serviceName,
         appointmentDate: booking.appointmentDate,
         appointmentTime: booking.startTime,
-        testResult: detail.testResults || 'Chưa có kết quả',
-        resultNote: detail.resultNote || '',
+        testResults: testResults,
+        parameterNames: parameterNames, // Thêm map tên tham số
+        summary: summaryData,
         bookingContent: booking.notes
       });
       setShowViewResultModal(true);
     } catch (error) {
+      console.error("Error in handleViewResult:", error);
       alert("Không thể tải thông tin kết quả: " + error.message);
     }
   };
@@ -285,58 +462,157 @@ const StaffTestBookingManager = () => {
   // Hàm mở modal chỉnh sửa kết quả
   const handleEditResult = async (booking) => {
     try {
-      // Lấy thông tin chi tiết từ API
-      const response = await fetch(`http://localhost:8080/api/test-bookings/${booking.id}/detail`);
-      if (!response.ok) {
-        throw new Error('Không thể lấy thông tin chi tiết');
-      }
-      const detail = await response.json();
+      console.log("Fetching test results for editing, booking ID:", booking.id);
       
+      // Lấy test result từ API mới (dùng testBookingInfoId)
+      const response = await fetch(`http://localhost:8080/api/test-results/test-booking/${booking.id}`);
+      console.log("Test results response status:", response.status);
+      
+      let testResults = [];
+      if (response.ok) {
+        testResults = await response.json();
+        console.log("Test results for editing:", testResults);
+      } else if (response.status === 404) {
+        console.log("No test results found for editing");
+        testResults = [];
+      } else {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error('Không thể lấy thông tin kết quả chi tiết');
+      }
+
+      // Lấy test parameters cho service này
+      const parametersResponse = await fetch(`http://localhost:8080/api/service-test-parameters/service/${booking.serviceId}`);
+      if (parametersResponse.ok) {
+        const parameters = await parametersResponse.json();
+        setTestParameters(parameters);
+        // Khởi tạo editing parameters với giá trị hiện tại
+        const currentParams = {};
+        parameters.forEach(param => {
+          const existing = testResults.find(tr => tr.parameterId === param.parameterId);
+          currentParams[param.parameterId] = existing ? existing.resultValue : '';
+        });
+        setEditingParameters(currentParams);
+      } else {
+        console.log("No parameters found for service:", booking.serviceId);
+        setTestParameters([]);
+        setEditingParameters({});
+      }
+
       setEditResultData({
         id: booking.id,
+        // Không set resultId vì có thể có nhiều result, sẽ lấy từng cái khi update
         customerName: booking.fullName,
         phone: booking.phone,
         serviceName: booking.serviceName,
         appointmentDate: booking.appointmentDate,
         appointmentTime: booking.startTime,
-        currentResult: detail.testResults || '',
-        currentResultNote: detail.resultNote || '',
-        bookingContent: booking.notes
+        bookingContent: booking.notes,
+        testResults: testResults
       });
-      setEditingResult(detail.testResults || '');
-      setEditingResultNote(detail.resultNote || '');
+      setEditingResultNote('');
       setShowEditResultModal(true);
     } catch (error) {
+      console.error("Error in handleEditResult:", error);
       alert("Không thể tải thông tin kết quả: " + error.message);
     }
   };
 
   // Hàm cập nhật kết quả xét nghiệm
   const handleUpdateResult = async () => {
-    if (!editingResult) {
-      alert("Vui lòng chọn kết quả xét nghiệm!");
+    console.log("Starting handleUpdateResult");
+    console.log("editResultData:", editResultData);
+    console.log("editingParameters:", editingParameters);
+    
+    // Kiểm tra có tham số nào được nhập chưa
+    const hasValues = Object.values(editingParameters).some(value => value && value.trim() !== '');
+    if (!hasValues) {
+      alert("Vui lòng nhập ít nhất một giá trị tham số!");
       return;
     }
     
     try {
-      const updateParams = new URLSearchParams({
-        testResult: editingResult,
-        resultNote: editingResultNote || ""
-      }).toString();
-      
-      const response = await fetch(
-        `http://localhost:8080/api/test-bookings/${editResultData.id}/update-result?${updateParams}`,
-        { method: "PUT" }
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Không thể cập nhật kết quả. Mã lỗi: ${response.status}`);
+      // Lặp qua từng parameter và cập nhật từng result
+      const parameterEntries = Object.entries(editingParameters)
+        .filter(([_, value]) => value && value.trim() !== '');
+
+      for (const [parameterId, value] of parameterEntries) {
+        console.log(`Processing parameter ${parameterId} with value: ${value}`);
+        
+        // Tìm test result existing cho parameter này
+        const existingResult = editResultData.testResults.find(tr => 
+          tr.parameterId.toString() === parameterId.toString()
+        );
+        
+        console.log(`Existing result for parameter ${parameterId}:`, existingResult);
+        
+        if (existingResult) {
+          // Cập nhật result existing
+          const updateData = {
+            resultId: existingResult.resultId,
+            testBookingInfoId: editResultData.id,
+            parameterId: parseInt(parameterId),
+            resultValue: value.trim(),
+            note: editingResultNote || "",
+            status: "NORMAL", // Hoặc logic khác để xác định status
+            createdAt: existingResult.createdAt, // Giữ nguyên createdAt
+            updatedAt: new Date().toISOString() // Cập nhật updatedAt
+          };
+          
+          console.log(`Updating existing result with data:`, updateData);
+          
+          const response = await fetch(
+            `http://localhost:8080/api/test-results/${existingResult.resultId}`,
+            { 
+              method: "PUT",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updateData)
+            }
+          );
+          
+          console.log(`Update response status: ${response.status}`);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Update error response:`, errorText);
+            throw new Error(`Không thể cập nhật kết quả cho tham số ${parameterId}. Mã lỗi: ${response.status}`);
+          }
+        } else {
+          // Tạo mới result nếu chưa có
+          const createData = {
+            testBookingInfoId: editResultData.id,
+            parameterId: parseInt(parameterId),
+            resultValue: value.trim(),
+            note: editingResultNote || "",
+            status: "NORMAL"
+          };
+          
+          console.log(`Creating new result with data:`, createData);
+          
+          const response = await fetch(
+            `http://localhost:8080/api/test-results`,
+            { 
+              method: "POST",
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(createData)
+            }
+          );
+          
+          console.log(`Create response status: ${response.status}`);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Create error response:`, errorText);
+            throw new Error(`Không thể tạo kết quả cho tham số ${parameterId}. Mã lỗi: ${response.status}`);
+          }
+        }
       }
       
       setShowEditResultModal(false);
       setEditResultData(null);
-      setEditingResult("");
+      setEditingParameters({});
       setEditingResultNote("");
+      setTestParameters([]);
       fetchBookings();
       alert("Đã cập nhật kết quả xét nghiệm thành công!");
     } catch (error) {
@@ -796,15 +1072,17 @@ const StaffTestBookingManager = () => {
           position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.25)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
         }}>
-          <div style={{ 
-            background: "#fff", 
-            padding: 32, 
-            borderRadius: 12, 
-            minWidth: 500,
-            maxWidth: '90vw',
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-            position: 'relative'
-          }}>
+      <div style={{ 
+        background: "#fff", 
+        padding: 32, 
+        borderRadius: 12, 
+        minWidth: 500,
+        maxWidth: '90vw',
+        maxHeight: '85vh', // Thêm chiều cao tối đa
+        overflow: 'auto', // Thêm thanh cuộn khi nội dung vượt quá kích thước
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        position: 'relative'
+      }}>
             <button 
               onClick={() => setShowViewResultModal(false)}
               style={{
@@ -828,25 +1106,75 @@ const StaffTestBookingManager = () => {
               <div style={{ marginBottom: 12 }}><strong>Loại xét nghiệm:</strong> {viewResultData.serviceName}</div>
               <div style={{ marginBottom: 12 }}><strong>Ngày khám:</strong> {viewResultData.appointmentDate}</div>
               <div style={{ marginBottom: 12 }}><strong>Giờ khám:</strong> {viewResultData.appointmentTime || 'N/A'}</div>
-              <div style={{ marginBottom: 12 }}><strong>Kết quả:</strong> 
-                <span style={{ 
-                  fontWeight: 600, 
-                  color: viewResultData.testResult === 'Dương tính' ? '#dc2626' : viewResultData.testResult === 'Âm tính' ? '#059669' : '#6b7280',
-                  backgroundColor: viewResultData.testResult === 'Dương tính' ? '#fef2f2' : viewResultData.testResult === 'Âm tính' ? '#f0fdf4' : '#f9fafb',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  border: `1px solid ${viewResultData.testResult === 'Dương tính' ? '#fecaca' : viewResultData.testResult === 'Âm tính' ? '#bbf7d0' : '#e5e7eb'}`
-                }}>
-                  {viewResultData.testResult}
-                </span>
-              </div>
               
-              {viewResultData.resultNote && (
-                <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#f0f9ff', borderRadius: 6, border: '1px solid #e0f2fe' }}>
-                  <strong style={{ color: '#0891b2' }}>Ghi chú kết quả:</strong>
-                  <div style={{ marginTop: 6, color: '#374151' }}>{viewResultData.resultNote}</div>
+              {/* Hiển thị kết quả tổng quát */}
+              {viewResultData.summary && (
+                <div style={{ marginBottom: 20, padding: 16, backgroundColor: '#f0f9ff', borderRadius: 8, border: '1px solid #22d3ee' }}>
+                  <strong style={{ display: 'block', marginBottom: 12, color: '#0891b2', fontSize: 16 }}>Kết quả tổng quát:</strong>
+                  
+                  {viewResultData.summary.overallResult && (
+                    <div style={{ marginBottom: 10 }}>
+                      <strong>Kết luận:</strong> 
+                      <div style={{ marginTop: 4, color: '#374151', fontStyle: 'italic' }}>
+                        {viewResultData.summary.overallResult}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div style={{ marginBottom: 10 }}>
+                    <strong>Trạng thái tổng quát:</strong> 
+                    <span style={{ 
+                      fontWeight: 600, 
+                      color: viewResultData.summary.overallStatus === 'NORMAL' ? '#059669' : '#dc2626',
+                      backgroundColor: viewResultData.summary.overallStatus === 'NORMAL' ? '#f0fdf4' : '#fef2f2',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      marginLeft: '8px',
+                      border: `1px solid ${viewResultData.summary.overallStatus === 'NORMAL' ? '#bbf7d0' : '#fecaca'}`
+                    }}>
+                      {viewResultData.summary.overallStatus === 'NORMAL' ? 'Bình thường' : 'Bất thường'}
+                    </span>
+                  </div>
+                  
+                  {viewResultData.summary.note && (
+                    <div style={{ marginTop: 10 }}>
+                      <strong>Ghi chú tổng quát:</strong>
+                      <div style={{ marginTop: 4, color: '#374151' }}>{viewResultData.summary.note}</div>
+                    </div>
+                  )}
+                  
+                  <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
+                    <strong>Cập nhật lần cuối:</strong> {new Date(viewResultData.summary.updatedAt).toLocaleString('vi-VN')}
+                  </div>
                 </div>
               )}
+
+              {/* Hiển thị kết quả theo parameter */}
+              <div style={{ marginBottom: 16 }}>
+                <strong style={{ display: 'block', marginBottom: 8, color: '#0891b2' }}>Kết quả chi tiết theo tham số:</strong>
+                {viewResultData.testResults && viewResultData.testResults.length > 0 ? (
+                  <div style={{ 
+                    backgroundColor: '#f8f9fa', 
+                    padding: 12, 
+                    borderRadius: 6,
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    {viewResultData.testResults.map((tr, index) => (
+                      <div key={index} style={{ marginBottom: 12, paddingBottom: 8, borderBottom: index < viewResultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                        <div><strong>Tham số:</strong> {viewResultData.parameterNames[tr.parameterId] || tr.parameterId}</div>
+                        <div><strong>Kết quả:</strong> {tr.resultValue} {tr.unit || ''}</div>
+                        <div><strong>Trạng thái:</strong> <span style={{
+                          color: tr.status === 'NORMAL' ? '#059669' : '#dc2626',
+                          fontWeight: 600
+                        }}>{tr.status === 'NORMAL' ? 'Bình thường' : tr.status}</span></div>
+                        {tr.note && <div><strong>Ghi chú:</strong> {tr.note}</div>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Chưa có kết quả chi tiết</div>
+                )}
+              </div>
               
               {viewResultData.bookingContent && (
                 <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 6 }}>
@@ -883,15 +1211,17 @@ const StaffTestBookingManager = () => {
           position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.25)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
         }}>
-          <div style={{ 
-            background: "#fff", 
-            padding: 32, 
-            borderRadius: 12, 
-            minWidth: 500,
-            maxWidth: '90vw',
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-            position: 'relative'
-          }}>
+      <div style={{ 
+        background: "#fff", 
+        padding: 32, 
+        borderRadius: 12, 
+        minWidth: 500,
+        maxWidth: '90vw',
+        maxHeight: '85vh', // Thêm chiều cao tối đa
+        overflow: 'auto', // Thêm thanh cuộn khi nội dung vượt quá kích thước
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        position: 'relative'
+      }}>
             <button 
               onClick={() => setShowEditResultModal(false)}
               style={{
@@ -920,22 +1250,53 @@ const StaffTestBookingManager = () => {
             
             {/* Form chỉnh sửa */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Kết quả xét nghiệm:</label>
-              <select 
-                value={editingResult} 
-                onChange={e => setEditingResult(e.target.value)} 
-                style={{ 
-                  width: "100%", 
-                  padding: "10px 12px", 
-                  borderRadius: 8, 
-                  border: '1px solid #cbd5e1',
-                  fontSize: '16px'
-                }}
-              >
-                <option value="">-- Chọn kết quả --</option>
-                <option value="Âm tính">Âm tính</option>
-                <option value="Dương tính">Dương tính</option>
-              </select>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Tham số xét nghiệm:</label>
+              {testParameters.length > 0 ? (
+                <div style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  padding: 16, 
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb'
+                }}>
+                  {testParameters.map((param) => (
+                    <div key={param.parameterId} style={{ marginBottom: 12 }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: 4, 
+                        fontWeight: 500,
+                        color: '#374151'
+                      }}>
+                        {param.parameterName} {param.unit ? `(${param.unit})` : ''}:
+                      </label>
+                      <input
+                        type="text"
+                        value={editingParameters[param.parameterId] || ''}
+                        onChange={e => setEditingParameters(prev => ({
+                          ...prev,
+                          [param.parameterId]: e.target.value
+                        }))}
+                        placeholder={`Nhập ${param.parameterName.toLowerCase()}`}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: 6,
+                          border: '1px solid #cbd5e1',
+                          fontSize: '14px'
+                        }}
+                      />
+                      {param.referenceRange && (
+                        <small style={{ color: '#6b7280', fontSize: '12px' }}>
+                          Giá trị bình thường: {param.referenceRange}
+                        </small>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                  Đang tải tham số xét nghiệm...
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: 24 }}>
@@ -961,8 +1322,9 @@ const StaffTestBookingManager = () => {
                 onClick={() => { 
                   setShowEditResultModal(false); 
                   setEditResultData(null); 
-                  setEditingResult(""); 
+                  setEditingParameters({}); 
                   setEditingResultNote("");
+                  setTestParameters([]);
                 }}
                 style={{
                   background: '#e0f2fe',
@@ -1004,47 +1366,126 @@ const StaffTestBookingManager = () => {
           position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.25)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
         }}>
-          <div style={{ 
-            background: "#fff", 
-            padding: 32, 
-            borderRadius: 12, 
-            minWidth: 450,
-            maxWidth: '90vw',
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-            position: 'relative'
-          }}>
+      <div style={{ 
+        background: "#fff", 
+        padding: 32, 
+        borderRadius: 12, 
+        minWidth: 450,
+        maxWidth: '90vw',
+        maxHeight: '85vh', // Thêm chiều cao tối đa
+        overflow: 'auto', // Thêm thanh cuộn khi nội dung vượt quá kích thước
+        boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        position: 'relative'
+      }}>
             <h2 style={{ color: '#0891b2', marginBottom: 18, fontWeight: 700, fontSize: 24 }}>Gửi kết quả xét nghiệm</h2>
             
             {/* Thông tin khách hàng và loại xét nghiệm */}
-            {pendingCheckoutId && bookings.find(b => b.id === pendingCheckoutId) && (
+            {currentBooking && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 10 }}><b>Khách hàng:</b> {bookings.find(b => b.id === pendingCheckoutId)?.fullName}</div>
+                <div style={{ marginBottom: 10 }}><b>Khách hàng:</b> {currentBooking.fullName}</div>
                 <div style={{ marginBottom: 10 }}>
-                  <b>Loại xét nghiệm:</b> {bookings.find(b => b.id === pendingCheckoutId)?.serviceName || "N/A"}
+                  <b>Loại xét nghiệm:</b> {currentBooking.serviceName || "N/A"}
                 </div>
-                <div style={{ marginBottom: 10 }}><b>Ngày khám:</b> {bookings.find(b => b.id === pendingCheckoutId)?.appointmentDate}</div>
+                <div style={{ marginBottom: 10 }}><b>Ngày khám:</b> {currentBooking.appointmentDate}</div>
               </div>
             )}
             
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Kết quả xét nghiệm:</label>
-              <select 
-                value={selectedResult} 
-                onChange={e => setSelectedResult(e.target.value)} 
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Tham số xét nghiệm:</label>
+              {testParameters.length > 0 ? (
+                <div style={{ 
+                  backgroundColor: '#f8f9fa', 
+                  padding: 16, 
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb'
+                }}>
+                  {testParameters.map((param) => (
+                    <div key={param.parameterId} style={{ marginBottom: 12 }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: 4, 
+                        fontWeight: 500,
+                        color: '#374151'
+                      }}>
+                        {param.parameterName} {param.unit ? `(${param.unit})` : ''}:
+                      </label>
+                      <input
+                        type="text"
+                        value={selectedParameters[param.parameterId] || ''}
+                        onChange={e => setSelectedParameters(prev => ({
+                          ...prev,
+                          [param.parameterId]: e.target.value
+                        }))}
+                        placeholder={`Nhập ${param.parameterName.toLowerCase()}`}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: 6,
+                          border: '1px solid #cbd5e1',
+                          fontSize: '14px'
+                        }}
+                      />
+                      {param.referenceRange && (
+                        <small style={{ color: '#6b7280', fontSize: '12px' }}>
+                          Giá trị bình thường: {param.referenceRange}
+                        </small>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                  Đang tải tham số xét nghiệm...
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Kết quả tổng quát:</label>
+              <textarea 
+                value={overallResult} 
+                onChange={e => setOverallResult(e.target.value)} 
+                placeholder="Nhập kết luận tổng quát về xét nghiệm..."
                 style={{ 
                   width: "100%", 
                   padding: "10px 12px", 
                   borderRadius: 8, 
                   border: '1px solid #cbd5e1',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  minHeight: '80px',
+                  resize: 'vertical'
                 }}
-              >
-                <option value="">-- Chọn kết quả --</option>
-                <option value="Âm tính">Âm tính</option>
-                <option value="Dương tính">Dương tính</option>
-              </select>
+              />
             </div>
 
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Trạng thái kết quả:</label>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <input 
+                    type="radio" 
+                    name="resultStatus" 
+                    value="NORMAL" 
+                    checked={overallStatus === "NORMAL"} 
+                    onChange={() => setOverallStatus("NORMAL")}
+                    style={{ marginRight: "6px" }}
+                  />
+                  <span style={{ color: "#059669", fontWeight: 500 }}>Bình thường</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <input 
+                    type="radio" 
+                    name="resultStatus" 
+                    value="ABNORMAL" 
+                    checked={overallStatus === "ABNORMAL"} 
+                    onChange={() => setOverallStatus("ABNORMAL")} 
+                    style={{ marginRight: "6px" }}
+                  />
+                  <span style={{ color: "#dc2626", fontWeight: 500 }}>Bất thường</span>
+                </label>
+              </div>
+            </div>
+            
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Ghi chú kết quả (tùy chọn):</label>
               <textarea 
@@ -1068,8 +1509,10 @@ const StaffTestBookingManager = () => {
                 onClick={() => { 
                   setShowResultPopup(false); 
                   setPendingCheckoutId(null); 
-                  setSelectedResult(""); 
+                  setSelectedParameters({}); 
                   setResultNote("");
+                  setTestParameters([]);
+                  setCurrentBooking(null);
                 }}
                 style={{
                   background: '#e0f2fe',

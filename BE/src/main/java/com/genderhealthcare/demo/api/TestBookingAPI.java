@@ -200,18 +200,16 @@ public class TestBookingAPI {
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable("id") Integer id,
                                           @RequestParam("status") String status,
-                                          @RequestParam(value = "testResult", required = false) String testResult,
-                                          @RequestParam(value = "resultNote", required = false) String resultNote,
                                           @RequestParam(value = "staffName", required = false) String staffName) {
         try {
             TestBookingInfo updated;
             
-            if ("Đã check-out".equals(status) && testResult != null) {
-                // Cập nhật thành check-out với kết quả
-                updated = testBookingInfoService.updateTestStatusWithResult(id, status, testResult, resultNote);
+            if ("Đã check-out".equals(status)) {
+                // Cập nhật thành check-out
+                updated = testBookingInfoService.updateTestStatusToCheckout(id);
             } else if ("Đã kết thúc".equals(status)) {
                 // Hoàn thành test booking - chuyển từ check-out sang kết thúc
-                updated = testBookingInfoService.completeTestBooking(id, testResult, resultNote, staffName);
+                updated = testBookingInfoService.completeTestBooking(id);
             } else {
                 // Cập nhật trạng thái thông thường (check-in, etc.)
                 updated = testBookingInfoService.updateTestStatus(id, status);
@@ -281,8 +279,9 @@ public class TestBookingAPI {
                         .body("Không tìm thấy thông tin đặt xét nghiệm với ID: " + id);
             }
             
-            // Sử dụng phương thức hiện có để cập nhật trạng thái và kết quả
-            TestBookingInfo updated = testBookingInfoService.updateTestStatusWithResult(id, testStatus, testResult, resultNote);
+            // Cập nhật trạng thái thành check-out (không cần kết quả ở đây)
+            // Kết quả xét nghiệm được quản lý trong hệ thống TestResult riêng
+            TestBookingInfo updated = testBookingInfoService.updateTestStatusToCheckout(id);
             
             return ResponseEntity.ok(updated);
             
@@ -320,12 +319,15 @@ public class TestBookingAPI {
                         .body("Chỉ có thể cập nhật kết quả cho xét nghiệm đã hoàn thành");
             }
             
-            // Cập nhật kết quả và ghi chú
-            existing.setTestResults(testResult);
-            existing.setResultNote(resultNote);
-            TestBookingInfo updated = testBookingInfoService.updateTestBookingInfo(id, existing);
+            // Ghi chú: Với hệ thống mới, kết quả xét nghiệm được quản lý trong bảng test_result riêng
+            // API này không còn cần thiết và sẽ trả về thông báo hướng dẫn
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("API này đã được thay thế. Vui lòng sử dụng hệ thống TestResult API để quản lý kết quả xét nghiệm.");
             
-            return ResponseEntity.ok(updated);
+            // Không cần cập nhật kết quả ở đây nữa
+            // TestBookingInfo updated = testBookingInfoService.updateTestBookingInfo(id, existing);
+            
+            // return ResponseEntity.ok(updated);
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

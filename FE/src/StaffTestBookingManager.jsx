@@ -8,6 +8,8 @@ import {
   getServiceId,
   getServiceName,
   getStatusColor,
+  formatTestStatus,
+  getTestStatusColor,
   fetchBookings,
   updateBookingStatus,
   fetchTestParameters,
@@ -1083,15 +1085,14 @@ const StaffTestBookingManager = () => {
                   <div style={{ marginBottom: 10 }}>
                     <strong>Trạng thái tổng quát:</strong> 
                     <span style={{ 
-                      fontWeight: 600, 
-                      color: viewResultData.summary.overallStatus === 'NORMAL' ? '#059669' : '#dc2626',
-                      backgroundColor: viewResultData.summary.overallStatus === 'NORMAL' ? '#f0fdf4' : '#fef2f2',
+                      fontWeight: 600,
+                      ...getTestStatusColor(viewResultData.summary.overallStatus),
                       padding: '4px 8px',
                       borderRadius: '4px',
                       marginLeft: '8px',
                       border: `1px solid ${viewResultData.summary.overallStatus === 'NORMAL' ? '#bbf7d0' : '#fecaca'}`
                     }}>
-                      {viewResultData.summary.overallStatus === 'NORMAL' ? 'Bình thường' : 'Bất thường'}
+                      {formatTestStatus(viewResultData.summary.overallStatus)}
                     </span>
                   </div>
                   
@@ -1122,10 +1123,18 @@ const StaffTestBookingManager = () => {
                       <div key={index} style={{ marginBottom: 12, paddingBottom: 8, borderBottom: index < viewResultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
                         <div><strong>Tham số:</strong> {viewResultData.parameterNames[tr.parameterId] || tr.parameterId}</div>
                         <div><strong>Kết quả:</strong> {tr.resultValue} {tr.unit || ''}</div>
-                        <div><strong>Trạng thái:</strong> <span style={{
-                          color: tr.status === 'NORMAL' ? '#059669' : '#dc2626',
-                          fontWeight: 600
-                        }}>{tr.status === 'NORMAL' ? 'Bình thường' : tr.status}</span></div>
+                        <div><strong>Trạng thái:</strong> 
+                          <span style={{
+                            ...getTestStatusColor(tr.status),
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            marginLeft: '8px'
+                          }}>
+                            {formatTestStatus(tr.status)}
+                          </span>
+                        </div>
                         {tr.note && <div><strong>Ghi chú:</strong> {tr.note}</div>}
                       </div>
                     ))}

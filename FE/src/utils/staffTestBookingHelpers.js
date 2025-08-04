@@ -78,6 +78,77 @@ export const getStatusColor = (status) => {
 };
 
 /**
+ * Format trạng thái xét nghiệm chi tiết tiếng Việt
+ */
+export const formatTestStatus = (status) => {
+  if (!status) return 'Không xác định';
+  
+  const statusUpper = status.toString().toUpperCase();
+  switch (statusUpper) {
+    case 'NORMAL':
+    case 'Normal':
+      return 'Bình thường';
+    case 'HIGH':
+    case 'High':
+      return 'Cao hơn bình thường';
+    case 'LOW':
+    case 'Low':
+      return 'Thấp hơn bình thường';
+    case 'ABNORMAL':
+    case 'Abnormal':
+      return 'Bất thường';
+    case 'CRITICAL':
+    case 'Critical':
+      return 'Nguy hiểm';
+    case 'BORDERLINE':
+    case 'Borderline':
+      return 'Biên giới';
+    case 'ELEVATED':
+    case 'Elevated':
+      return 'Tăng cao';
+    case 'DECREASED':
+    case 'Decreased':
+      return 'Giảm thấp';
+    default:
+      return status;
+  }
+};
+
+/**
+ * Lấy màu sắc cho trạng thái xét nghiệm
+ */
+export const getTestStatusColor = (status) => {
+  if (!status) return { bg: '#f3f4f6', color: '#6b7280' };
+  
+  const statusUpper = status.toString().toUpperCase();
+  switch (statusUpper) {
+    case 'NORMAL':
+    case 'Normal':
+      return { bg: '#f0fdf4', color: '#16a34a' };
+    case 'HIGH':
+    case 'High':
+    case 'ELEVATED':
+    case 'Elevated':
+      return { bg: '#fef3c7', color: '#d97706' };
+    case 'LOW':
+    case 'Low':
+    case 'DECREASED':
+    case 'Decreased':
+      return { bg: '#dbeafe', color: '#2563eb' };
+    case 'ABNORMAL':
+    case 'Abnormal':
+    case 'CRITICAL':
+    case 'Critical':
+      return { bg: '#fef2f2', color: '#dc2626' };
+    case 'BORDERLINE':
+    case 'Borderline':
+      return { bg: '#fdf4ff', color: '#a855f7' };
+    default:
+      return { bg: '#f3f4f6', color: '#6b7280' };
+  }
+};
+
+/**
  * Lấy danh sách test booking từ API
  */
 export const fetchBookings = async (statusFilter) => {

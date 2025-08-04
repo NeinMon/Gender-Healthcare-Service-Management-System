@@ -445,6 +445,36 @@ const StaffTestBookingManager = () => {
         setEditingParameters({});
       }
 
+      // Lấy test result summary hiện có (nếu có)
+      let summaryData = null;
+      try {
+        console.log("Fetching summary for editing, booking ID:", booking.id);
+        const summaryResponse = await fetch(`http://localhost:8080/api/test-result-summary/test-booking/${booking.id}`);
+        console.log("Summary response status:", summaryResponse.status);
+        
+        if (summaryResponse.ok) {
+          summaryData = await summaryResponse.json();
+          console.log("Summary data for editing:", summaryData);
+          
+          // Load dữ liệu summary vào form
+          setEditingOverallResult(summaryData.overallResult || '');
+          setEditingOverallStatus(summaryData.overallStatus || 'NORMAL');
+          setEditingResultNote(summaryData.note || '');
+        } else if (summaryResponse.status === 404) {
+          console.log("No summary found for editing");
+          // Reset form về trạng thái mặc định
+          setEditingOverallResult('');
+          setEditingOverallStatus('NORMAL');
+          setEditingResultNote('');
+        }
+      } catch (summaryError) {
+        console.log("Error fetching summary for editing:", summaryError);
+        // Reset form về trạng thái mặc định nếu có lỗi
+        setEditingOverallResult('');
+        setEditingOverallStatus('NORMAL');
+        setEditingResultNote('');
+      }
+
       setEditResultData({
         id: booking.id,
         // Không set resultId vì có thể có nhiều result, sẽ lấy từng cái khi update
@@ -454,9 +484,10 @@ const StaffTestBookingManager = () => {
         appointmentDate: booking.appointmentDate,
         appointmentTime: booking.startTime,
         bookingContent: booking.notes,
-        testResults: testResults
+        testResults: testResults,
+        summary: summaryData // Thêm summary data để reference
       });
-      setEditingResultNote('');
+      
       setShowEditResultModal(true);
     } catch (error) {
       console.error("Error in handleEditResult:", error);
@@ -487,8 +518,8 @@ const StaffTestBookingManager = () => {
 
     // Kiểm tra có ít nhất một tham số được nhập
     const hasValues = Object.values(editingParameters).some(value => value && value.trim() !== '');
-    if (!hasValues) {
-      alert("Vui lòng nhập ít nhất một giá trị tham số!");
+    if (!hasValues && (!editingOverallResult || editingOverallResult.trim() === '')) {
+      alert("Vui lòng nhập ít nhất một giá trị tham số hoặc kết quả tổng quát!");
       return;
     }
     
@@ -568,11 +599,88 @@ const StaffTestBookingManager = () => {
           }
         }
       }
+
+      // Cập nhật hoặc tạo mới Test Result Summary
+      if (editingOverallResult && editingOverallResult.trim() !== '') {
+        try {
+          // Kiểm tra xem đã có summary cho booking này chưa
+          const summaryResponse = await fetch(`http://localhost:8080/api/test-result-summary/test-booking/${editResultData.id}`);
+          
+          if (summaryResponse.ok) {
+            // Đã có summary, cập nhật
+            const existingSummary = await summaryResponse.json();
+            console.log("Existing summary found:", existingSummary);
+            
+            const updateSummaryData = {
+              testBookingInfoId: editResultData.id,
+              overallResult: editingOverallResult.trim(),
+              overallStatus: editingOverallStatus || "NORMAL",
+              note: editingResultNote || ""
+            };
+            
+            console.log(`Updating summary with data:`, updateSummaryData);
+            
+            const updateSummaryResponse = await fetch(
+              `http://localhost:8080/api/test-result-summary/${existingSummary.id}`,
+              {
+                method: "PUT",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateSummaryData)
+              }
+            );
+            
+            if (!updateSummaryResponse.ok) {
+              const errorText = await updateSummaryResponse.text();
+              console.error("Update summary error:", errorText);
+              throw new Error(`Không thể cập nhật kết quả tổng quát. Mã lỗi: ${updateSummaryResponse.status}`);
+            }
+            
+            console.log("Summary updated successfully");
+          } else if (summaryResponse.status === 404) {
+            // Chưa có summary, tạo mới
+            console.log("No existing summary found, creating new one");
+            
+            const createSummaryData = {
+              testBookingInfoId: editResultData.id,
+              overallResult: editingOverallResult.trim(),
+              overallStatus: editingOverallStatus || "NORMAL",
+              note: editingResultNote || ""
+            };
+            
+            console.log(`Creating new summary with data:`, createSummaryData);
+            
+            const createSummaryResponse = await fetch(
+              `http://localhost:8080/api/test-result-summary`,
+              {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(createSummaryData)
+              }
+            );
+            
+            if (!createSummaryResponse.ok) {
+              const errorText = await createSummaryResponse.text();
+              console.error("Create summary error:", errorText);
+              throw new Error(`Không thể tạo kết quả tổng quát. Mã lỗi: ${createSummaryResponse.status}`);
+            }
+            
+            console.log("Summary created successfully");
+          } else {
+            throw new Error(`Lỗi khi kiểm tra summary hiện có. Mã lỗi: ${summaryResponse.status}`);
+          }
+        } catch (summaryError) {
+          console.error("Error handling summary:", summaryError);
+          // Không throw error ở đây để không làm gián đoạn việc cập nhật test results
+          alert("Cảnh báo: Cập nhật kết quả chi tiết thành công nhưng có lỗi khi cập nhật kết quả tổng quát: " + summaryError.message);
+        }
+      }
       
       setShowEditResultModal(false);
       setEditResultData(null);
       setEditingParameters({});
       setEditingResultNote("");
+      setEditingOverallResult("");
+      setEditingOverallStatus("NORMAL");
       setTestParameters([]);
       handleFetchBookings();
       alert("Đã cập nhật kết quả xét nghiệm thành công!");

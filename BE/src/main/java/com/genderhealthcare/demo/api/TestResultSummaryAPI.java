@@ -38,23 +38,23 @@ public class TestResultSummaryAPI {
         return summary.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Lấy kết quả tổng quát theo ID
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<TestResultSummary> getById(@PathVariable Integer id) {
-        Optional<TestResultSummary> summary = summaryService.getById(id);
-        return summary.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
+    // /**
+    //  * Lấy kết quả tổng quát theo ID
+    //  */
+    // @GetMapping("/{id}")
+    // public ResponseEntity<TestResultSummary> getById(@PathVariable Integer id) {
+    //     Optional<TestResultSummary> summary = summaryService.getById(id);
+    //     return summary.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    // }
 
-    /**
-     * Lấy tất cả kết quả tổng quát
-     */
-    @GetMapping
-    public ResponseEntity<List<TestResultSummary>> getAllSummaries() {
-        List<TestResultSummary> summaries = summaryService.getAllSummaries();
-        return ResponseEntity.ok(summaries);
-    }
+    // /**
+    //  * Lấy tất cả kết quả tổng quát
+    //  */
+    // @GetMapping
+    // public ResponseEntity<List<TestResultSummary>> getAllSummaries() {
+    //     List<TestResultSummary> summaries = summaryService.getAllSummaries();
+    //     return ResponseEntity.ok(summaries);
+    // }
 
     /**
      * Cập nhật kết quả tổng quát theo ID
@@ -70,16 +70,16 @@ public class TestResultSummaryAPI {
         return ResponseEntity.notFound().build();
     }
 
-    /**
-     * Xóa kết quả tổng quát theo ID
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable Integer id) {
-        try {
-            summaryService.deleteById(id);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+    // /**
+    //  * Xóa kết quả tổng quát theo ID
+    //  */
+    // @DeleteMapping("/{id}")
+    // public ResponseEntity<Void> deleteById(@PathVariable Integer id) {
+    //     try {
+    //         summaryService.deleteById(id);
+    //         return ResponseEntity.ok().build();
+    //     } catch (Exception e) {
+    //         return ResponseEntity.notFound().build();
+    //     }
+    // }
 }

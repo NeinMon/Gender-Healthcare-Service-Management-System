@@ -49,11 +49,13 @@ export const fetchConsultantSchedule = async (consultantId, date) => {
     const res = await fetch(`http://localhost:8080/api/consultant-schedules/consultant/${consultantId}`);
     if (res.ok) {
       const schedules = await res.json();
-      // Tìm lịch làm việc của consultant trong ngày cụ thể
-      const daySchedule = schedules.find(schedule => 
+      // Tìm TẤT CẢ lịch làm việc của consultant trong ngày cụ thể
+      const daySchedules = schedules.filter(schedule => 
         schedule.workDate === date && schedule.status === 'AVAILABLE'
       );
-      return daySchedule;
+      
+      // Trả về array các ca làm việc thay vì 1 ca duy nhất
+      return daySchedules.length > 0 ? daySchedules : null;
     }
     return null;
   } catch (error) {
@@ -131,15 +133,19 @@ export const fetchAvailableTimes = async (consultantId, date, setAvailableTimes,
       // Bước 1: Lấy thông tin ca làm việc của consultant
       const scheduleInfo = await fetchConsultantSchedule(consultantId, date);
       
-      if (!scheduleInfo) {
+      if (!scheduleInfo || scheduleInfo.length === 0) {
         // Nếu consultant không có lịch làm việc trong ngày này
         setAvailableTimes([]);
         setLoadingTimes(false);
         return;
       }
       
-      // Bước 2: Tạo danh sách khung giờ theo ca làm việc
-      const allTimeSlots = generateTimeSlotsByShift(scheduleInfo.shift);
+      // Bước 2: Tạo danh sách khung giờ cho TẤT CẢ ca làm việc
+      let allTimeSlots = [];
+      scheduleInfo.forEach(schedule => {
+        const slotsForShift = generateTimeSlotsByShift(schedule.shift);
+        allTimeSlots = [...allTimeSlots, ...slotsForShift];
+      });
       
       // Bước 3: Lấy khung giờ đã được đặt từ backend
       const res = await fetch(`http://localhost:8080/api/bookings/available-times?consultantId=${consultantId}&date=${date}`);

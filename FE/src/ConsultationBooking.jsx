@@ -40,7 +40,7 @@ const ConsultationBooking = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [consultants, setConsultants] = useState([]); // Sử dụng state để lưu danh sách tư vấn viên từ API
   const [availableTimes, setAvailableTimes] = useState([]);
-  const [consultantSchedule, setConsultantSchedule] = useState(null); // Thông tin ca làm việc của consultant
+  const [consultantSchedule, setConsultantSchedule] = useState([]); // Thay đổi từ null thành array để lưu nhiều ca
   const [error, setError] = useState('');
   const [loadingTimes, setLoadingTimes] = useState(false); // Thêm state loading cho khung giờ
   // New states for payment flow
@@ -72,7 +72,7 @@ const ConsultationBooking = () => {
     } else {
       // Nếu chưa chọn ngày, hiển thị tất cả consultant
       fetchConsultants(setConsultants);
-      setConsultantSchedule(null);
+      setConsultantSchedule([]);
     }
   }, [formData.date]);
 
@@ -82,15 +82,15 @@ const ConsultationBooking = () => {
       if (formData.consultantId && formData.date) {
         try {
           const scheduleInfo = await fetchConsultantSchedule(formData.consultantId, formData.date);
-          setConsultantSchedule(scheduleInfo);
+          setConsultantSchedule(scheduleInfo || []);
           // Reset time selection khi đổi consultant
           setFormData(prev => ({ ...prev, time: '' }));
         } catch (error) {
           console.error('Error fetching consultant schedule:', error);
-          setConsultantSchedule(null);
+          setConsultantSchedule([]);
         }
       } else {
-        setConsultantSchedule(null);
+        setConsultantSchedule([]);
       }
     };
     
@@ -496,7 +496,7 @@ const ConsultationBooking = () => {
               </div>
 
               {/* Hiển thị thông tin ca làm việc */}
-              {consultantSchedule && (
+              {consultantSchedule && consultantSchedule.length > 0 && (
                 <div style={{ 
                   marginTop: "20px", 
                   padding: "15px", 
@@ -507,20 +507,24 @@ const ConsultationBooking = () => {
                   <h4 style={{ margin: "0 0 10px 0", color: "#0891b2" }}>
                     Thông tin ca làm việc
                   </h4>
-                  <p style={{ margin: "5px 0", color: "#0891b2" }}>
-                    <strong>Ca làm việc:</strong> {
-                      consultantSchedule.shift === 'MORNING' 
-                        ? 'Ca sáng (8:00 - 12:00)' 
-                        : 'Ca chiều (13:30 - 17:30)'
-                    }
-                  </p>
-                  <p style={{ margin: "5px 0", color: "#0891b2", fontSize: "14px" }}>
-                    Khung giờ có thể đặt: {
-                      consultantSchedule.shift === 'MORNING' 
-                        ? '8:00, 9:00, 10:00, 11:00' 
-                        : '13:30, 14:30, 15:30, 16:30'
-                    }
-                  </p>
+                  {consultantSchedule.map((schedule, index) => (
+                    <div key={index} style={{ marginBottom: "10px" }}>
+                      <p style={{ margin: "5px 0", color: "#0891b2" }}>
+                        <strong>Ca {index + 1}:</strong> {
+                          schedule.shift === 'MORNING' 
+                            ? 'Ca sáng (8:00 - 12:00)' 
+                            : 'Ca chiều (13:30 - 17:30)'
+                        }
+                      </p>
+                      <p style={{ margin: "5px 0", color: "#0891b2", fontSize: "14px" }}>
+                        Khung giờ có thể đặt: {
+                          schedule.shift === 'MORNING' 
+                            ? '8:00, 9:00, 10:00, 11:00' 
+                            : '13:30, 14:30, 15:30, 16:30'
+                        }
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
 

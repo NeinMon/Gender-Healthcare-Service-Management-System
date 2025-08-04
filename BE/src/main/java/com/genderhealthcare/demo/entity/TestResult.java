@@ -81,19 +81,66 @@ public class TestResult {
         
         // Xử lý đặc biệt cho siêu âm
         if ("ULTRASOUND".equals(parameterType)) {
-            // Siêu âm thường có kết quả mô tả, không có số liệu cụ thể
-            if (resultValue.toLowerCase().contains("bình thường") || 
-                resultValue.toLowerCase().contains("normal")) {
-                this.status = "Normal";
-            } else if (resultValue.toLowerCase().contains("bất thường") ||
-                      resultValue.toLowerCase().contains("u xơ") ||
-                      resultValue.toLowerCase().contains("polyp") ||
-                      resultValue.toLowerCase().contains("nang")) {
-                this.status = "Abnormal";
-            } else {
-                this.status = "Unknown";
+             // Kiểm tra xem đầu vào có phải là số không (có thể là kết quả đo lường)
+        if (resultValue.trim().matches("\\d+(\\.\\d+)?")) {
+            try {
+                double value = Double.parseDouble(resultValue.trim());
+                
+                // Nếu có reference range, sử dụng nó để đánh giá
+                if (referenceRange != null && !referenceRange.trim().isEmpty()) {
+                    // Áp dụng logic xử lý reference range tương tự như hormone và blood
+                    if (referenceRange.contains("-")) {
+                        String[] parts = referenceRange.split("-");
+                        double minValue = Double.parseDouble(parts[0].trim());
+                        double maxValue = Double.parseDouble(parts[1].trim());
+                        
+                        if (value < minValue) {
+                            this.status = "Low";
+                        } else if (value > maxValue) {
+                            this.status = "High";
+                        } else {
+                            this.status = "Normal";
+                        }
+                    } else {
+                        // Xử lý các format khác nếu có
+                        this.status = "Unknown";
+                    }
+                } else {
+                    // Nếu không có reference range, dùng logic mặc định cho từng loại đo lường
+                    // Dựa vào giá trị và đơn vị
+                    
+                    // Nếu giá trị là mm (có thể là độ dày nội mạc)
+                    if (value > 15) { // Độ dày nội mạc > 15mm thường là bất thường
+                        this.status = "High";
+                    } else if (value >= 5 && value <= 15) { // 5-15mm thường là bình thường
+                        this.status = "Normal";
+                    } else {
+                        this.status = "Low";
+                    }
+                }
+                return;
+            } catch (NumberFormatException e) {
+                // Nếu parse số thất bại, tiếp tục xử lý như mô tả
             }
-            return;
+        }
+        
+        // Xử lý mô tả (text) cho siêu âm
+        if (resultValue.toLowerCase().contains("bình thường") || 
+            resultValue.toLowerCase().contains("normal") ||
+            resultValue.toLowerCase().contains("không có bất thường")) {
+            this.status = "Normal";
+        } else if (resultValue.toLowerCase().contains("bất thường") ||
+                  resultValue.toLowerCase().contains("u xơ") ||
+                  resultValue.toLowerCase().contains("polyp") ||
+                  resultValue.toLowerCase().contains("nang") ||
+                  resultValue.toLowerCase().contains("dày") ||
+                  resultValue.toLowerCase().contains("tăng kích thước") ||
+                  resultValue.toLowerCase().contains("dịch douglas")) {
+            this.status = "Abnormal";
+        } else {
+            this.status = "Unknown";
+        }
+        return;
         }
         
         // Xử lý cho các xét nghiệm có số liệu (HORMONE, BLOOD)

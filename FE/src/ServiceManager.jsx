@@ -1,32 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar';
-import {
-  getUserIdFromStorage,
-  formatDate,
-  formatPrice,
-  fetchServices,
-  searchServices,
-  addService,
-  updateService,
-  deleteService,
-  fetchUsers,
-  searchUsers,
-  addUser,
-  updateUser,
-  deleteUser,
-  fetchSchedules,
-  searchSchedules,
-  addSchedule,
-  updateSchedule,
-  deleteSchedule,
-  fetchLeaveRequests,
-  approveLeaveRequest,
-  rejectLeaveRequest,
-  validateServiceData,
-  validateUserData,
-  validateScheduleData
-} from './utils/serviceManagerHelpers';
 
 const ServiceManager = () => {
   const [services, setServices] = useState([]);
@@ -76,88 +50,61 @@ const ServiceManager = () => {
   // Load services khi component mount
   useEffect(() => {
     // Lấy userId từ localStorage/sessionStorage
-    const currentUserId = getUserIdFromStorage();
-    setUserId(currentUserId);
-    setFormData(prev => ({
-      ...prev,
-      managerId: currentUserId
-    }));
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || sessionStorage.getItem('loggedInUser') || '{}');
+    const currentUserId = localStorage.getItem('userId') || loggedInUser.userID || loggedInUser.id;
     
-    loadServices();
-    loadUsers();
-    loadSchedules();
-    loadLeaveRequests();
+    if (currentUserId) {
+      setUserId(Number(currentUserId));
+      setFormData(prev => ({
+        ...prev,
+        managerId: Number(currentUserId)
+      }));
+    } else {
+      console.warn('Không tìm thấy userId, sử dụng giá trị mặc định');
+      setUserId(1);
+      setFormData(prev => ({
+        ...prev,
+        managerId: 1
+      }));
+    }
+    
+    fetchServices();
+    fetchUsers();
+    fetchSchedules();
+    fetchLeaveRequests();
   }, []);
 
-  // Show alert message
-  const showAlert = (type, message) => {
-    setAlert({ show: true, type, message });
-    setTimeout(() => {
-      setAlert({ show: false, type: '', message: '' });
-    }, 5000);
-  };
-
-  // Wrapper functions to use helpers with error handling
-  const loadServices = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchServices();
-      setServices(data);
-    } catch (error) {
-      showAlert('error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchUsers();
-      setUsers(data);
-    } catch (error) {
-      showAlert('error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadSchedules = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchSchedules();
-      setSchedules(data);
-    } catch (error) {
-      showAlert('error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLeaveRequests = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchLeaveRequests();
-      setLeaveRequests(data);
-    } catch (error) {
-      showAlert('error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Lấy danh sách services từ API
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/services');
+      if (response.ok) {
+        const data = await response.json();
+        setServices(data);
+      } else {
+        console.error('Failed to fetch services');
+        showAlert('error', 'Không thể tải danh sách dịch vụ');
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách dịch vụ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Tìm kiếm services
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
       if (activeTab === 'services') {
-        loadServices();
+        fetchServices();
       } else if (activeTab === 'users') {
-        loadUsers();
+        fetchUsers();
       } else if (activeTab === 'schedules') {
-        loadSchedules();
+        fetchSchedules();
       } else if (activeTab === 'leave-requests') {
-        loadLeaveRequests();
+        fetchLeaveRequests();
       }
       return;
     }
@@ -165,48 +112,205 @@ const ServiceManager = () => {
     try {
       setLoading(true);
       if (activeTab === 'services') {
-        const data = await searchServices(searchTerm);
-        setServices(data);
+        const response = await fetch(`http://localhost:8080/api/services/search?name=${encodeURIComponent(searchTerm)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setServices(data);
+        } else {
+          console.error('Failed to search services');
+          showAlert('error', 'Không thể tìm kiếm dịch vụ');
+        }
       } else if (activeTab === 'users') {
-        const data = await searchUsers(searchTerm);
-        setUsers(data);
-      } else if (activeTab === 'schedules') {
-        const data = await searchSchedules(searchTerm);
-        setSchedules(data);
+        // Search users by name, email, or phone
+        const response = await fetch('http://localhost:8080/api/users');
+        if (response.ok) {
+          const data = await response.json();
+          const filteredUsers = data.filter(user => 
+            (user.role === 'CONSULTANT' || user.role === 'STAFF' || user.role === 'CUSTOMER') &&
+            (user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             user.phone?.includes(searchTerm))
+          );
+          setUsers(filteredUsers);
+        } else {
+          console.error('Failed to search users');
+          showAlert('error', 'Không thể tìm kiếm tài khoản');
+        }
+      } else {
+        // Search schedules by consultant name or date
+        const response = await fetch('http://localhost:8080/api/consultant-schedules/all');
+        if (response.ok) {
+          const data = await response.json();
+          const filteredSchedules = data.filter(schedule => 
+            schedule.workDate?.includes(searchTerm) ||
+            schedule.shift?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            schedule.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          // Sort filtered schedules by workDate and shift
+          const sortedFilteredSchedules = filteredSchedules.sort((a, b) => {
+            // First sort by date (oldest first)
+            const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+            if (dateComparison !== 0) {
+              return dateComparison;
+            }
+            // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+            if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+              return -1;
+            } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+              return 1;
+            }
+            return 0;
+          });
+          setSchedules(sortedFilteredSchedules);
+        } else {
+          console.error('Failed to search schedules');
+          showAlert('error', 'Không thể tìm kiếm lịch làm việc');
+        }
       }
     } catch (error) {
-      showAlert('error', error.message);
+      console.error('Error searching:', error);
+      showAlert('error', 
+        activeTab === 'services' ? 'Lỗi kết nối khi tìm kiếm dịch vụ' : 
+        activeTab === 'users' ? 'Lỗi kết nối khi tìm kiếm tài khoản' : 
+        'Lỗi kết nối khi tìm kiếm lịch làm việc');
     } finally {
       setLoading(false);
     }
   };
 
-  // Leave requests handlers
-  const handleApproveLeaveRequest = async (requestId) => {
+  // Lấy danh sách users từ API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/users');
+      if (response.ok) {
+        const data = await response.json();
+        // Lấy tất cả các role: consultant, staff và customer
+        const filteredUsers = data.filter(user => 
+          user.role === 'CONSULTANT' || user.role === 'STAFF' || user.role === 'CUSTOMER'
+        );
+        setUsers(filteredUsers);
+      } else {
+        console.error('Failed to fetch users');
+        showAlert('error', 'Không thể tải danh sách tài khoản');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách tài khoản');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Lấy danh sách schedules từ API
+  const fetchSchedules = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/consultant-schedules/all');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort schedules by workDate (oldest first) and then by shift
+        const sortedData = data.sort((a, b) => {
+          // First sort by date (oldest first)
+          const dateComparison = new Date(a.workDate) - new Date(b.workDate);
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          // If dates are equal, sort by shift (MORNING first, then AFTERNOON)
+          if (a.shift === 'MORNING' && b.shift === 'AFTERNOON') {
+            return -1;
+          } else if (a.shift === 'AFTERNOON' && b.shift === 'MORNING') {
+            return 1;
+          }
+          return 0;
+        });
+        setSchedules(sortedData);
+      } else {
+        console.error('Failed to fetch schedules');
+        showAlert('error', 'Không thể tải danh sách lịch làm việc');
+      }
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách lịch làm việc');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Lấy danh sách đơn xin nghỉ từ API
+  const fetchLeaveRequests = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/leave-requests/all');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort by created date (newest first)
+        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setLeaveRequests(sortedData);
+      } else {
+        console.error('Failed to fetch leave requests');
+        showAlert('error', 'Không thể tải danh sách đơn xin nghỉ');
+      }
+    } catch (error) {
+      console.error('Error fetching leave requests:', error);
+      showAlert('error', 'Lỗi kết nối khi tải danh sách đơn xin nghỉ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Duyệt đơn xin nghỉ
+  const approveLeaveRequest = async (requestId) => {
     if (!window.confirm('Bạn có chắc chắn muốn duyệt đơn xin nghỉ này?')) {
       return;
     }
 
     try {
-      await approveLeaveRequest(requestId, userId);
-      showAlert('success', 'Đã duyệt đơn xin nghỉ thành công!');
-      loadLeaveRequests(); // Refresh list
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/approve?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã duyệt đơn xin nghỉ thành công!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
     } catch (error) {
-      showAlert('error', error.message);
+      console.error('Error approving leave request:', error);
+      showAlert('error', 'Lỗi khi duyệt đơn xin nghỉ: ' + error.message);
     }
   };
 
-  const handleRejectLeaveRequest = async (requestId) => {
+  // Từ chối đơn xin nghỉ
+  const rejectLeaveRequest = async (requestId) => {
     if (!window.confirm('Bạn có chắc chắn muốn từ chối đơn xin nghỉ này?')) {
       return;
     }
 
     try {
-      await rejectLeaveRequest(requestId, userId);
-      showAlert('success', 'Đã từ chối đơn xin nghỉ!');
-      loadLeaveRequests(); // Refresh list
+      const response = await fetch(`http://localhost:8080/api/leave-requests/${requestId}/reject?managerId=${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Đã từ chối đơn xin nghỉ!');
+        fetchLeaveRequests(); // Refresh list
+      } else {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
     } catch (error) {
-      showAlert('error', error.message);
+      console.error('Error rejecting leave request:', error);
+      showAlert('error', 'Lỗi khi từ chối đơn xin nghỉ: ' + error.message);
     }
   };
 
@@ -234,15 +338,69 @@ const ServiceManager = () => {
   const handleAddSchedule = async (e) => {
     e.preventDefault();
     
+    // Validation
+    if (!scheduleFormData.consultantID) {
+      showAlert('error', 'Vui lòng chọn tư vấn viên');
+      return;
+    }
+    
+    if (!scheduleFormData.workDate) {
+      showAlert('error', 'Vui lòng chọn ngày làm việc');
+      return;
+    }
+
     try {
-      const scheduleData = validateScheduleData(scheduleFormData);
-      await addSchedule(scheduleData);
-      showAlert('success', 'Thêm lịch làm việc thành công!');
-      setShowAddScheduleModal(false);
-      resetScheduleForm();
-      loadSchedules();
+      const scheduleData = {
+        consultantID: parseInt(scheduleFormData.consultantID),
+        workDate: scheduleFormData.workDate,
+        shift: scheduleFormData.shift,
+        status: scheduleFormData.status,
+        notes: scheduleFormData.notes.trim() || ""
+      };
+
+      const response = await fetch('http://localhost:8080/api/consultant-schedules/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData)
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Thêm lịch làm việc thành công!');
+        setShowAddScheduleModal(false);
+        resetScheduleForm();
+        fetchSchedules();
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to add schedule:', errorText);
+        
+        // Xử lý lỗi cụ thể
+        let errorMessage = 'Không thể thêm lịch làm việc';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error && errorData.error.includes('quá khứ')) {
+            errorMessage = 'Không thể tạo lịch làm việc trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else if (errorData.error && errorData.error.includes('trùng lặp')) {
+            errorMessage = 'Tư vấn viên đã có lịch làm việc trong ca này. Vui lòng chọn ca khác hoặc ngày khác.';
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // Nếu không parse được JSON, sử dụng text thô
+          if (errorText.includes('quá khứ')) {
+            errorMessage = 'Không thể tạo lịch làm việc trong quá khứ. Vui lòng chọn ngày hiện tại hoặc tương lai.';
+          } else {
+            errorMessage = errorText;
+          }
+        }
+        
+        showAlert('error', errorMessage);
+      }
     } catch (error) {
-      showAlert('error', error.message);
+      console.error('Error adding schedule:', error);
+      showAlert('error', 'Lỗi kết nối khi thêm lịch làm việc');
     }
   };
 
@@ -285,7 +443,7 @@ const ServiceManager = () => {
         setShowEditScheduleModal(false);
         setEditingSchedule(null);
         resetScheduleForm();
-        loadSchedules();
+        fetchSchedules();
       } else {
         const errorText = await response.text();
         console.error('Failed to update schedule:', errorText);
@@ -332,7 +490,7 @@ const ServiceManager = () => {
 
       if (response.ok) {
         showAlert('success', 'Xóa lịch làm việc thành công!');
-        loadSchedules();
+        fetchSchedules();
       } else {
         const errorText = await response.text();
         console.error('Failed to delete schedule:', errorText);
@@ -391,6 +549,14 @@ const ServiceManager = () => {
     });
   };
 
+  // Show alert message
+  const showAlert = (type, message) => {
+    setAlert({ show: true, type, message });
+    setTimeout(() => {
+      setAlert({ show: false, type: '', message: '' });
+    }, 5000);
+  };
+
   // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -404,15 +570,51 @@ const ServiceManager = () => {
   const handleAddService = async (e) => {
     e.preventDefault();
     
+    // Validation
+    if (!formData.serviceName.trim()) {
+      showAlert('error', 'Vui lòng nhập tên dịch vụ');
+      return;
+    }
+    
+    if (!formData.price || parseFloat(formData.price) < 1000) {
+      showAlert('error', 'Giá dịch vụ phải từ 1,000 VNĐ trở lên');
+      return;
+    }
+
+    if (!userId) {
+      showAlert('error', 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      return;
+    }
+
     try {
-      const serviceData = validateServiceData(formData, userId);
-      await addService(serviceData);
-      showAlert('success', 'Thêm dịch vụ thành công!');
-      setShowAddModal(false);
-      resetForm();
-      loadServices(); // Reload danh sách
+      const serviceData = {
+        serviceName: formData.serviceName.trim(),
+        description: formData.description.trim() || null,
+        price: parseFloat(formData.price),
+        managerId: userId
+      };
+
+      const response = await fetch('http://localhost:8080/api/services', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(serviceData)
+      });
+
+      if (response.ok) {
+        showAlert('success', 'Thêm dịch vụ thành công!');
+        setShowAddModal(false);
+        resetForm();
+        fetchServices(); // Reload danh sách
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to add service:', errorText);
+        showAlert('error', 'Không thể thêm dịch vụ: ' + errorText);
+      }
     } catch (error) {
-      showAlert('error', error.message);
+      console.error('Error adding service:', error);
+      showAlert('error', 'Lỗi kết nối khi thêm dịch vụ');
     }
   };
 
@@ -459,7 +661,7 @@ const ServiceManager = () => {
         setShowEditModal(false);
         setEditingService(null);
         resetForm();
-        loadServices(); // Reload danh sách
+        fetchServices(); // Reload danh sách
       } else {
         const errorText = await response.text();
         console.error('Failed to update service:', errorText);
@@ -484,7 +686,7 @@ const ServiceManager = () => {
 
       if (response.ok) {
         showAlert('success', 'Xóa dịch vụ thành công!');
-        loadServices(); // Reload danh sách
+        fetchServices(); // Reload danh sách
       } else {
         const errorText = await response.text();
         console.error('Failed to delete service:', errorText);
@@ -683,6 +885,17 @@ const ServiceManager = () => {
       specification: user.specification || ''
     });
     setShowEditUserModal(true);
+  };
+
+  // Format ngày tháng
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  // Format giá tiền
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN').format(price) + ' VNĐ';
   };
 
   return (

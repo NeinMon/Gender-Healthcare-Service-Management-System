@@ -110,6 +110,63 @@ const MyTestBookings = () => {
     }
   };
 
+  // Hàm format trạng thái xét nghiệm chi tiết
+  const formatTestStatus = (status) => {
+    if (!status) return 'Không xác định';
+    
+    const statusUpper = status.toString().toUpperCase();
+    switch (statusUpper) {
+      case 'NORMAL':
+      case 'Normal':
+        return 'Bình thường';
+      case 'HIGH':
+      case 'High':
+        return 'Cao hơn bình thường';
+      case 'LOW':
+      case 'Low':
+        return 'Thấp hơn bình thường';
+      case 'ABNORMAL':
+      case 'Abnormal':
+        return 'Bất thường';
+      case 'CRITICAL':
+      case 'Critical':
+        return 'Nguy hiểm';
+      case 'BORDERLINE':
+      case 'Borderline':
+        return 'Biên giới';
+      default:
+        return status;
+    }
+  };
+
+  // Hàm lấy màu sắc cho trạng thái xét nghiệm
+  const getTestStatusColor = (status) => {
+    if (!status) return { bg: '#f3f4f6', color: '#6b7280' };
+    
+    const statusUpper = status.toString().toUpperCase();
+    switch (statusUpper) {
+      case 'NORMAL':
+      case 'Normal':
+        return { bg: '#f0fdf4', color: '#16a34a' };
+      case 'HIGH':
+      case 'High':
+        return { bg: '#fef3c7', color: '#d97706' };
+      case 'LOW':
+      case 'Low':
+        return { bg: '#dbeafe', color: '#2563eb' };
+      case 'ABNORMAL':
+      case 'Abnormal':
+      case 'CRITICAL':
+      case 'Critical':
+        return { bg: '#fef2f2', color: '#dc2626' };
+      case 'BORDERLINE':
+      case 'Borderline':
+        return { bg: '#fdf4ff', color: '#a855f7' };
+      default:
+        return { bg: '#f3f4f6', color: '#6b7280' };
+    }
+  };
+
   // Hàm mở modal và lấy kết quả xét nghiệm từ API
   const handleShowResult = async (booking) => {
     setShowResultModal(true);
@@ -342,14 +399,13 @@ const MyTestBookings = () => {
                       <strong>Trạng thái tổng quát:</strong> 
                       <span style={{ 
                         fontWeight: 600, 
-                        color: resultData.summary.overallStatus === 'NORMAL' ? '#059669' : '#dc2626',
-                        backgroundColor: resultData.summary.overallStatus === 'NORMAL' ? '#f0fdf4' : '#fef2f2',
+                        ...getTestStatusColor(resultData.summary.overallStatus),
                         padding: '4px 8px',
                         borderRadius: '4px',
                         marginLeft: '8px',
                         border: `1px solid ${resultData.summary.overallStatus === 'NORMAL' ? '#bbf7d0' : '#fecaca'}`
                       }}>
-                        {resultData.summary.overallStatus === 'NORMAL' ? 'Bình thường' : 'Bất thường'}
+                        {formatTestStatus(resultData.summary.overallStatus)}
                       </span>
                     </div>
                     
@@ -415,16 +471,24 @@ const MyTestBookings = () => {
                           paddingBottom: 8, 
                           padding: 12,
                           borderRadius: 6,
-                          backgroundColor: tr.status === 'NORMAL' || tr.status === 'Normal' ? '#f0fdf4' : '#fef2f2',
+                          backgroundColor: getTestStatusColor(tr.status).bg,
                           border: `1px solid ${tr.status === 'NORMAL' || tr.status === 'Normal' ? '#bbf7d0' : '#fecaca'}`,
                           borderBottom: index < resultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' 
                         }}>
                           <div><strong>Tham số:</strong> {resultData.parameterNames[tr.parameterId] || tr.parameterId}</div>
                           <div><strong>Kết quả:</strong> {tr.resultValue} {tr.unit || ''}</div>
-                          <div><strong>Trạng thái:</strong> <span style={{
-                            color: tr.status === 'NORMAL' || tr.status === 'Normal' ? '#16a34a' : '#dc2626',
-                            fontWeight: 600
-                          }}>{tr.status === 'NORMAL' || tr.status === 'Normal' ? 'Bình thường' : tr.status}</span></div>
+                          <div><strong>Trạng thái:</strong> 
+                            <span style={{
+                              ...getTestStatusColor(tr.status),
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              marginLeft: '8px'
+                            }}>
+                              {formatTestStatus(tr.status)}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>

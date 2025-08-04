@@ -16,9 +16,9 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
       title: 'Chu kỳ kinh nguyệt bất thường',
       description: `Chu kỳ ${cycleLength} ngày ${cycleLength < 21 ? 'quá ngắn' : 'quá dài'} so với bình thường (21-35 ngày). Điều này có thể ảnh hưởng đến khả năng sinh sản và sức khỏe tổng thể.`,
       recommendations: [
-        'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
-        'Siêu âm tử cung và buồng trứng (Đánh giá cấu trúc, phát hiện u xơ, polyp, nang, dị dạng)',
-        'Xét nghiệm công thức máu đầy đủ (Hồng cầu, Hemoglobin, Hematocrit, Bạch cầu, Tiểu cầu)'
+        'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
+        'Siêu âm chuyên sâu đánh giá cấu trúc và phát hiện bất thường tử cung, buồng trứng',
+        'Xét nghiệm máu tổng quát đánh giá tình trạng sức khỏe và phát hiện thiếu máu'
       ],
       severity: 'high',
       advice: 'Chu kỳ bất thường có thể là dấu hiệu của rối loạn nội tiết tố hoặc các vấn đề về sức khỏe sinh sản khác.'
@@ -32,9 +32,9 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
       title: 'Thời gian kinh nguyệt bất thường',
       description: `Thời gian kinh nguyệt ${periodLength} ngày ${periodLength > 7 ? 'kéo dài quá mức' : 'quá ngắn'} so với bình thường (2-7 ngày). ${periodLength > 7 ? 'Kinh nguyệt kéo dài có thể gây thiếu máu và mệt mỏi.' : 'Kinh nguyệt quá ngắn có thể ảnh hưởng đến quá trình thải độc tự nhiên của cơ thể.'}`,
       recommendations: [
-        'Xét nghiệm công thức máu đầy đủ (Hồng cầu, Hemoglobin, Hematocrit, Bạch cầu, Tiểu cầu)',
-        'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
-        'Siêu âm tử cung và buồng trứng (Đánh giá cấu trúc, phát hiện u xơ, polyp, nang, dị dạng)'
+        'Xét nghiệm máu tổng quát đánh giá tình trạng sức khỏe và phát hiện thiếu máu',
+        'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
+        'Siêu âm chuyên sâu đánh giá cấu trúc và phát hiện bất thường tử cung, buồng trứng'
       ],
       severity: periodLength > 7 ? 'high' : 'medium',
       advice: periodLength > 7 
@@ -51,7 +51,7 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
       description: `Chu kỳ ${cycleLength} ngày nằm ở biên giới của phạm vi bình thường. Cần theo dõi để phát hiện sớm những thay đổi bất thường.`,
       recommendations: [
         'Theo dõi chu kỳ thường xuyên trong 3-6 tháng',
-        'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+        'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
         'Tham khảo ý kiến bác sĩ nếu chu kỳ tiếp tục thay đổi'
       ],
       severity: 'low',
@@ -67,7 +67,7 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
       description: `Thời gian kinh nguyệt ${periodLength} ngày nằm ở biên giới của phạm vi bình thường. Cần quan sát để đảm bảo không có xu hướng xấu đi.`,
       recommendations: [
         'Theo dõi thời gian kinh nguyệt hàng tháng',
-        'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, Prolactin, TSH, AMH)',
+        'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
         'Tham khảo bác sĩ nếu có triệu chứng bất thường khác'
       ],
       severity: 'low',
@@ -85,11 +85,9 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
         title: 'Lượng máu kinh nhiều',
         description: 'Lượng máu kinh nhiều (5+ băng vệ sinh/ngày) có thể dẫn đến thiếu máu và ảnh hưởng đến chất lượng cuộc sống.',
         recommendations: [
-          'Xét nghiệm công thức máu đầy đủ (đặc biệt chú ý Hemoglobin và Hematocrit)',
-          'Xét nghiệm đông máu (PT, PTT, INR)',
-          'Siêu âm tử cung và buồng trứng (tìm u xơ, polyp)',
-          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, TSH)',
-          'Xét nghiệm vitamin B12, Folate, Ferritin'
+          'Xét nghiệm máu tổng quát đánh giá tình trạng sức khỏe và phát hiện thiếu máu',
+          'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
+          'Siêu âm chuyên sâu đánh giá cấu trúc và phát hiện bất thường tử cung, buồng trứng'
         ],
         severity: 'high',
         advice: 'Lượng máu kinh nhiều có thể là dấu hiệu của u xơ tử cung, rối loạn đông máu hoặc mất cân bằng hormone.'
@@ -100,9 +98,8 @@ export const analyzeCycleAbnormalities = (cycleLength, periodLength, flowLevel =
         title: 'Lượng máu kinh ít',
         description: 'Lượng máu kinh ít (1-2 băng vệ sinh/ngày) có thể liên quan đến thiếu hụt hormone hoặc vấn đề về lót tử cung.',
         recommendations: [
-          'Xét nghiệm nội tiết tố (FSH, LH, Estradiol, Progesterone, AMH, TSH)',
-          'Siêu âm tử cung đánh giá độ dày nội mạc tử cung',
-          'Kiểm tra cân nặng và chỉ số BMI',
+          'Xét nghiệm đầy đủ các hormone liên quan đến chu kỳ kinh nguyệt và khả năng sinh sản',
+          'Siêu âm chuyên sâu đánh giá cấu trúc và phát hiện bất thường tử cung, buồng trứng',
           'Đánh giá stress và chế độ dinh dưỡng'
         ],
         severity: 'medium',

@@ -320,7 +320,13 @@ const MyTestBookings = () => {
                 
                 {/* Hiển thị kết quả tổng quát nếu có */}
                 {resultData.summary && (
-                  <div style={{ marginBottom: 20, padding: 16, backgroundColor: '#f0f9ff', borderRadius: 8, border: '1px solid #22d3ee' }}>
+                  <div style={{ 
+                    marginBottom: 20, 
+                    padding: 16, 
+                    backgroundColor: resultData.summary.overallStatus === 'NORMAL' ? '#f0fdf4' : '#fef2f2', 
+                    borderRadius: 8, 
+                    border: `1px solid ${resultData.summary.overallStatus === 'NORMAL' ? '#bbf7d0' : '#fecaca'}` 
+                  }}>
                     <strong style={{ display: 'block', marginBottom: 12, color: '#0891b2', fontSize: 16 }}>Kết quả tổng quát:</strong>
                     
                     {resultData.summary.overallResult && (
@@ -357,6 +363,39 @@ const MyTestBookings = () => {
                     <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
                       <strong>Cập nhật lần cuối:</strong> {new Date(resultData.summary.updatedAt).toLocaleString('vi-VN')}
                     </div>
+                    
+                    {/* Nút đặt lịch tư vấn nếu trạng thái bất thường */}
+                    {resultData.summary.overallStatus !== 'NORMAL' && (
+                      <div style={{ marginTop: 16, textAlign: 'center' }}>
+                        <Link 
+                          to="/consultation-booking" 
+                          style={{ 
+                            textDecoration: 'none', 
+                            color: '#fff', 
+                            fontWeight: 600, 
+                            fontSize: "14px", 
+                            background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)', 
+                            borderRadius: "8px", 
+                            padding: '10px 20px', 
+                            transition: 'all 0.2s', 
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 2px 6px rgba(220,38,38,0.3)"
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(220,38,38,0.4)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 2px 6px rgba(220,38,38,0.3)";
+                          }}
+                        >
+                          <span style={{ fontSize: "16px" }}>🩺</span> Đặt lịch tư vấn
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -371,14 +410,21 @@ const MyTestBookings = () => {
                       border: '1px solid #e5e7eb'
                     }}>
                       {resultData.testResults.map((tr, index) => (
-                        <div key={index} style={{ marginBottom: 12, paddingBottom: 8, borderBottom: index < resultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                        <div key={index} style={{ 
+                          marginBottom: 12, 
+                          paddingBottom: 8, 
+                          padding: 12,
+                          borderRadius: 6,
+                          backgroundColor: tr.status === 'NORMAL' || tr.status === 'Normal' ? '#f0fdf4' : '#fef2f2',
+                          border: `1px solid ${tr.status === 'NORMAL' || tr.status === 'Normal' ? '#bbf7d0' : '#fecaca'}`,
+                          borderBottom: index < resultData.testResults.length - 1 ? '1px solid #e5e7eb' : 'none' 
+                        }}>
                           <div><strong>Tham số:</strong> {resultData.parameterNames[tr.parameterId] || tr.parameterId}</div>
                           <div><strong>Kết quả:</strong> {tr.resultValue} {tr.unit || ''}</div>
                           <div><strong>Trạng thái:</strong> <span style={{
-                            color: tr.status === 'NORMAL' ? '#059669' : '#dc2626',
+                            color: tr.status === 'NORMAL' || tr.status === 'Normal' ? '#16a34a' : '#dc2626',
                             fontWeight: 600
-                          }}>{tr.status === 'NORMAL' ? 'Bình thường' : tr.status}</span></div>
-                          {tr.note && <div><strong>Ghi chú:</strong> {tr.note}</div>}
+                          }}>{tr.status === 'NORMAL' || tr.status === 'Normal' ? 'Bình thường' : tr.status}</span></div>
                         </div>
                       ))}
                     </div>

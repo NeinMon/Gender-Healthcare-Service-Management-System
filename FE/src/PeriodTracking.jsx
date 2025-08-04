@@ -611,7 +611,7 @@ const PeriodTracking = () => {
                     🧪 Đặt lịch xét nghiệm ngay
                   </Link>
                   <Link
-                    to="/consultation-booking"
+                    to="/ask-question"
                     style={{
                       display: "inline-block",
                       background: "#fff",
@@ -634,7 +634,7 @@ const PeriodTracking = () => {
                       e.target.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
                     }}
                   >
-                    💬 Đặt lịch tư vấn với bác sĩ
+                    💬 Đặt câu hỏi
                   </Link>
                 </div>
               </div>

@@ -2,6 +2,32 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "./UserAvatar";
 import UserAccount from "./UserAccount";
+import {
+  STATUS_OPTIONS,
+  fetchServiceNames,
+  getServiceId,
+  getServiceName,
+  getStatusColor,
+  fetchBookings,
+  updateBookingStatus,
+  fetchTestParameters,
+  initializeSelectedParameters,
+  initializeEditingParameters,
+  validateRequiredParameters,
+  validateOverallResult,
+  hasParameterValues,
+  sendTestResultWithSummary,
+  sendTestResultSummary,
+  completeTestBooking,
+  fetchTestResults,
+  fetchTestResultSummary,
+  fetchParameterNames,
+  updateTestResult,
+  createTestResult,
+  updateTestResultSummary,
+  createTestResultSummary,
+  transformBookingData
+} from "./utils/staffTestBookingHelpers";
 
 // Component chuyển hướng từ /staff sang /staff-test-bookings
 export const RedirectToStaffTestBookings = () => {
@@ -11,13 +37,6 @@ export const RedirectToStaffTestBookings = () => {
   }, [navigate]);
   return null;
 };
-
-const STATUS_OPTIONS = [
-  "Chờ bắt đầu",
-  "Đã check-in",
-  "Đã check-out",
-  "Đã kết thúc"
-];
 
 const StaffTestBookingManager = () => {
   const [bookings, setBookings] = useState([]);
@@ -35,6 +54,8 @@ const StaffTestBookingManager = () => {
   const [editResultData, setEditResultData] = useState(null);
   const [editingParameters, setEditingParameters] = useState({});
   const [editingResultNote, setEditingResultNote] = useState("");
+  const [editingOverallResult, setEditingOverallResult] = useState("");
+  const [editingOverallStatus, setEditingOverallStatus] = useState("NORMAL");
   const [testParameters, setTestParameters] = useState([]);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [dateFilter, setDateFilter] = useState("");
@@ -46,21 +67,6 @@ const StaffTestBookingManager = () => {
   const navigate = useNavigate();
 
   // Hàm helper cho màu sắc trạng thái
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Chờ bắt đầu':
-        return { bg: '#fde68a', color: '#b45309' };
-      case 'Đã check-in':
-        return { bg: '#22d3ee', color: '#fff' };
-      case 'Đã check-out':
-        return { bg: '#86efac', color: '#166534' };
-      case 'Đã kết thúc':
-        return { bg: '#c084fc', color: '#fff' };
-      default:
-        return { bg: '#e5e7eb', color: '#374151' };
-    }
-  };
-
   // Lấy thông tin staff từ localStorage/sessionStorage
   useEffect(() => {
     const userJson = localStorage.getItem("loggedInUser") || sessionStorage.getItem("loggedInUser");
@@ -80,92 +86,22 @@ const StaffTestBookingManager = () => {
     }
   }, [navigate]);
 
-  // Lấy thông tin các dịch vụ từ API
-  const fetchServiceNames = async (serviceIds) => {
-    if (!serviceIds || serviceIds.length === 0) {
-      return {};
-    }
-    try {
-      const servicesResponse = await fetch('http://localhost:8080/api/services');
-      if (servicesResponse.ok) {
-        const allServices = await servicesResponse.json();
-        const namesObj = {};
-        allServices.forEach(service => {
-          const id = typeof service.serviceId === 'string' 
-            ? parseInt(service.serviceId, 10) 
-            : service.serviceId;
-          namesObj[id] = service.serviceName;
-        });
-        setServiceNames(prevNames => ({...prevNames, ...namesObj}));
-        return namesObj;
-      }
-    } catch (err) {}
-    return {};
-  };
-
-  // Lấy serviceId từ booking (chỉ lấy trực tiếp từ serviceId, backend đã chuẩn hóa)
-  const getServiceId = (booking) => {
-    if (booking.serviceId !== undefined && booking.serviceId !== null) {
-      return typeof booking.serviceId === 'string' ? parseInt(booking.serviceId, 10) : booking.serviceId;
-    }
-    return null;
-  };
-
-  // Lấy tên dịch vụ xét nghiệm từ booking
-  const getServiceName = (booking) => {
-    if (booking.serviceName) {
-      return booking.serviceName;
-    }
-    const serviceId = getServiceId(booking);
-    if (serviceId !== null && serviceNames[serviceId]) {
-      return serviceNames[serviceId];
-    }
-    return "Xét nghiệm chưa xác định";
-  };
-
-  // Lấy danh sách test booking từ API detail
-  const fetchBookings = async () => {
+  // Hàm lấy danh sách bookings với helper functions
+  const handleFetchBookings = async () => {
     setLoading(true);
     try {
-      const endpoint = statusFilter 
-        ? `http://localhost:8080/api/test-bookings/status/${encodeURIComponent(statusFilter)}/detail`
-        : `http://localhost:8080/api/test-bookings/all/detail`;
-      const res = await fetch(endpoint);
-      if (res.ok) {
-        const data = await res.json();
-        let serviceIds = [];
-        if (data.length > 0) {
-          serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
-        }
-        await fetchServiceNames(serviceIds);
-        setBookings(data
-          .filter(b => (b.payment?.status || '').toUpperCase() === 'PAID')
-          .map(b => {
-            const serviceId = getServiceId(b);
-            const displayServiceName = getServiceName(b);
-            return {
-              id: b.id,
-              bookingId: b.bookingId,
-              fullName: b.fullName || "N/A",
-              phone: b.phone || "N/A",
-              serviceId: serviceId,
-              serviceName: displayServiceName,
-              content: b.bookingContent || "",
-              appointmentDate: b.appointmentDate ? (typeof b.appointmentDate === 'string' ? b.appointmentDate.split('T')[0] : (b.appointmentDate?.toString?.().split('T')[0] || "")) : "",
-              startTime: b.appointmentTime || "",
-              notes: b.bookingContent || "N/A",
-              testStatus: b.testStatus || "",
-              paymentStatus: b.payment?.status || '',
-              amount: b.payment?.amount || '',
-              paymentId: b.payment?.paymentLinkId || '',
-              orderCode: b.payment?.orderCode || '',
-            };
-          })
-        );
-      } else {
-        setBookings([]);
+      const data = await fetchBookings(statusFilter);
+      let serviceIds = [];
+      if (data.length > 0) {
+        serviceIds = [...new Set(data.map(getServiceId).filter(Boolean))];
       }
-    } catch {
+      const namesObj = await fetchServiceNames(serviceIds);
+      setServiceNames(prevNames => ({...prevNames, ...namesObj}));
+      
+      const transformedBookings = transformBookingData(data, {...serviceNames, ...namesObj});
+      setBookings(transformedBookings);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
       setBookings([]);
     }
     setLoading(false);
@@ -173,45 +109,34 @@ const StaffTestBookingManager = () => {
 
   // Khởi tạo serviceNames từ API ngay khi component mount
   useEffect(() => {
-    // Fetch danh sách dịch vụ từ API ngay khi component mount
-    fetch('http://localhost:8080/api/services')
-      .then(response => {
-        if (response.ok) return response.json();
-        throw new Error('Failed to fetch services');
-      })
-      .then(services => {
-        const servicesMap = {};
-        services.forEach(service => {
-          const id = typeof service.serviceId === 'string' 
-            ? parseInt(service.serviceId, 10) 
-            : service.serviceId;
-          servicesMap[id] = service.serviceName;
-        });
+    const initializeServices = async () => {
+      try {
+        const servicesMap = await fetchServiceNames([]);
         setServiceNames(servicesMap);
         setServiceNamesLoaded(true);
-      })
-      .catch(() => {
+      } catch (error) {
+        console.error('Error initializing services:', error);
         setServiceNames({});
         setServiceNamesLoaded(true);
-      });
+      }
+    };
+    
+    initializeServices();
   }, []);
 
   // Chỉ fetch bookings khi serviceNames đã sẵn sàng hoặc khi đổi trạng thái
   useEffect(() => {
     if (serviceNamesLoaded) {
-      fetchBookings();
+      handleFetchBookings();
     }
     // eslint-disable-next-line
   }, [statusFilter, serviceNamesLoaded]);
 
   // Hàm đổi trạng thái booking (test booking)
-  const updateStatus = async (id, newStatus) => {
-    const res = await fetch(
-      `http://localhost:8080/api/test-bookings/${id}/status?status=${encodeURIComponent(newStatus)}`,
-      { method: "PUT" }
-    );
-    if (res.ok) {
-      fetchBookings();
+  const handleUpdateStatus = async (id, newStatus) => {
+    const success = await updateBookingStatus(id, newStatus);
+    if (success) {
+      handleFetchBookings();
     } else {
       alert("Cập nhật trạng thái thất bại!");
     }
@@ -293,9 +218,28 @@ const StaffTestBookingManager = () => {
 
   // Xác nhận và gửi kết quả xét nghiệm (chuyển từ "Đã check-out" thành "Đã kết thúc")
   const handleConfirmResult = async () => {
-    // Kiểm tra có tham số nào được nhập chưa
-    const hasValues = Object.values(selectedParameters).some(value => value && value.trim() !== '');
-    if (!hasValues && (!overallResult || overallResult.trim() === '')) {
+    // Kiểm tra tất cả các tham số bắt buộc đã được nhập chưa
+    const missingParameters = [];
+    testParameters.forEach(param => {
+      const value = selectedParameters[param.parameterId];
+      if (!value || value.trim() === '') {
+        missingParameters.push(param.parameterName);
+      }
+    });
+
+    // Bắt buộc nhập đầy đủ tất cả tham số - không cho phép bỏ qua
+    if (missingParameters.length > 0) {
+      alert(`Vui lòng nhập đầy đủ tất cả các tham số bắt buộc:\n- ${missingParameters.join('\n- ')}\n\nKhông thể gửi kết quả khi thiếu tham số.`);
+      return;
+    }
+
+    // Kiểm tra có ít nhất một dữ liệu được nhập
+    const hasParameterValues = Object.values(selectedParameters).some(value => value && value.trim() !== '');
+    if (!hasParameterValues && (!overallResult || overallResult.trim() === '')) {
+      alert("Vui lòng nhập ít nhất một giá trị tham số hoặc kết quả tổng quát!");
+      return;
+    }
+    if (!hasParameterValues && (!overallResult || overallResult.trim() === '')) {
       alert("Vui lòng nhập ít nhất một giá trị tham số hoặc kết quả tổng quát!");
       return;
     }
@@ -371,7 +315,7 @@ const StaffTestBookingManager = () => {
       setOverallStatus("NORMAL");
       setTestParameters([]);
       setCurrentBooking(null);
-      fetchBookings();
+      handleFetchBookings();
       alert("Đã gửi kết quả xét nghiệm thành công!");
     } catch (error) {
       console.error("Error in handleConfirmResult:", error);
@@ -524,7 +468,22 @@ const StaffTestBookingManager = () => {
     console.log("editResultData:", editResultData);
     console.log("editingParameters:", editingParameters);
     
-    // Kiểm tra có tham số nào được nhập chưa
+    // Kiểm tra tất cả các tham số bắt buộc đã được nhập chưa
+    const missingParameters = [];
+    testParameters.forEach(param => {
+      const value = editingParameters[param.parameterId];
+      if (!value || value.trim() === '') {
+        missingParameters.push(param.parameterName);
+      }
+    });
+
+    // Bắt buộc nhập đầy đủ tất cả tham số - không cho phép bỏ qua
+    if (missingParameters.length > 0) {
+      alert(`Vui lòng nhập đầy đủ tất cả các tham số bắt buộc:\n- ${missingParameters.join('\n- ')}\n\nKhông thể cập nhật kết quả khi thiếu tham số.`);
+      return;
+    }
+
+    // Kiểm tra có ít nhất một tham số được nhập
     const hasValues = Object.values(editingParameters).some(value => value && value.trim() !== '');
     if (!hasValues) {
       alert("Vui lòng nhập ít nhất một giá trị tham số!");
@@ -613,7 +572,7 @@ const StaffTestBookingManager = () => {
       setEditingParameters({});
       setEditingResultNote("");
       setTestParameters([]);
-      fetchBookings();
+      handleFetchBookings();
       alert("Đã cập nhật kết quả xét nghiệm thành công!");
     } catch (error) {
       console.error("Error in handleUpdateResult:", error);
@@ -974,7 +933,7 @@ const StaffTestBookingManager = () => {
                             <td style={{ padding: '16px 24px', textAlign: "center" }}>
                               {b.testStatus === "Chờ bắt đầu" && (
                                 <button 
-                                  onClick={() => updateStatus(b.id, "Đã check-in")}
+                                  onClick={() => handleUpdateStatus(b.id, "Đã check-in")}
                                   style={{
                                     background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
                                     color: '#fff',
@@ -990,7 +949,7 @@ const StaffTestBookingManager = () => {
                               )}
                               {b.testStatus === "Đã check-in" && (
                                 <button 
-                                  onClick={() => updateStatus(b.id, "Đã check-out")}
+                                  onClick={() => handleUpdateStatus(b.id, "Đã check-out")}
                                   style={{
                                     background: 'linear-gradient(90deg, #0891b2 0%, #22d3ee 100%)',
                                     color: '#fff',
@@ -1250,7 +1209,9 @@ const StaffTestBookingManager = () => {
             
             {/* Form chỉnh sửa */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Tham số xét nghiệm:</label>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Tham số xét nghiệm:
+              </label>
               {testParameters.length > 0 ? (
                 <div style={{ 
                   backgroundColor: '#f8f9fa', 
@@ -1266,7 +1227,7 @@ const StaffTestBookingManager = () => {
                         fontWeight: 500,
                         color: '#374151'
                       }}>
-                        {param.parameterName} {param.unit ? `(${param.unit})` : ''}:
+                        {param.parameterName} {param.unit ? `(${param.unit})` : ''} <span style={{ color: '#000000', fontWeight: 600 }}>*</span>:
                       </label>
                       <input
                         type="text"
@@ -1316,6 +1277,58 @@ const StaffTestBookingManager = () => {
                 }}
               />
             </div>
+
+            {/* Kết quả tổng quát */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Kết quả tổng quát <span style={{ color: '#000000', fontWeight: 600 }}>*</span>:
+              </label>
+              <textarea 
+                value={editingOverallResult} 
+                onChange={e => setEditingOverallResult(e.target.value)} 
+                placeholder="Nhập kết quả tổng quát..."
+                style={{ 
+                  width: "100%", 
+                  padding: "10px 12px", 
+                  borderRadius: 8, 
+                  border: '1px solid #cbd5e1',
+                  fontSize: '16px',
+                  minHeight: '100px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            {/* Trạng thái kết quả */}
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Trạng thái kết quả <span style={{ color: '#000000', fontWeight: 600 }}>*</span>:
+              </label>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="editResultStatus"
+                    value="NORMAL"
+                    checked={editingOverallStatus === 'NORMAL'}
+                    onChange={e => setEditingOverallStatus(e.target.value)}
+                    style={{ marginRight: "6px" }}
+                  />
+                  <span style={{ color: "#059669", fontWeight: 500 }}>Bình thường</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                  <input
+                    type="radio"
+                    name="editResultStatus"
+                    value="ABNORMAL"
+                    checked={editingOverallStatus === 'ABNORMAL'}
+                    onChange={e => setEditingOverallStatus(e.target.value)}
+                    style={{ marginRight: "6px" }}
+                  />
+                  <span style={{ color: "#dc2626", fontWeight: 500 }}>Bất thường</span>
+                </label>
+              </div>
+            </div>
             
             <div style={{ display: "flex", justifyContent: "center", gap: 16 }}>
               <button 
@@ -1324,6 +1337,8 @@ const StaffTestBookingManager = () => {
                   setEditResultData(null); 
                   setEditingParameters({}); 
                   setEditingResultNote("");
+                  setEditingOverallResult("");
+                  setEditingOverallStatus("NORMAL");
                   setTestParameters([]);
                 }}
                 style={{
@@ -1391,7 +1406,9 @@ const StaffTestBookingManager = () => {
             )}
             
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Tham số xét nghiệm:</label>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Tham số xét nghiệm:
+              </label>
               {testParameters.length > 0 ? (
                 <div style={{ 
                   backgroundColor: '#f8f9fa', 
@@ -1441,7 +1458,9 @@ const StaffTestBookingManager = () => {
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Kết quả tổng quát:</label>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Kết quả tổng quát <span style={{ color: '#000000', fontWeight: 600 }}>*</span>:
+              </label>
               <textarea 
                 value={overallResult} 
                 onChange={e => setOverallResult(e.target.value)} 
@@ -1459,7 +1478,9 @@ const StaffTestBookingManager = () => {
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>Trạng thái kết quả:</label>
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Trạng thái kết quả <span style={{ color: '#000000', fontWeight: 600 }}>*</span>:
+              </label>
               <div style={{ display: "flex", gap: "12px" }}>
                 <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
                   <input 
